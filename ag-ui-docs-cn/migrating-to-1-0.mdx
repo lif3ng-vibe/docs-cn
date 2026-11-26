@@ -1,55 +1,27 @@
 ---
-title: "Migrating to 1.0"
-description: "What changes for an application or integration moving to AG-UI 1.0, per SDK — and what does not"
+title: "迁移到 1.0"
+description: "应用或集成迁往 AG-UI 1.0 时，按 SDK 逐个说明哪些要改、哪些不用改"
 ---
 
-AG-UI 1.0 is the first release with a specification behind it: the
-[schema](/spec/1.0/schema) is the single source of truth, every SDK's
-protocol types are generated from it, and the behavioural rules that used to
-live only in the TypeScript client are [written down](/spec/1.0). Most of
-what changed is additive. This page is the part that is not — what you have to
-touch, per SDK, and what keeps working on its own.
+AG-UI 1.0 是第一个有规范支撑的版本：[schema](/spec/1.0/schema) 是唯一的权威来源，每个 SDK 的协议类型都由它生成，而过去只存在于 TypeScript 客户端中的行为规则也已[成文](/spec/1.0)。这次的变更大多是增量式的。本页要讲的是例外——按 SDK 逐个说明你必须改动的地方，以及哪些东西无需改动即可继续工作。
 
-The protocol-level changes are listed in the specification's
-[Key Changes](/spec/1.0/changelog); this page does not repeat them, it says
-what each one means for code you already have.
+协议层面的变更已列在规范的[关键变更](/spec/1.0/changelog)中；本页不再重复，只说明每项变更对你现有代码意味着什么。
 
-## What keeps working
+## 哪些照常工作
 
-**A 0.x agent keeps working against a 1.0 client.** The TypeScript client
-carries an always-on compatibility boundary that translates the retired shapes
-it meets on an incoming stream — the five `THINKING_*` events become their
-`REASONING_*` equivalents, a legacy `binary` content part becomes the media part
-its media type names, and historically accepted whole optional `null` fields
-become absent before validation. Every inbound translation warns. These shims
-are recorded, with their replacements and their expiry, in
-[`DEPRECATIONS.md`](https://github.com/ag-ui-protocol/ag-ui/blob/main/DEPRECATIONS.md).
-Their expiry dates are provisional — twelve months from when each shim was
-written, re-dated at the 1.0 release if it slips — after which the retired
-shapes stop working entirely.
+**0.x 智能体（agent）对接 1.0 客户端时照常工作**。TypeScript 客户端内置了一层始终开启的兼容边界，它会翻译在入站流中遇到的已废弃形态——五个 `THINKING_*` 事件被转换为对应的 `REASONING_*` 事件，旧式 `binary` 内容部分（content part）被转换为按其媒体类型命名的媒体部分，而历史上被接受的整体可选 `null` 字段会在校验前被转为"字段缺失"。每一次入站翻译都会发出警告。这些垫片（shim）连同其替代方案与过期时间，都记录在 [`DEPRECATIONS.md`](https://github.com/ag-ui-protocol/ag-ui/blob/main/DEPRECATIONS.md) 中。过期时间是暂定的——从每个垫片写入时起算十二个月，若 1.0 发布延期则相应顺延——到期之后，这些已废弃的形态将完全停止工作。
 
-**A 1.0 agent keeps working against a 0.x client.** Everything 1.0 adds —
-`RUN_FINISHED.outcome`, the subagent events, `protocolVersion`, activity
-events — is optional or is a new event type, and a client from before the
-version field ignores what it does not know.
+**1.0 智能体对接 0.x 客户端时同样照常工作**。1.0 新增的一切——`RUN_FINISHED.outcome`、子智能体（subagent）事件、`protocolVersion`、活动（activity）事件——要么是可选的，要么是新的事件类型，而早于版本字段出现的客户端会忽略自己不认识的内容。
 
-**The wire is the same.** JSON over SSE and the protobuf binding are unchanged
-in framing. The field names you send today are the field names 1.0 reads,
-with the exceptions on this page.
+**线上格式不变**。基于 SSE 的 JSON 与 protobuf 绑定在帧结构上均未改变。你今天发送的字段名就是 1.0 读取的字段名，例外仅限本页所列。
 
 ---
 
-## Producers: declare your version
+## 生产者：声明你的版本
 
-A 1.0 producer MUST declare the protocol version it speaks on `RUN_STARTED`
-([Versioning](/spec/1.0/basic/versioning)). The field is optional in the
-schema, because its absence is how a pre-1.0 producer is recognised. That means
-no SDK adds it for you when you build the event yourself. Use the SDK's
-constant, never a hand-typed string, and never echo the version from
-`RunAgentInput.protocolVersion`: the declaration states the producer's own
-version.
+1.0 生产者必须在 `RUN_STARTED` 上声明自己所讲的协议版本（[版本管理](/spec/1.0/basic/versioning)）。该字段在 schema 中是可选的，因为"字段缺失"正是识别 1.0 之前生产者的方式。这意味着当你自行构造事件时，没有任何 SDK 会替你加上它。请使用 SDK 提供的常量，不要手写字符串，也不要回传来自 `RunAgentInput.protocolVersion` 的版本：这个声明描述的是生产者自己的版本。
 
-**Python:** pass `protocol_version` when you construct the event.
+**Python**：构造事件时传入 `protocol_version`。
 
 ```python
 from ag_ui.core import PROTOCOL_VERSION, RunStartedEvent
@@ -61,7 +33,7 @@ RunStartedEvent(
 )
 ```
 
-**TypeScript:** set `protocolVersion` on the `RUN_STARTED` object.
+**TypeScript**：在 `RUN_STARTED` 对象上设置 `protocolVersion`。
 
 ```ts
 import { EventType, PROTOCOL_VERSION, type RunStartedEvent } from "@ag-ui/core";
@@ -74,10 +46,7 @@ const runStarted: RunStartedEvent = {
 };
 ```
 
-**.NET:** `AGUI.Server` builds `RUN_STARTED` for you when it converts a
-`ChatResponseUpdate` stream, and that event carries `AGUIProtocol.Version`.
-There is nothing to add. If you emit your own `RunStartedEvent` (as an update's
-`RawRepresentation`), it passes through unchanged, so set the field yourself:
+**.NET**：`AGUI.Server` 在转换 `ChatResponseUpdate` 流时会替你构造 `RUN_STARTED`，该事件已携带 `AGUIProtocol.Version`，无需额外操作。如果你自己发出 `RunStartedEvent`（作为某个 update 的 `RawRepresentation`），它会原样通过，因此请自行设置该字段：
 
 ```csharp
 new RunStartedEvent
@@ -88,64 +57,27 @@ new RunStartedEvent
 };
 ```
 
-**Middlewares and proxies** that pass a producer's `RUN_STARTED` through must
-leave its `protocolVersion` untouched. Don't add one, overwrite it, or remove
-it. The declaration names what the stream speaks, so a forwarder reports the
-original producer's version. Only a layer that translates the stream into a
-different version declares the version it emits.
+**中间件与代理**在透传生产者的 `RUN_STARTED` 时，必须保持其 `protocolVersion` 原封不动：不要添加、覆盖或删除它。这个声明描述的是流本身所讲的版本，因此转发方上报的应是原始生产者的版本。只有把流翻译成不同版本的层，才声明它自己发出的版本。
 
 ---
 
 ## TypeScript
 
-The TypeScript SDK takes the most change of the three, because it is where the
-protocol's behaviour was previously defined.
+三个 SDK 中 TypeScript 的变化最大，因为协议的行为以前正是在这里定义的。
 
-### Omit whole optional null fields
+### 整体可选的 null 字段应直接省略
 
-Optional protocol fields must be absent instead of `null`, including `rawEvent`,
-`RUN_FINISHED.result`, and `forwardedProps`. `EventEncoder` and outgoing HTTP
-inputs omit these fields before transmission. Emit the canonical shape from
-in-memory agents too.
+可选的协议字段必须以"缺失"而非 `null` 的形式出现，包括 `rawEvent`、`RUN_FINISHED.result` 和 `forwardedProps`。`EventEncoder` 与外发的 HTTP 输入会在传输前省略这些字段。内存态智能体（in-memory agent）也应发出规范形态。
 
-Older producers remain compatible for a fixed set of whole optional `null`
-fields. Before validation, the client translates each to an absent field and
-warns once per field per run for `rawEvent` and `subagentRunId` on any event,
-`RUN_STARTED.parentRunId`, `RUN_STARTED.input`, `RUN_FINISHED.result`,
-`RUN_FINISHED.outcome.pendingToolCallIds`, `provider`, `reasoningTokens`,
-`cachedInputTokens` and `cacheWriteInputTokens` in `RUN_FINISHED.usage[]`,
-`RUN_ERROR.usage`, `SUBAGENT_FINISHED.result`, `TOOL_CALL_RESULT.role`,
-resume-entry `payload`, media-part `metadata` (`image`, `audio`, `video`,
-`document`), tool `parameters`, and `RunAgentInput.forwardedProps`. This applies
-to in-memory runs, reconnects, SSE, and protobuf, including messages and input
-echoes embedded in events. Subscribers receive the normalized event: for
-example, an old `RUN_FINISHED.result: null` becomes an absent result. This is
-client tolerance, not a protocol change: producers must still omit these
-fields.
+对于一组固定的整体可选 `null` 字段，旧生产者仍然兼容。校验之前，客户端会把每个这样的字段翻译为"字段缺失"，并按每次运行、每个字段各警告一次，涉及：任意事件上的 `rawEvent` 与 `subagentRunId`、`RUN_STARTED.parentRunId`、`RUN_STARTED.input`、`RUN_FINISHED.result`、`RUN_FINISHED.outcome.pendingToolCallIds`、`RUN_FINISHED.usage[]` 中的 `provider`、`reasoningTokens`、`cachedInputTokens` 与 `cacheWriteInputTokens`、`RUN_ERROR.usage`、`SUBAGENT_FINISHED.result`、`TOOL_CALL_RESULT.role`、resume 条目的 `payload`、媒体部分的 `metadata`（`image`、`audio`、`video`、`document`）、工具的 `parameters`，以及 `RunAgentInput.forwardedProps`。这适用于内存态运行、重连、SSE 与 protobuf，包括嵌入在事件中的消息与输入回显。订阅者收到的是规范化后的事件：例如旧式的 `RUN_FINISHED.result: null` 会变成缺失的 result。这是客户端的容错，而非协议变更：生产者仍然必须省略这些字段。
 
-Direct schema validation remains strict and does not invoke the client's event
-compatibility boundary. Request handlers accepting older `RunAgentInput` values
-must locally omit historically accepted optional nulls before calling
-`RunAgentInputSchema.parse`: `forwardedProps`, `tools[].parameters`,
-`resume[].payload`, and `metadata` on image/audio/video/document parts in
-`messages[].content[]`. Do not recursively strip nulls from application data or
-remove nulls from fields that already rejected them. CopilotKit's shared
-run/connect request parser handles this as a local compatibility exception;
-AG-UI does not expose a public request-normalization helper. The existing
-`RunAgentInput.state: null` parser tolerance still yields `undefined`.
+直接的 schema 校验保持严格，不会调用客户端的事件兼容边界。接受旧式 `RunAgentInput` 值的请求处理器，必须在调用 `RunAgentInputSchema.parse` 之前于本地省略那些历史上被接受的可选 null：`forwardedProps`、`tools[].parameters`、`resume[].payload`，以及 `messages[].content[]` 中 image/audio/video/document 部分上的 `metadata`。不要从应用数据里递归剥离 null，也不要从本来就已拒绝 null 的字段中移除 null。CopilotKit 的共享 run/connect 请求解析器把这一点作为本地兼容例外处理；AG-UI 不提供公开的请求规范化辅助函数。现有的 `RunAgentInput.state: null` 解析容错仍然会得到 `undefined`。
 
-This compatibility is limited to the fields listed above. Event or message
-`metadata: null` remains invalid, as do other optional nulls such as
-`TEXT_MESSAGE_START.name`, `RUN_ERROR.code`, `usage[].model`,
-`RunAgentInput.parentRunId`, and a `subagentRunId: null` nested in a message. Required JSON payloads
-such as `CUSTOM.value`, and null values inside state, metadata, or other
-application data, remain valid and are preserved.
+这种兼容仅限于上面列出的字段。事件或消息的 `metadata: null` 仍然无效，其他可选 null 亦然，例如 `TEXT_MESSAGE_START.name`、`RUN_ERROR.code`、`usage[].model`、`RunAgentInput.parentRunId`，以及嵌在消息里的 `subagentRunId: null`。`CUSTOM.value` 这类必需的 JSON 负载，以及 state、metadata 或其他应用数据内部的 null 值，仍然有效且会被保留。
 
-### zod is an optional peer dependency of `@ag-ui/core`
+### zod 是 `@ag-ui/core` 的可选 peer 依赖
 
-`@ag-ui/core`'s main entry is types and constants only and never loads zod.
-The validators live on a subpath, and importing them requires zod (`3.25.18`
-or newer, or any `4.x`):
+`@ag-ui/core` 的主入口只包含类型与常量，从不加载 zod。校验器位于一个子路径上，导入它们需要 zod（`3.25.18` 或更新版本，或任意 `4.x`）：
 
 ```ts
 // before
@@ -157,177 +89,82 @@ import { EventSchemas, UserMessageSchema } from "@ag-ui/core/schemas";
 ```
 
 ```bash
-npm install @ag-ui/core          # types only — nothing else to install
-npm install @ag-ui/core zod      # if you use the validators
+npm install @ag-ui/core          # 仅类型——无需安装其他内容
+npm install @ag-ui/core zod      # 如果你使用校验器
 ```
 
-Every validator moves, including the historic aliases (`EventSchemas`, the
-`*InputPartSchema` names, `OptionalMetadataSchema`) and the capability
-schemas. `@ag-ui/client` no longer re-exports them either — it re-exports
-core's main entry, and they are not on it. `@ag-ui/client` itself still
-needs zod, because its enforcement stage validates with it. It takes zod as a
-peer dependency (as do `@ag-ui/encoder` and `@ag-ui/proto`), so install zod
-alongside it:
+所有校验器都移动了，包括历史别名（`EventSchemas`、`*InputPartSchema` 系列名称、`OptionalMetadataSchema`）以及能力 schema。`@ag-ui/client` 也不再重新导出它们——它重新导出的是 core 的主入口，而这些校验器并不在其上。`@ag-ui/client` 自身仍然需要 zod，因为它的强制执行阶段要用它做校验。它把 zod 作为 peer 依赖（`@ag-ui/encoder` 与 `@ag-ui/proto` 也是如此），所以请一并安装 zod：
 
 ```bash
 npm install @ag-ui/client zod
 ```
 
-### Unknown material no longer reaches your code
+### 未知内容不再进入你的代码
 
-The client has one enforcement stage, after middleware, on every path. An
-event whose type nothing recognises is dropped with a warning. An unknown
-property on a known event is stripped with a warning naming its path. A
-*malformed* value on a field the protocol defines — a number where a string
-belongs — fails the run, as it always did.
+客户端在每条路径上都有一个强制执行阶段，位于中间件之后。类型无人识别的事件会被丢弃并发出警告；已知事件上的未知属性会被剔除，并发出指明其路径的警告；而协议定义字段上的*畸形*值——本该是字符串的地方出现了数字——则会让运行失败，这一直如此。
 
-If you were reading a non-standard property off an event in a subscriber, it
-is gone before the subscriber sees it. The sanctioned channel for extra data
-is `metadata`, which is open by key on every event and message and is never
-stripped.
+如果你过去在订阅者里从事件上读取某个非标准属性，它会在订阅者看到之前就被移除。附加数据的正规通道是 `metadata`——它在每个事件与消息上都按 key 开放，且永远不会被剔除。
 
-The same applies to what you send: unknown keys on `RunAgentInput` are
-stripped before transmission. The field that exists for exactly that purpose
-is `forwardedProps`, which carries any JSON to the agent untouched.
+你发送的内容同样如此：`RunAgentInput` 上的未知 key 会在传输前被剔除。正是为此目的而存在的字段是 `forwardedProps`，它会把任意 JSON 原封不动地带给智能体。
 
-### Behaviour that is stricter in 1.0
+### 1.0 中更严格的行为
 
-Two rules the client used to apply loosely, or on one path only, now apply
-everywhere. Each of them turns something that quietly succeeded into a run
-that fails.
+客户端过去执行得较为宽松、或只在单条路径上生效的两条规则，现在到处生效。它们中的每一条都会把原本悄悄成功的情况变成一次失败的运行。
 
-**Reasoning open/close discipline is verified.** A `REASONING_MESSAGE_CONTENT`
-or `REASONING_MESSAGE_END` naming a message nothing opened, a reasoning span
-closed without being opened, and a span or message still open when the run
-finishes all fail the run. Orphaned fragments and reopens were rejected for
-`THINKING_*` before 1.0; failing the run for a span or message left open at
-`RUN_FINISHED` is new, and matches what text messages and tool calls already
-did. Spans and reasoning messages are separate namespaces — unlike
-`THINKING_*`, a reasoning message does not have to sit inside a span, and a
-`REASONING_START` id does not open a reasoning message.
+**推理（reasoning）的开启/关闭纪律受到校验**。引用了一条无人开启的消息的 `REASONING_MESSAGE_CONTENT` 或 `REASONING_MESSAGE_END`、关闭了一个未曾开启的推理区段（span）、以及运行结束时仍未关闭的区段或消息，都会让运行失败。孤立片段与重复开启在 1.0 之前的 `THINKING_*` 上就已被拒绝；在 `RUN_FINISHED` 时因区段或消息仍处于开启状态而使运行失败则是新规则，与文本消息和工具调用已有的行为一致。区段与推理消息属于两个独立的命名空间——与 `THINKING_*` 不同，推理消息不必位于某个区段之内，而且 `REASONING_START` 的 id 并不会开启一条推理消息。
 
-**The enforcement guarantee holds on every path.** Unknown material is
-stripped *with* a warning and a malformed known value is fatal — and that is
-now true with middleware installed and over the protobuf binding, not only on
-the plain SSE path. Material that used to vanish silently on those paths —
-an unrecognised property on a chunk expanded inside a middleware chain, an
-unknown message role or patch operation crossing the protobuf decoder — now
-rides through to enforcement and is reported where it is dropped.
+**强制执行保证在每条路径上都成立**。未知内容会被剔除并*附带*警告，已知字段的畸形值则是致命错误——如今在安装了中间件的情况下、在 protobuf 绑定上也如此，而不再只在纯 SSE 路径上成立。过去在那些路径上会无声消失的内容——中间件链内展开的 chunk 上未被识别的属性、穿过 protobuf 解码器的未知消息角色或 patch 操作——现在会一路送到强制执行阶段，并在被剔除之处得到报告。
 
-**`RUN_ERROR` is unchanged, and that is deliberate.** A producer-sent
-`RUN_ERROR` is a well-formed stream — an agent honestly reporting that its run
-failed is not a protocol violation — so the client accepts it: the event is
-delivered to `onRunErrorEvent`, the stream continues, and `runAgent()`
-resolves, exactly as in 0.x. A `RUN_STARTED` after a `RUN_ERROR` begins a new
-run in the same stream, and everything that run produces is applied. If you
-need a rejected promise when a run reports its own failure, raise it from your
-own `onRunErrorEvent` subscriber; the client will not do it for you.
+**`RUN_ERROR` 保持不变，这是有意为之**。由生产者发出的 `RUN_ERROR` 属于格式良好的流——智能体如实报告自己的运行失败并不是协议违规——因此客户端会接受它：事件被投递给 `onRunErrorEvent`，流继续，`runAgent()` 正常 resolve，与 0.x 完全一致。`RUN_ERROR` 之后出现的 `RUN_STARTED` 会在同一条流中开启新的运行，该运行产生的一切都会被应用。如果你需要在运行报告自身失败时得到一个 rejected promise，请在你自己的 `onRunErrorEvent` 订阅者里抛出；客户端不会替你这么做。
 
-### Retired from the public API
+### 从公开 API 中移除
 
-- The five `THINKING_*` events — enum members, types, schemas, factories.
-  Emit `REASONING_*`; incoming `THINKING_*` streams are still translated by
-  the boundary above.
-- `BinaryInputContent` (`{ type: "binary" }`). Use the media parts — `image`,
-  `audio`, `video`, `document` — with a `source`. Incoming legacy parts are
-  still translated.
-- `stripUnknown` and `StripResult` from `@ag-ui/client`. They were the
-  enforcement stage's internals.
+- 五个 `THINKING_*` 事件——枚举成员、类型、schema 与工厂函数。请改发 `REASONING_*`；入站的 `THINKING_*` 流仍会由上述兼容边界翻译。
+- `BinaryInputContent`（`{ type: "binary" }`）。请改用带 `source` 的媒体部分——`image`、`audio`、`video`、`document`。入站的旧式部分仍会被翻译。
+- `@ag-ui/client` 的 `stripUnknown` 与 `StripResult`。它们原本是强制执行阶段的内部实现。
 
-### Renames and type changes
+### 重命名与类型变更
 
-- `SubAgentInfo` → `SubagentInfo`, and `multiAgent.subAgents` → `subagents`
-  on `AgentCapabilities`. The wire key changes with it and there is no alias:
-  a declaration still carrying `subAgents` has that key treated as unknown.
-  The protocol spells the word as one everywhere (`subagentRunId`).
-- `RunAgentInput.tools` and `.context` are non-optional on the TypeScript
-  type. Absent on the wire still means empty; the SDK presents it as `[]` so
-  nothing downstream has to narrow.
-- `AbstractAgent.maxVersion` is deprecated in favour of `maxProtocolVersion`.
-  An override of the old name still works and warns once per process.
-- The content parts are named by what they are, not by direction:
-  `InputContent` → `ContentPart`, `TextInputContent` → `TextPart`,
-  `ImageInputContent` → `ImagePart` (audio, video, document alike),
-  `InputContentSource` → `PartSource`, `InputContentDataSource` →
-  `DataSource`, `InputContentUrlSource` → `UrlSource`, with the matching
-  `...Schema` validators. The old names are exported as deprecated aliases of
-  the same types and validators, so nothing breaks; the wire `type` values are
-  unchanged.
-- `PartSource` has a third arm, `FileSource` (`type: "file"`): a handle the
-  model provider issued for bytes already uploaded to it. Code that switches
-  exhaustively on `source.type` needs a case for it. Never treat its `value`
-  as a URL; if your agent cannot hand the handle to its provider, skip the
-  part with a warning, as for any part the model cannot take.
-- `ToolMessage.content` and `ToolCallResultEvent.content` are
-  `string | ContentPart[]`, as `UserMessage.content` already was. Code that
-  passed a tool result straight into a string slot narrows it first;
-  `contentToText()` from `@ag-ui/core` gives the text parts concatenated and
-  `contentHasMedia()` says whether that flattening would lose anything. The
-  legacy `ActionExecutionResult` bridge flattens this way and warns.
-- Every content part has an optional `id`, and `TextPart` has the optional
-  `metadata` the media parts already had.
-- `execution.maxIterations` and `maxExecutionTime` on capabilities validate as
-  non-negative integers within JavaScript's safe range.
+- `SubAgentInfo` → `SubagentInfo`，以及 `AgentCapabilities` 上的 `multiAgent.subAgents` → `subagents`。线上 key 随之改变且没有别名：仍带有 `subAgents` 的声明会把该 key 当作未知处理。协议在所有地方都把这个词写作一个单词（`subagentRunId`）。
+- 在 TypeScript 类型上，`RunAgentInput.tools` 与 `.context` 不再可选。线上缺失仍然表示为空；SDK 会把它呈现为 `[]`，下游无需再做收窄。
+- `AbstractAgent.maxVersion` 已弃用，推荐使用 `maxProtocolVersion`。对旧名称的覆写仍然有效，并会在每个进程内警告一次。
+- 内容部分以"它是什么"命名，而不是以方向命名：`InputContent` → `ContentPart`、`TextInputContent` → `TextPart`、`ImageInputContent` → `ImagePart`（audio、video、document 同理）、`InputContentSource` → `PartSource`、`InputContentDataSource` → `DataSource`、`InputContentUrlSource` → `UrlSource`，对应的 `...Schema` 校验器一并更名。旧名称仍作为同一类型与校验器的弃用别名导出，因此不会有东西损坏；线上 `type` 值不变。
+- `PartSource` 增加了第三个分支 `FileSource`（`type: "file"`）：模型提供方为已上传到它那里的字节颁发的句柄。对 `source.type` 做穷尽 switch 的代码需要为它补一个分支。永远不要把它的 `value` 当作 URL；如果你的智能体无法把句柄交给它的提供方，就跳过该部分并发出警告，与模型无法处理的任何部分一样。
+- `ToolMessage.content` 与 `ToolCallResultEvent.content` 变为 `string | ContentPart[]`，正如 `UserMessage.content` 一向如此。过去把工具结果直接塞进字符串槽位的代码需要先做收窄；`@ag-ui/core` 的 `contentToText()` 会把文本部分拼接起来，`contentHasMedia()` 则告诉你这种展平是否会丢失内容。旧式 `ActionExecutionResult` 桥接层就是这样展平的，并且会发出警告。
+- 每个内容部分都有一个可选的 `id`，而 `TextPart` 拥有媒体部分早已具备的可选 `metadata`。
+- 能力（capabilities）上的 `execution.maxIterations` 与 `maxExecutionTime` 会按 JavaScript 安全整数范围内的非负整数进行校验。
 
-### New, and worth knowing
+### 新增内容与值得了解的点
 
-The client declares `protocolVersion: "1.0"` on every `RunAgentInput` and
-reads the producer's answer on `RUN_STARTED`, warning when a producer speaks
-a newer or uninterpretable version. Pinning `maxProtocolVersion` below this
-client package's own version omits the field, for a peer whose parser would
-reject an unknown member.
+客户端会在每个 `RunAgentInput` 上声明 `protocolVersion: "1.0"`，并在 `RUN_STARTED` 上读取生产者的应答，当生产者讲的是更新或无法解读的版本时发出警告。把 `maxProtocolVersion` 钉在低于本客户端包自身版本的值会省略该字段，以兼容解析器会拒绝未知成员的对端。
 
-Protobuf decoding merges repeated occurrences of a singular message field,
-including nested messages, metadata, and run inputs. Later scalar values win,
-repeated list entries append in order, and an omitted field preserves its
-earlier value. TypeScript and .NET follow the same protobuf merging rules.
+protobuf 解码会合并单一消息字段的重复出现，包括嵌套消息、元数据与运行输入。标量值以后出现者为准，列表条目按顺序追加，被省略的字段保留其先前的值。TypeScript 与 .NET 遵循相同的 protobuf 合并规则。
 
 ---
 
 ## Python
 
-The Python SDK is producer-side: it defines the shapes an agent emits. The
-changes are narrower, and one of them affects anyone parsing its output.
+Python SDK 位于生产者一侧：它定义智能体发出的形态。变更范围更窄，但其中一项会影响所有解析其输出的代码。
 
-### Absent fields are omitted, never `null`
+### 缺失字段直接省略，绝不写 `null`
 
-A field with no value is left out of the JSON rather than written as `null`.
-This shipped ahead of 1.0, in `ag-ui-protocol` 0.1.20, so it is only a
-migration step if you are coming from earlier than that — but it is the change
-most likely to affect anything that parses an agent's output. A reader doing
-`if payload["parentMessageId"] is None` or the equivalent needs
-`"parentMessageId" not in payload`. A `null` that *is* a value — under a
-metadata key, inside a state snapshot, a JSON Patch `add` of `null` — is
-preserved exactly; only a `null` standing in for a whole absent field is gone.
+没有值的字段会从 JSON 中省略，而不是写成 `null`。这一点在 1.0 之前的 `ag-ui-protocol` 0.1.20 中就已落地，因此只有当你从更早版本迁移时它才构成一个迁移步骤——但它是最可能影响任何解析智能体输出的代码的变更。原来写 `if payload["parentMessageId"] is None` 或等价写法的读取方，需要改成 `"parentMessageId" not in payload`。*确实是值*的 `null`——位于 metadata key 之下、state 快照内部、JSON Patch 对 `null` 的 `add`——会被原样保留；只有代替整个缺失字段的 `null` 才会消失。
 
-### Generated models replace the hand-written ones
+### 生成的模型取代手写模型
 
-`ag_ui.core` keeps every name it exported except the ones retired and renamed
-below, now re-exported from the generated source, and construction is
-unchanged: snake_case keyword arguments, aliases on the wire. Three behaviours
-differ:
+`ag_ui.core` 保留了它曾导出的所有名称（下文移除与更名的除外），现在从生成的源码重新导出，构造方式不变：snake_case 关键字参数、线上使用别名。有三处行为不同：
 
-- Single-value literals (`type`, a fixed `role`) default to their only legal
-  value; you no longer spell them.
-- Fields with schema defaults (`role` on a text message, `replace` on a
-  patch) parse to `None` when absent rather than to a materialised default.
-- JSON Patch operations parse to typed operation models. The wire form is
-  identical.
+- 单值字面量（`type`、固定的 `role`）默认取其唯一合法值；你不必再显式写出它们。
+- 带 schema 默认值的字段（文本消息上的 `role`、patch 上的 `replace`）在缺失时解析为 `None`，而不是物化出默认值。
+- JSON Patch 操作会解析为带类型的操作模型。线上形式完全相同。
 
-Validation stays as tolerant as it was: unknown keys are kept, pydantic's
-default coercion applies. The strict contract is the specification's
-[fixture corpus](/spec/1.0/schema-files), not the SDK models.
+校验仍然像过去一样宽容：未知 key 会被保留，pydantic 的默认类型强转照常生效。严格的契约是规范的[测试样例库（fixture corpus）](/spec/1.0/schema-files)，而不是 SDK 模型。
 
-### Read JSON Patch entries as objects
+### 把 JSON Patch 条目当作对象来读
 
-Entries in `StateDeltaEvent.delta` and `ActivityDeltaEvent.patch` are typed
-operation models, even when you construct the event with dictionaries. Replace
-dictionary reads such as `patch["path"]` and `patch.get("op")` with `patch.path`
-and `patch.op`. The JSON sent over the wire is unchanged.
+`StateDeltaEvent.delta` 与 `ActivityDeltaEvent.patch` 中的条目是带类型的操作模型，即使你是用字典构造的事件。请把 `patch["path"]`、`patch.get("op")` 这类字典读取替换为 `patch.path` 与 `patch.op`。线上发送的 JSON 不变。
 
-If a patch library or other existing code needs dictionaries, convert each
-operation with `model_dump(by_alias=True)`. Keeping aliases enabled preserves
-wire keys such as `from` on move and copy operations.
+如果某个 patch 库或其他现有代码需要字典，可用 `model_dump(by_alias=True)` 转换每个操作。保持别名启用可以保留 move 与 copy 操作上线上的 `from` 这类 key。
 
 ```python
 from ag_ui.core import StateDeltaEvent
@@ -341,135 +178,59 @@ patches = [operation.model_dump(by_alias=True) for operation in event.delta]
 assert patches == [{"op": "replace", "path": "/count", "value": 1}]
 ```
 
-An adapter that supports both older SDK dictionaries and 1.0 models can keep a
-dictionary entry as-is and call `model_dump(by_alias=True)` only when the entry
-is a model.
+同时支持旧版 SDK 字典与 1.0 模型的适配器，可以把字典条目原样保留，只在条目是模型时才调用 `model_dump(by_alias=True)`。
 
-### Retired
+### 已移除
 
-- `MetadataMixin`, from `ag_ui.core`, `ag_ui.core.types`, and
-  `ag_ui.core.events`. Generated protocol models already carry their metadata
-  fields, so the separate helper is no longer exported. Remove the import;
-  for a custom model that inherited it, inherit `ConfiguredBaseModel` from
-  `ag_ui.core.types` and declare `metadata: Optional[Metadata] = None`, importing
-  `Optional` from `typing` and `Metadata` from `ag_ui.core`.
-- The `THINKING_*` events. Emit `REASONING_*`. There is no producer-side
-  shim; the TypeScript client translates old streams on its side.
-- `BinaryInputContent` as a *part*: `ContentPart` has no `binary` member, and
-  a message carrying one is rejected at `RunAgentInput` validation. The class
-  itself stays importable from `ag_ui.core` for one release (see
-  `DEPRECATIONS.md`), so an adapter written against 0.x still imports and its
-  legacy branch simply never runs; the SDK never constructs one. Use the
-  media parts.
+- `MetadataMixin`，来自 `ag_ui.core`、`ag_ui.core.types` 与 `ag_ui.core.events`。生成的协议模型已自带 metadata 字段，因此这个独立的辅助类不再导出。请移除相应的 import；对于继承过它的自定义模型，改为继承 `ag_ui.core.types` 的 `ConfiguredBaseModel`，并声明 `metadata: Optional[Metadata] = None`（从 `typing` 导入 `Optional`，从 `ag_ui.core` 导入 `Metadata`）。
+- `THINKING_*` 事件。请改发 `REASONING_*`。生产者侧没有垫片；TypeScript 客户端会在它那一侧翻译旧流。
+- 作为*部分*的 `BinaryInputContent`：`ContentPart` 没有 `binary` 成员，携带它的消息会在 `RunAgentInput` 校验时被拒绝。类本身在接下来的一个版本内仍可从 `ag_ui.core` 导入（见 `DEPRECATIONS.md`），因此面向 0.x 编写的适配器仍能导入，其旧式分支只是永远不会运行；SDK 从不构造这种对象。请使用媒体部分。
 
-### Renamed
+### 已重命名
 
-- `SubAgentInfo` → `SubagentInfo`; `MultiAgentCapabilities.sub_agents` →
-  `subagents` (wire key `subagents`). `SubAgentInfo` remains exported as an
-  alias of the same class for one release; the old field and wire key do not.
-- `ExecutionCapabilities.max_iterations` and `max_execution_time` now reject
-  negative values.
-- The content parts are named by what they are, not by direction:
-  `InputContent` → `ContentPart`, `TextInputContent` → `TextPart`,
-  `ImageInputContent` → `ImagePart` (audio, video, document alike),
-  `InputContentSource` → `PartSource`, `InputContentDataSource` →
-  `DataSource`, `InputContentUrlSource` → `UrlSource`. The old names remain
-  exported from `ag_ui.core` as aliases of the same classes.
-- `PartSource` has a third arm, `FileSource` (`type="file"`): a handle the
-  model provider issued for bytes already uploaded to it. Code that branches on
-  the source class needs a case for it. Never treat its `value` as a URL; if
-  your agent cannot hand the handle to its provider, skip the part with a
-  warning, as for any part the model cannot take.
-- `ToolMessage.content` and `ToolCallResultEvent.content` are
-  `Union[str, List[ContentPart]]`, as `UserMessage.content` already was. Code
-  that treated a tool result as `str` narrows it first. Every part has an
-  optional `id`, and `TextPart` has the optional `metadata` the media parts
-  already had.
+- `SubAgentInfo` → `SubagentInfo`；`MultiAgentCapabilities.sub_agents` → `subagents`（线上 key 为 `subagents`）。`SubAgentInfo` 在一个版本内仍作为同一类的别名导出；旧字段名与线上 key 则不然。
+- `ExecutionCapabilities.max_iterations` 与 `max_execution_time` 现在会拒绝负值。
+- 内容部分以"它是什么"命名，而不是以方向命名：`InputContent` → `ContentPart`、`TextInputContent` → `TextPart`、`ImageInputContent` → `ImagePart`（audio、video、document 同理）、`InputContentSource` → `PartSource`、`InputContentDataSource` → `DataSource`、`InputContentUrlSource` → `UrlSource`。旧名称仍从 `ag_ui.core` 导出，作为同一类的别名。
+- `PartSource` 增加了第三个分支 `FileSource`（`type="file"`）：模型提供方为已上传到它那里的字节颁发的句柄。按来源类做分支的代码需要为它补一个分支。永远不要把它的 `value` 当作 URL；如果你的智能体无法把句柄交给它的提供方，就跳过该部分并发出警告，与模型无法处理的任何部分一样。
+- `ToolMessage.content` 与 `ToolCallResultEvent.content` 变为 `Union[str, List[ContentPart]]`，正如 `UserMessage.content` 一向如此。过去把工具结果当作 `str` 的代码需要先做收窄。每个部分都有可选的 `id`，`TextPart` 拥有媒体部分早已具备的可选 `metadata`。
 
 ---
 
 ## .NET
 
-The .NET SDK jumps furthest, because it was the last still hand-writing its
-protocol types and because it gains a feature the other two already had.
+.NET SDK 的跨越最大：它是最后一个仍在手写协议类型的 SDK，同时也是最后获得另外两个早已具备的特性的一个。
 
-### Generated models replace ~60 hand-written classes
+### 生成的模型取代约 60 个手写类
 
-The surface a consumer sees is the one it saw before, minus what the schema
-retired: the same sealed classes, the same `[JsonPropertyName]` wire names,
-absent members omitted on write. .NET's tolerance of unrecognised material is
-unchanged — an unknown property is skipped, as `System.Text.Json` has always
-done — so nobody should expect a strictness that is not there.
+消费者看到的接口面与过去一致，只是少了 schema 移除的部分：同样的 sealed 类、同样的 `[JsonPropertyName]` 线上名称、写入时省略缺失成员。.NET 对无法识别内容的容忍度不变——未知属性会被跳过，`System.Text.Json` 一向如此——因此不要指望并不存在的严格性。
 
-One behaviour is more tolerant than before: an event *type* the SDK has no
-model for is now skipped with a trace warning by both stream readers, rather
-than ending the stream. Decoding a single unknown event on its own still
-throws `AGUIUnknownEventTypeException`.
+有一处行为比过去更宽容：SDK 没有对应模型的事件*类型*，如今会被两个流读取器跳过并记录一条 trace 警告，而不是终止流。单独解码一个未知事件仍会抛出 `AGUIUnknownEventTypeException`。
 
-### Subagents
+### 子智能体
 
-`SUBAGENT_STARTED`, `SUBAGENT_FINISHED` and `SUBAGENT_ERROR` have models,
-JSON handling and protobuf mappers. `SubagentRunId` is a property on the
-events that can carry attribution — not on the base event — so a consumer
-that switches on event type reads it from the concrete type. The
-[subagent rules](/spec/1.0/events/subagents) say what a consumer must do
-with it.
+`SUBAGENT_STARTED`、`SUBAGENT_FINISHED` 与 `SUBAGENT_ERROR` 都有模型、JSON 处理与 protobuf 映射。`SubagentRunId` 是可携带归因信息的事件上的属性——而不是基类事件上的属性——因此按事件类型做 switch 的消费者要从具体类型上读取它。[子智能体规则](/spec/1.0/events/subagents)说明了消费者必须如何处理它。
 
-### Retired
+### 已移除
 
-- `AGUIBinaryInputContent`, its type constant, and its converter arms. A
-  `DataContent` or `UriContent` crossing the Microsoft.Extensions.AI boundary
-  becomes the media part its media type names, filename in the part's
-  metadata. .NET has no middleware layer and nothing translates an incoming
-  legacy part: a `{ "type": "binary" }` part is an unknown discriminator, and
-  the converter throws a `JsonException` that fails deserialisation of the
-  whole message — and of the snapshot or run input carrying it. A producer
-  still emitting the legacy part must be upgraded before a 1.0 .NET consumer
-  can read it.
+- `AGUIBinaryInputContent`、它的类型常量以及转换器的对应分支。跨越 Microsoft.Extensions.AI 边界的 `DataContent` 或 `UriContent` 会变成按其媒体类型命名的媒体部分，文件名保存在该部分的 metadata 中。.NET 没有中间件层，也没有任何东西翻译入站的旧式部分：`{ "type": "binary" }` 部分是一个未知的 discriminator，转换器会抛出 `JsonException`，导致整条消息——以及携带它的快照或运行输入——反序列化失败。仍在发送旧式部分的生产者必须先升级，1.0 的 .NET 消费者才能读取它。
 
-### Renames and type changes
+### 重命名与类型变更
 
-- `SubAgentInfo` → `SubagentInfo`; `MultiAgentCapabilities.SubAgents` →
-  `Subagents` (wire key `subagents`). No alias; the old key is skipped.
-- `AgentCapabilities.Custom` and `IdentityCapabilities.Metadata` are
-  `JsonElement?` rather than `IDictionary<string, object?>?`. Build them with
-  `JsonSerializer.SerializeToElement(...)`.
-- `ExecutionCapabilities.MaxIterations` and `MaxExecutionTime` are `long?`
-  rather than `int?`.
-- `Tool.Parameters` and `RunAgentInput.ForwardedProperties` (wire key
-  `forwardedProps`) are nullable `JsonElement?`, as the schema says; a
-  message's `Id` is a non-nullable string that is always written.
-- `AGUIUserContent` → `AGUIContent`: the string-or-parts union is no longer
-  the user message's alone. `AGUIToolMessage.Content` and
-  `ToolCallResultEvent.Content` are `AGUIContent` rather than `string`; a
-  string still assigns implicitly, and reading one back is
-  `Content.Value as string` or a walk over its parts. The part classes keep
-  their `AGUI...InputContent` names even though the schema renamed them to
-  `...Part`. Every part has an optional `Id`, and `AGUITextInputContent` has
-  the optional `Metadata` the media parts already had.
-- `AGUIInputContentSource` has a third subclass, `AGUIInputContentFileSource`
-  (`type: "file"`, constant `AGUIInputContentSourceTypes.File`): a handle the
-  model provider issued for bytes already uploaded to it, with optional
-  `Provider` and `MimeType`. A `switch` over the source hierarchy needs a case
-  for it. Never treat its `Value` as a URL; if your agent cannot hand the
-  handle to its provider, skip the part with a warning, as for any part the
-  model cannot take.
+- `SubAgentInfo` → `SubagentInfo`；`MultiAgentCapabilities.SubAgents` → `Subagents`（线上 key 为 `subagents`）。没有别名；旧 key 会被跳过。
+- `AgentCapabilities.Custom` 与 `IdentityCapabilities.Metadata` 的类型是 `JsonElement?` 而非 `IDictionary<string, object?>?`。请用 `JsonSerializer.SerializeToElement(...)` 构造它们。
+- `ExecutionCapabilities.MaxIterations` 与 `MaxExecutionTime` 的类型是 `long?` 而非 `int?`。
+- `Tool.Parameters` 与 `RunAgentInput.ForwardedProperties`（线上 key 为 `forwardedProps`）按 schema 所述是可空的 `JsonElement?`；消息的 `Id` 是非可空字符串，并且总是会被写入。
+- `AGUIUserContent` → `AGUIContent`："字符串或部分"的联合类型不再为用户消息所独有。`AGUIToolMessage.Content` 与 `ToolCallResultEvent.Content` 的类型是 `AGUIContent` 而非 `string`；字符串仍可隐式赋值，读回时用 `Content.Value as string` 或遍历其各部分。部分类仍保留 `AGUI...InputContent` 名称，尽管 schema 已把它们更名为 `...Part`。每个部分都有可选的 `Id`，`AGUITextInputContent` 拥有媒体部分早已具备的可选 `Metadata`。
+- `AGUIInputContentSource` 增加了第三个子类 `AGUIInputContentFileSource`（`type: "file"`，常量 `AGUIInputContentSourceTypes.File`）：模型提供方为已上传到它那里的字节颁发的句柄，带有可选的 `Provider` 与 `MimeType`。对来源层次做 `switch` 的代码需要为它补一个分支。永远不要把它的 `Value` 当作 URL；如果你的智能体无法把句柄交给它的提供方，就跳过该部分并发出警告，与模型无法处理的任何部分一样。
 
 ### AOT
 
-The source-generated serializer context is the only resolver under
-ahead-of-time compilation. Tool results are serialized by their runtime type,
-and a result of a type the context does not register throws
-`NotSupportedException`. `int` is registered explicitly in 1.0 — it had
-previously been present only by accident.
+在提前编译（AOT）下，源生成的序列化器上下文是唯一的 resolver。工具结果按其运行时类型序列化，上下文未注册的类型的结果会抛出 `NotSupportedException`。`int` 在 1.0 中已显式注册——以前它只是碰巧存在。
 
 ---
 
-## Where to look next
+## 接下来看哪里
 
-- The [Key Changes](/spec/1.0/changelog) page for the protocol-level
-  differences, with links into the specification.
-- [Capabilities](/spec/1.0/basic/capabilities) for what a declaration
-  obliges now that it is specified.
-- [Versioning and compatibility](/spec/1.0/basic/versioning) for how a
-  1.0 peer talks to an older one.
+- [关键变更](/spec/1.0/changelog)页面：协议层面的差异，附有进入规范的链接。
+- [能力](/spec/1.0/basic/capabilities)：声明被规范化之后，它意味着哪些义务。
+- [版本管理与兼容性](/spec/1.0/basic/versioning)：1.0 的对端如何与旧版本对端通信。

@@ -1,23 +1,17 @@
 ---
-title: "Messages"
-description: "Understanding message structure and communication in AG-UI"
+title: "消息"
+description: "理解 AG-UI 中的消息结构与通信方式"
 ---
 
-# Messages
+# 消息
 
-Messages form the backbone of communication in the AG-UI protocol. They
-represent the conversation history between users and AI agents, and provide a
-standardized way to exchange information regardless of the underlying AI service
-being used.
+消息构成了 AG-UI 协议中通信的主干。它们承载用户与 AI 智能体之间的对话历史，并提供一种标准化的信息交换方式——无论底层使用的是哪家 AI 服务。
 
-## Message Structure
+## 消息结构
 
-AG-UI messages follow a vendor-neutral format, ensuring compatibility across
-different AI providers while maintaining a consistent structure. This allows
-applications to switch between AI services (like OpenAI, Anthropic, or custom
-models) without changing the client-side implementation.
+AG-UI 消息采用供应商中立的格式，在保持结构一致的同时，兼容不同的 AI 提供方。应用因此可以在不同 AI 服务（如 OpenAI、Anthropic 或自定义模型）之间切换，而无需改动客户端侧的实现。
 
-The basic message structure includes:
+基本的消息结构如下：
 
 ```typescript
 interface BaseMessage {
@@ -30,27 +24,19 @@ interface BaseMessage {
 }
 ```
 
-The `role` discriminator can be `"user"`, `"assistant"`, `"system"`, `"tool"`,
-`"developer"`, `"activity"`, or `"reasoning"`. Concrete message types extend
-this shape with the fields they need.
+`role` 判别字段可以取 `"user"`、`"assistant"`、`"system"`、`"tool"`、`"developer"`、`"activity"` 或 `"reasoning"`。具体的消息类型在这个基本形态上扩展各自需要的字段。
 
-Every message type carries `metadata`, an optional open-by-key object that
-accumulates as the message is built from its events. Tool calls carry one of
-their own. See [Metadata](/concepts/metadata) for the rules.
+每种消息类型都携带 `metadata`——一个按键开放的可选对象，随消息由事件逐步构建而累积。工具调用也携带自己的元数据。规则见[元数据](/concepts/metadata)。
 
-> The `encryptedContent` field enables privacy-preserving workflows where
-> sensitive content (such as reasoning chains) can be passed across turns
-> without exposing the raw content. This is particularly useful for zero data
-> retention (ZDR) compliance and `store:false` scenarios.
+> `encryptedContent` 字段支撑保护隐私的工作流：敏感内容（如推理链）可以在多轮之间传递而不暴露原始内容。这对零数据保留（ZDR）合规和 `store:false` 场景尤其有用。
 
-## Message Types
+## 消息类型
 
-AG-UI supports several message types to accommodate different participants in a
-conversation:
+AG-UI 支持多种消息类型，以覆盖对话中的不同参与者：
 
-### User Messages
+### 用户消息
 
-Messages from the end user to the agent:
+从终端用户发给智能体的消息：
 
 ```typescript
 interface UserMessage {
@@ -118,15 +104,13 @@ interface DocumentPart {
 }
 ```
 
-> In Python, the previous `BinaryInputContent` model is deprecated and remains
-> temporarily available as a compatibility path.
+> 在 Python 中，先前的 `BinaryInputContent` 模型已废弃，作为兼容路径暂时仍可使用。
 
-This structure keeps traditional plain-text inputs working while enabling richer
-payloads such as images, audio clips, or uploaded files in the same message.
+这一结构让传统的纯文本输入照常可用，同时支持在同一消息中携带更丰富的负载，例如图片、音频片段或上传的文件。
 
-### Assistant Messages
+### 助手消息
 
-Messages from the AI assistant to the user:
+从 AI 助手发给用户的消息：
 
 ```typescript
 interface AssistantMessage {
@@ -139,9 +123,9 @@ interface AssistantMessage {
 }
 ```
 
-### System Messages
+### 系统消息
 
-Instructions or context provided to the agent:
+提供给智能体的指令或上下文：
 
 ```typescript
 interface SystemMessage {
@@ -152,9 +136,9 @@ interface SystemMessage {
 }
 ```
 
-### Tool Messages
+### 工具消息
 
-Results from tool executions:
+工具执行产生的结果：
 
 ```typescript
 interface ToolMessage {
@@ -167,17 +151,15 @@ interface ToolMessage {
 }
 ```
 
-Key points:
+要点：
 
-- The `toolCallId` links the result back to the original tool call
-- Use `error` to indicate tool execution failures
-- Use `encryptedValue` to attach encrypted chain-of-thought related to how the
-  agent interpreted or processed the tool result
+- `toolCallId` 把结果关联回最初的工具调用
+- 用 `error` 表示工具执行失败
+- 用 `encryptedValue` 附加加密的思维链，记录智能体如何解读或处理该工具结果
 
-### Activity Messages
+### 活动消息
 
-Structured UI messages that exist only on the frontend.  Used for progress,
-status, or any custom visual element that shouldn’t be sent to the model:
+只存在于前端的结构化 UI 消息。用于进度、状态，或任何不应发送给模型的自定义视觉元素：
 
 ```typescript
 interface ActivityMessage {
@@ -188,21 +170,17 @@ interface ActivityMessage {
 }
 ```
 
-Key points
+要点
 
-- Emitted via `ACTIVITY_SNAPSHOT` and `ACTIVITY_DELTA` to support live,
-  updateable UI (checklists, steps, search-in-progress, etc.).
-- **Frontend-only:** never forwarded to the agent, so no filtering and no LLM
-  confusion.
-- **Customizable:** define your own `activityType` and `content` and render a
-  matching UI component.
-- **Streamable:** can be updated over time for long-running operations.
-- Helps persist/restore custom events by turning them into durable message
-  objects.
+- 通过 `ACTIVITY_SNAPSHOT` 和 `ACTIVITY_DELTA` 发出，支持实时、可更新的 UI（清单、步骤、搜索进行中等）。
+- **仅限前端**：绝不转发给智能体，因此无需过滤，也不会让 LLM 困惑。
+- **可定制**：自定义 `activityType` 与 `content`，并渲染配套的 UI 组件。
+- **可流式更新**：对长时间运行的操作可以随时间持续更新。
+- 通过把自定义事件转化为可持久保存的消息对象，帮助实现持久化/恢复。
 
-### Developer Messages
+### 开发者消息
 
-Internal messages used for development or debugging:
+用于开发或调试的内部消息：
 
 ```typescript
 interface DeveloperMessage {
@@ -213,10 +191,9 @@ interface DeveloperMessage {
 }
 ```
 
-### Reasoning Messages
+### 推理消息
 
-Messages representing the agent's internal reasoning or chain-of-thought
-process:
+表示智能体内部推理或思维链过程的消息：
 
 ```typescript
 interface ReasoningMessage {
@@ -228,33 +205,23 @@ interface ReasoningMessage {
 ```
 
 <Tip>
-  Unlike Activity messages, Reasoning messages are intended to represent the
-  agent's internal thought process and may be encrypted for privacy and are
-  meant to be sent back to the agent for further processing on subsequent turns.
+  与活动消息不同，推理消息用来表示智能体的内部思考过程，可以出于隐私考虑加密，并且会在后续轮次回传给智能体做进一步处理。
 </Tip>
 
-Key points:
+要点：
 
-- Emitted via `REASONING_MESSAGE_START`, `REASONING_MESSAGE_CONTENT`, and
-  `REASONING_MESSAGE_END` events.
-- **Visibility control:** Content may be visible to users (as a summary) or
-  fully encrypted.
-- **Encrypted values:** Use `REASONING_ENCRYPTED_VALUE` events to attach
-  encrypted chain-of-thought to messages or tool calls without exposing content.
-- **State continuity:** Encrypted reasoning items can be passed across
-  conversation turns without exposing raw chain-of-thought.
-- **Privacy-first:** Supports `store:false` and zero data retention (ZDR)
-  policies while preserving reasoning capabilities.
-- **Separate from assistant messages:** Reasoning is kept distinct from final
-  responses to avoid polluting the conversation history.
+- 通过 `REASONING_MESSAGE_START`、`REASONING_MESSAGE_CONTENT` 和 `REASONING_MESSAGE_END` 事件发出。
+- **可见性控制**：内容可以对用户可见（作为摘要），也可以完全加密。
+- **加密值**：用 `REASONING_ENCRYPTED_VALUE` 事件把加密的思维链附加到消息或工具调用上，而不暴露内容。
+- **状态延续**：加密的推理条目可以在多轮对话之间传递，而不暴露原始思维链。
+- **隐私优先**：在保留推理能力的同时，支持 `store:false` 与零数据保留（ZDR）策略。
+- **与助手消息分离**：推理与最终响应分开保存，避免污染对话历史。
 
-See [Reasoning Events](/concepts/events#reasoning-events) for the streaming
-event lifecycle.
+流式事件的生命周期见[推理事件](/concepts/events#reasoning-events)。
 
-## Vendor Neutrality
+## 供应商中立
 
-AG-UI messages are designed to be vendor-neutral, meaning they can be easily
-mapped to and from proprietary formats used by various AI providers:
+AG-UI 消息在设计上是供应商中立的，可以轻松地与各 AI 提供方的专有格式相互映射：
 
 ```typescript
 // Example: Converting AG-UI messages to OpenAI format
@@ -279,18 +246,15 @@ const openaiMessages = agUiMessages
   }))
 ```
 
-This abstraction allows AG-UI to serve as a common interface regardless of the
-underlying AI service.
+有了这层抽象，无论底层是哪家 AI 服务，AG-UI 都能充当统一的接口。
 
-## Message Synchronization
+## 消息同步
 
-Messages can be synchronized between client and server through two primary
-mechanisms:
+消息可以通过两种主要机制在客户端与服务端之间同步：
 
-### Complete Snapshots
+### 完整快照
 
-The `MESSAGES_SNAPSHOT` event provides a complete view of all messages in a
-conversation:
+`MESSAGES_SNAPSHOT` 事件提供对话中所有消息的完整视图：
 
 ```typescript
 interface MessagesSnapshotEvent {
@@ -299,18 +263,18 @@ interface MessagesSnapshotEvent {
 }
 ```
 
-This is typically used:
+典型使用场景：
 
-- When initializing a conversation
-- After connection interruptions
-- When major state changes occur
-- To ensure client-server synchronization
+- 初始化对话时
+- 连接中断之后
+- 发生重大状态变更时
+- 为确保客户端与服务端同步
 
-### Streaming Messages
+### 流式消息
 
-For real-time interactions, new messages can be streamed as they're generated:
+对于实时交互，新消息可以在生成的同时流式送达：
 
-1. **Start a message**: Indicate a new message is being created
+1. **开始一条消息**：表示一条新消息正在创建
 
    ```typescript
    interface TextMessageStartEvent {
@@ -320,7 +284,7 @@ For real-time interactions, new messages can be streamed as they're generated:
    }
    ```
 
-2. **Stream content**: Send content chunks as they become available
+2. **流式传输内容**：内容就绪时分块发送
 
    ```typescript
    interface TextMessageContentEvent {
@@ -330,7 +294,7 @@ For real-time interactions, new messages can be streamed as they're generated:
    }
    ```
 
-3. **End a message**: Signal the message is complete
+3. **结束一条消息**：表示消息已完整
    ```typescript
    interface TextMessageEndEvent {
      type: EventType.TEXT_MESSAGE_END
@@ -338,17 +302,15 @@ For real-time interactions, new messages can be streamed as they're generated:
    }
    ```
 
-This streaming approach provides a responsive user experience with immediate
-feedback.
+这种流式方式带来即时反馈的灵敏用户体验。
 
-## Tool Integration in Messages
+## 消息中的工具集成
 
-AG-UI messages elegantly integrate tool usage, allowing agents to perform
-actions and process their results:
+AG-UI 消息以优雅的方式集成工具使用，让智能体能够执行操作并处理结果：
 
-### Tool Calls
+### 工具调用
 
-Tool calls are embedded within assistant messages:
+工具调用内嵌在助手消息中：
 
 ```typescript
 interface ToolCall {
@@ -361,7 +323,7 @@ interface ToolCall {
 }
 ```
 
-Example assistant message with tool calls:
+带工具调用的助手消息示例：
 
 ```typescript
 {
@@ -381,9 +343,9 @@ Example assistant message with tool calls:
 }
 ```
 
-### Tool Results
+### 工具结果
 
-Results from tool executions are represented as tool messages:
+工具执行结果以工具消息的形式表示：
 
 ```typescript
 {
@@ -394,18 +356,17 @@ Results from tool executions are represented as tool messages:
 }
 ```
 
-This creates a clear chain of tool usage:
+这构成了清晰的工具使用链条：
 
-1. Assistant requests a tool call
-2. Tool executes and returns a result
-3. Assistant can reference and respond to the result
+1. 助手发起一次工具调用
+2. 工具执行并返回结果
+3. 助手可以引用并响应这个结果
 
-## Streaming Tool Calls
+## 流式工具调用
 
-Similar to text messages, tool calls can be streamed to provide real-time
-visibility into the agent's actions:
+与文本消息类似，工具调用也可以流式传输，实时呈现智能体的动作：
 
-1. **Start a tool call**:
+1. **开始一次工具调用**：
 
    ```typescript
    interface ToolCallStartEvent {
@@ -416,7 +377,7 @@ visibility into the agent's actions:
    }
    ```
 
-2. **Stream arguments**:
+2. **流式传输参数**：
 
    ```typescript
    interface ToolCallArgsEvent {
@@ -426,7 +387,7 @@ visibility into the agent's actions:
    }
    ```
 
-3. **End a tool call**:
+3. **结束一次工具调用**：
    ```typescript
    interface ToolCallEndEvent {
      type: EventType.TOOL_CALL_END
@@ -434,12 +395,11 @@ visibility into the agent's actions:
    }
    ```
 
-This allows frontends to show tools being invoked progressively as the agent
-constructs its reasoning.
+这样，前端就能在智能体构建推理的过程中，逐步展示正在被调用的工具。
 
-## Practical Example
+## 实际示例
 
-Here's a complete example of a conversation with tool usage:
+下面是一个带工具使用的完整对话示例：
 
 ```typescript
 // Conversation history
@@ -487,14 +447,8 @@ Here's a complete example of a conversation with tool usage:
 ]
 ```
 
-## Conclusion
+## 结语
 
-The message structure in AG-UI enables sophisticated conversational AI
-experiences while maintaining vendor neutrality. By standardizing how messages
-are represented, synchronized, and streamed, AG-UI provides a consistent way to
-implement interactive human-agent communication regardless of the underlying AI
-service.
+AG-UI 的消息结构在保持供应商中立的同时，支撑起精细复杂的对话式 AI 体验。通过把消息的表示、同步与流式传输标准化，无论底层是哪家 AI 服务，AG-UI 都为人与智能体的交互通信提供了一致的实现方式。
 
-This system supports everything from simple text exchanges to complex tool-based
-workflows, all while optimizing for both real-time responsiveness and efficient
-data transfer.
+这套系统既能支撑简单的文本往来，也能支撑复杂的基于工具的工作流，同时在实时响应与高效数据传输之间取得平衡。

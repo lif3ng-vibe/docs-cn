@@ -1,33 +1,28 @@
 ---
-title: "Serialization"
-description: "Serialize event streams for history restore, branching, and compaction in AG-UI"
+title: "序列化"
+description: "在 AG-UI 中序列化事件流，用于历史恢复、分支与压缩"
 ---
 
-# Serialization
+# 序列化
 
-Serialization in AG-UI provides a standard way to persist and restore the event
-stream that drives an agent–UI session. With a serialized stream you can:
+AG-UI 的序列化提供了一种标准方式，用于持久化和恢复驱动智能体–UI 会话的事件流。有了序列化的事件流，你可以：
 
-- Restore chat history and UI state after reloads or reconnects
-- Attach to running agents and continue receiving events
-- Create branches (time travel) from any prior run
-- Compact stored history to reduce size without losing meaning
+- 在刷新或重连之后恢复聊天历史与 UI 状态
+- 接入正在运行的智能体并继续接收事件
+- 从任意先前的运行创建分支（时间旅行）
+- 压缩已存储的历史以减小体积，而不丢失语义
 
-This page explains the model, the updated event fields, and practical usage
-patterns with examples.
+本页通过示例讲解这套模型、更新后的事件字段以及实用的使用模式。
 
-## Core Concepts
+## 核心概念
 
-- Stream serialization – Convert the full event history to and from a portable
-  representation (e.g., JSON) for storage in databases, files, or logs.
-- Event compaction – Reduce verbose streams to snapshots while preserving
-  semantics (e.g., merge content chunks, collapse deltas into snapshots).
-- Run lineage – Track branches of conversation using a `parentRunId`, forming
-  a git‑like append‑only log that enables time travel and alternative paths.
+- 流序列化——把完整的事件历史与可移植的表示形式（如 JSON）相互转换，以便存入数据库、文件或日志。
+- 事件压缩——在保持语义的前提下把冗长的事件流约简为快照（例如合并内容片段、把增量折叠成快照）。
+- 运行血统——用 `parentRunId` 跟踪对话的分支，形成类似 git 的只追加日志，支持时间旅行与备选路径。
 
-## Updated Event Fields
+## 更新后的事件字段
 
-The `RunStarted` event includes additional optional fields:
+`RunStarted` 事件包含额外的可选字段：
 
 ```ts
 type RunStartedEvent = BaseEvent & {
@@ -41,35 +36,27 @@ type RunStartedEvent = BaseEvent & {
 }
 ```
 
-These fields enable lineage tracking and let implementations record precisely
-what was passed to the agent, independent of previously recorded messages.
+这些字段支持血统跟踪，并让实现能够精确记录传给智能体的内容，而不依赖此前记录的消息。
 
-## Event Compaction
+## 事件压缩
 
-Compaction reduces noise in an event stream while keeping the same observable
-outcome. A typical implementation provides a utility:
+压缩在保持相同可观测结果的前提下，降低事件流中的噪音。典型的实现会提供一个工具函数：
 
 ```ts
 declare function compactEvents(events: BaseEvent[]): BaseEvent[]
 ```
 
-Common compaction rules include:
+常见的压缩规则包括：
 
-- Message streams – Combine `TEXT_MESSAGE_*` sequences into a single message
-  snapshot; concatenate adjacent `TEXT_MESSAGE_CONTENT` for the same message.
-- Reasoning streams – Concatenate `REASONING_MESSAGE_CONTENT` for the same
-  reasoning message the same way.
-- Tool calls – Collapse tool call start/content/end into a compact record.
-- State – Merge consecutive `STATE_DELTA` events into a single final
-  `STATE_SNAPSHOT` and discard superseded updates.
-- Run input normalization – Remove from `RunStarted.input.messages` any
-  messages already present earlier in the stream.
+- 消息流——把 `TEXT_MESSAGE_*` 序列合并为单条消息快照；同一条消息相邻的 `TEXT_MESSAGE_CONTENT` 拼接在一起。
+- 推理流——以相同方式拼接同一条推理消息的 `REASONING_MESSAGE_CONTENT`。
+- 工具调用——把工具调用的 start/content/end 折叠成一条紧凑记录。
+- 状态——把连续的 `STATE_DELTA` 事件合并成最终的一个 `STATE_SNAPSHOT`，并丢弃被取代的更新。
+- 运行输入规范化——从 `RunStarted.input.messages` 中移除流中更早位置已有的消息。
 
-## Branching and Time Travel
+## 分支与时间旅行
 
-Setting `parentRunId` on a `RunStarted` event creates a git‑like lineage. The
-stream becomes an immutable append‑only log where each run can branch from any
-previous run.
+在 `RunStarted` 事件上设置 `parentRunId` 会形成类似 git 的血统。事件流变成一条不可变、只追加的日志，每次运行都可以从任意先前的运行分叉出来。
 
 ```mermaid
 gitGraph
@@ -84,15 +71,15 @@ gitGraph
     commit id: "run6"
 ```
 
-Benefits:
+好处：
 
-- Multiple branches in the same serialized log
-- Immutable history (append‑only)
-- Deterministic time travel to any point
+- 同一份序列化日志中容纳多个分支
+- 历史不可变（只追加）
+- 确定性地时间旅行到任意时点
 
-## Examples
+## 示例
 
-### Basic Serialization
+### 基础序列化
 
 ```ts
 // Serialize event stream
@@ -106,9 +93,9 @@ const restored = JSON.parse(await storage.load(threadId));
 const compacted = compactEvents(restored);
 ```
 
-### Event Compaction
+### 事件压缩
 
-Before:
+压缩前：
 
 ```ts
 [
@@ -121,7 +108,7 @@ Before:
 ]
 ```
 
-After:
+压缩后：
 
 ```ts
 [
@@ -136,7 +123,7 @@ After:
 ]
 ```
 
-### Branching With `parentRunId`
+### 使用 `parentRunId` 分支
 
 ```ts
 // Original run
@@ -157,7 +144,7 @@ After:
 }
 ```
 
-### Normalized Input
+### 规范化输入
 
 ```ts
 // First run includes full message
@@ -176,34 +163,24 @@ After:
 }
 ```
 
-## Metadata
+## 元数据
 
-Events and messages carry an optional [`metadata`](/concepts/metadata) object,
-and it is part of what you are serializing — persist it alongside everything
-else or a replayed stream will be missing token usage, trace ids and anything
-else producers attached.
+事件与消息携带一个可选的[元数据](/concepts/metadata)对象，它也是你要序列化的内容的一部分——请把它与其他内容一起持久化，否则重放的事件流会丢失 token 用量、追踪 ID 以及生产方附加的其他一切。
 
-Two things to know when persisting:
+持久化时有两点需要知道：
 
-- **Compaction folds it.** Collapsing deltas merges their metadata, last write
-  wins. See [Event Compaction](#event-compaction) and the
-  [compaction reference](/sdk/js/client/compaction) for the ordering caveats.
-- **Binary is narrower than JSON.** Over protobuf, metadata is a
-  `google.protobuf.Struct`, so nulls, arrays and nested objects survive — but
-  numbers are IEEE-754 doubles, so integers beyond 2^53 lose precision, and
-  several event types have no protobuf representation at all. JSON round-trips
-  everything exactly. Prefer JSON for archival storage.
+- **压缩会折叠元数据**。把增量折叠起来时，它们的元数据也会合并，后写者胜。顺序方面的注意事项见[事件压缩](#事件压缩)与[压缩参考](/sdk/js/client/compaction)。
+- **二进制比 JSON 窄**。在 protobuf 之上，元数据是 `google.protobuf.Struct`，null、数组和嵌套对象都能保留——但数字是 IEEE-754 双精度浮点数，超过 2^53 的整数会丢失精度，而且若干事件类型根本没有 protobuf 表示。JSON 则能精确往返所有内容。归档存储请优先选 JSON。
 
-## Implementation Notes
+## 实现注意事项
 
-- Provide SDK helpers for compaction and (de)serialization.
-- Store streams append‑only; prefer incremental writes when possible.
-- Consider compression when persisting long histories.
-- Add indexes by `threadId`, `runId`, and timestamps for fast retrieval.
+- 为压缩与序列化/反序列化提供 SDK 辅助函数。
+- 只追加地存储事件流；尽可能采用增量写入。
+- 持久化长历史时考虑压缩存储。
+- 按 `threadId`、`runId` 与时间戳建立索引，加快检索。
 
-## See Also
+## 另见
 
-- Concepts: [Events](/concepts/events), [Metadata](/concepts/metadata),
-  [State Management](/concepts/state)
-- SDKs: TypeScript encoder and core event types
+- 概念页：[事件](/concepts/events)、[元数据](/concepts/metadata)、[状态管理](/concepts/state)
+- SDK：TypeScript 编码器与核心事件类型
 

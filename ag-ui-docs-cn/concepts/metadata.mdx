@@ -1,32 +1,26 @@
 ---
-title: "Metadata"
-description: "Attaching extra information to events, messages and tool calls"
+title: "元数据"
+description: "为事件、消息与工具调用附加额外信息"
 ---
 
-Metadata is the sanctioned way to attach extra information to the protocol —
-token usage, a trace id, a finish reason, anything your application needs to
-carry alongside the conversation.
+元数据是协议认可的附加信息携带方式——token 用量、追踪 ID、结束原因，以及你的应用需要随对话一起携带的任何东西。
 
-Before it existed, producers hung undeclared properties off events and hoped
-consumers passed them through. That is why unknown properties reaching
-subscribers is removed in 1.0: metadata replaces it with something declared and
-typed that consumers are required to carry.
+在它出现之前，生产方把未声明的属性挂在事件上，指望消费方把它们透传下去。这正是 1.0 中移除“未知属性透传给订阅者”的原因：元数据用一个被声明、有类型、消费方必须承载的机制取代了它。
 
-## Where it lives
+## 挂在哪里
 
-Four places, all optional:
+四个位置，全部可选：
 
-| Carries `metadata` | Notes                                                                              |
+| 携带 `metadata`    | 说明                                                                               |
 | ------------------ | ---------------------------------------------------------------------------------- |
-| Every event        | Declared once on the base event, so all event types have it                        |
-| Every message      | All seven roles: developer, system, assistant, user, tool, activity, reasoning     |
-| Every tool call    | A tool call is not a message — see [Tool calls](#tool-calls)                       |
-| Every resume entry | A request field, so nothing merges into it — see [Resume entries](#resume-entries) |
+| 每个事件           | 在基础事件上声明一次，因此所有事件类型都拥有它                                       |
+| 每条消息           | 全部七种角色：developer、system、assistant、user、tool、activity、reasoning          |
+| 每次工具调用       | 工具调用不是消息——见[工具调用](#工具调用)                                            |
+| 每条恢复条目       | 它是请求字段，不会有东西合并进来——见[恢复条目](#恢复条目)                            |
 
-## Shape
+## 形态
 
-The object is **open by key**. Any JSON value is allowed under a key, including
-`null`. There is no schema for what you put in it.
+这个对象**按键开放**。键下允许任意 JSON 值，包括 `null`。对放进去的内容没有 schema 约束。
 
 ```typescript
 {
@@ -42,38 +36,25 @@ The object is **open by key**. Any JSON value is allowed under a key, including
 }
 ```
 
-The object itself is either **absent or an object — never `null`**. An empty
-object is valid and means "nothing to say", which is the same as omitting it.
+对象本身**要么缺省、要么是对象，绝不能是 `null`**。空对象是合法的，表示“无话可说”，与省略它等价。
 
 <Note>
-  Producers never emit `"metadata": null`: an optional field with no value is
-  omitted from the JSON entirely, in every official SDK. The TypeScript client
-  enforces this and rejects a `null` metadata object — unlike some older
-  optional fields, metadata has no legacy producers to tolerate. Note the
-  asymmetry: a `null` **value under a key** is meaningful data and is always
-  preserved. Only a `null` standing in for the whole object is invalid.
+  生产方绝不会发出 `"metadata": null`：在所有官方 SDK 中，没有值的可选字段会直接从 JSON 中省略。TypeScript 客户端强制执行这一点，并拒绝 `null` 的元数据对象——与某些更早的可选字段不同，元数据没有需要容忍的旧式生产方。注意其中的不对称：键下的 `null` **值**是有意义的数据，始终保留；只有顶替整个对象的 `null` 才是非法的。
 </Note>
 
-## The reserved key
+## 保留键
 
-The `ag-ui` key is reserved for AG-UI's own use. Every other key is yours.
+`ag-ui` 键保留给 AG-UI 自用。其余所有键都归你使用。
 
-Nothing rejects a write to `ag-ui` at runtime — enforcing it would contradict
-the open-by-key rule — but treat it as off limits, since AG-UI may put its own
-values there in future versions.
+运行时没有任何机制会拒绝向 `ag-ui` 写入——强制限制会与按键开放的原则相悖——但请把它视为禁区，因为 AG-UI 可能在未来版本中把自己的值放在那里。
 
-## Merging into messages
+## 合并进消息
 
-A message is assembled from a sequence of events, and the interesting values are
-only known at the end: a provider does not know its token usage until it has
-finished generating. So consumers **merge each event's metadata into the message
-that event builds**, as the sequence arrives.
+一条消息由一串事件组装而成，而有价值的值往往到最后一刻才确定：提供方要等生成结束才知道自己的 token 用量。因此消费方会随着事件序列的到来，**把每个事件的元数据合并进该事件构建的消息**。
 
-This describes clients that assemble messages from the stream, such as the
-TypeScript client. The .NET client does not assemble AG-UI messages — see the
-SDK notes below.
+这描述的是从事件流组装消息的客户端，例如 TypeScript 客户端。.NET 客户端不组装 AG-UI 消息——见下文 SDK 说明。
 
-The rule is last write wins, key by key:
+规则是按键合并、后写者胜：
 
 ```typescript
 // TEXT_MESSAGE_START    metadata: { source: "openai", stage: "start" }
@@ -84,12 +65,11 @@ message.metadata
 // { source: "openai", stage: "end", usage: { output: 340 } }
 ```
 
-`source` survived because nothing later set it. `stage` ended on the last value
-written. `usage` arrived only at the end, which is the whole point.
+`source` 保留了下来，因为后续没有人再设置它。`stage` 停留在最后写入的值上。`usage` 只在末尾出现——这正是设计的意义所在。
 
-### Values are replaced, never blended
+### 值是整体替换，从不混合
 
-Merging never recurses. A key holding an array or an object is replaced whole:
+合并从不递归。持有数组或对象的键会被整体替换：
 
 ```typescript
 // earlier: { tags: ["a", "b", "c"] }
@@ -97,13 +77,11 @@ Merging never recurses. A key holding an array or an object is replaced whole:
 // result:  { tags: ["z"] }        not ["a", "b", "c", "z"]
 ```
 
-This holds under `ag-ui` too. If you need to add to a nested structure, send the
-complete new value.
+这条规则对 `ag-ui` 同样适用。如果你需要向嵌套结构中添加内容，请发送完整的新值。
 
-### What does not merge
+### 哪些不会合并
 
-Metadata on an event that does not build a message stays on that event and never
-reaches one:
+不构建消息的事件，其元数据只留在事件自身上，永远不会到达消息：
 
 - `RUN_STARTED`, `RUN_FINISHED`, `RUN_ERROR`
 - `STEP_STARTED`, `STEP_FINISHED`
@@ -111,125 +89,62 @@ reaches one:
 - `RAW`, `CUSTOM`
 - `REASONING_START`, `REASONING_END`, `REASONING_ENCRYPTED_VALUE`
 
-`MESSAGES_SNAPSHOT` is a special case: the messages inside it carry their own
-metadata and arrive with it already attached, so the event's own metadata is not
-merged into any of them.
+`MESSAGES_SNAPSHOT` 是特例：其中的消息自带元数据、随消息一起到达，因此事件自身的元数据不会合并进其中任何一条。
 
 <Tip>
-  Putting run-level totals on `RUN_FINISHED` is fine and often right — just read
-  them from the event rather than expecting them on a message. If you want them
-  on a specific message, send them on that message's `*_END` event.
+  把运行级别的汇总放在 `RUN_FINISHED` 上完全可以，而且常常是正确的做法——只是要从事件上读取它们，别指望出现在某条消息上。如果想让它们落在特定消息上，请放在该消息的 `*_END` 事件上。
 </Tip>
 
-## Tool calls
+## 工具调用
 
-Tool call events — `TOOL_CALL_START`, `TOOL_CALL_ARGS`, `TOOL_CALL_END` — merge
-into the **tool call**, not into the assistant message that owns it.
+工具调用事件——`TOOL_CALL_START`、`TOOL_CALL_ARGS`、`TOOL_CALL_END`——合并进**工具调用**本身，而不是拥有它的助手消息。
 
 ```typescript
 assistantMessage.toolCalls[0].metadata
 // { provider: "anthropic", latencyMs: 84 }
 ```
 
-The reason is that several tool calls can share one parent assistant message.
-Folding all of their metadata into that parent would make the result depend on
-the order the calls happened to interleave — and stream transforms are allowed
-to change that order. Giving each tool call its own metadata removes the shared
-destination, so the outcome is the same however the stream is processed.
+原因在于多个工具调用可能共享同一个父助手消息。若把它们的元数据都折叠进父消息，结果就会取决于这些调用恰好交错出现的顺序——而流转换是允许改变这个顺序的。让每次工具调用拥有自己的元数据，就消除了共享的目标，无论流如何处理，结果都一致。
 
-`TOOL_CALL_RESULT` is different: it creates a tool message, so its metadata
-merges into that message like any other message-building event.
+`TOOL_CALL_RESULT` 则不同：它会创建一条工具消息，因此其元数据会像其他构建消息的事件一样合并进那条消息。
 
-## Resume entries
+## 恢复条目
 
-Each entry in `RunAgentInput.resume` — the per-interrupt response a client sends
-back after a run finished with an interrupt outcome — carries its own metadata.
-It holds envelope data about the response, such as a signature proving the human
-decision was not tampered with, or routing keys; the answer the agent asked for
-belongs in `payload`.
+`RunAgentInput.resume` 中的每个条目——运行以中断结果结束后客户端回传的、针对每个中断的响应——都携带自己的元数据。它存放关于该响应的信封数据，例如证明人类决策未被篡改的签名，或路由键；智能体所要的答案则放在 `payload` 中。
 
-A resume entry is a request field, not something assembled from a stream, so
-there are **no merge semantics** — nothing accumulates into it. See
-[Interrupts](/concepts/interrupts#resuming-a-run) for the full resume contract.
+恢复条目是请求字段，不是从事件流组装出来的东西，因此**没有合并语义**——不会有任何东西累积进去。完整的恢复契约见[中断](/concepts/interrupts#resuming-a-run)。
 
-## Transports
+## 传输层
 
-Over JSON — which is what SSE carries, and what every SDK reads and writes —
-metadata is a plain object, and every value shape round-trips exactly: nulls,
-arrays, nested objects, strings and numbers.
+在 JSON 之上——也就是 SSE 所承载、所有 SDK 读写的东西——元数据就是一个普通对象，每种值形态都能精确往返：null、数组、嵌套对象、字符串与数字。
 
-The binary protobuf format carries it as a `google.protobuf.Struct`, whose value
-type has a real null case, so a `null` under a key is preserved rather than
-approximated and an absent object stays distinguishable from an empty one. Two
-caveats apply there, and neither is specific to metadata:
+二进制 protobuf 格式把它承载为 `google.protobuf.Struct`，其值类型有真正的 null 分支，因此键下的 `null` 会被原样保留而非近似处理，缺省的对象也能与空对象区分开。在那里有两条注意事项，而且都不是元数据特有的：
 
-- **Not every event has a protobuf representation.** The wire format covers a
-  subset of the event types — the tool result, activity, reasoning and
-  deprecated thinking events have no protobuf message, so they cannot cross that
-  transport at all, with or without metadata. The .NET encoder rejects them
-  outright; the TypeScript encoder produces an empty payload that decoding then
-  rejects. Either way the event does not arrive, so do not rely on the binary
-  transport for those events.
-- **Numbers are IEEE-754 doubles.** `google.protobuf.Value` models every number
-  as a double, so integers beyond 2^53 lose precision on the round trip. This is
-  a property of the format and applies to `state` and every other dynamic
-  payload equally.
+- **并非每个事件都有 protobuf 表示**。线格式只覆盖一部分事件类型——工具结果、活动、推理以及已废弃的 thinking 事件都没有对应的 protobuf 消息，因此它们根本无法跨越这条传输层，带不带元数据都一样。.NET 编码器会直接拒绝它们；TypeScript 编码器会产出一个随后又被解码端拒绝的空负载。无论哪种方式，事件都到不了对面，所以不要依赖二进制传输层来传这些事件。
+- **数字是 IEEE-754 双精度浮点数**。`google.protobuf.Value` 把所有数字都建模为 double，超过 2^53 的整数在往返后会丢失精度。这是格式本身的属性，对 `state` 以及所有其他动态负载同样适用。
 
-Byte-for-byte output is not guaranteed between encoders: `Struct` is a
-`map<string, Value>`, and protobuf map entry ordering is not canonical. What is
-guaranteed is that both sides decode to the same value. In practice the
-TypeScript and .NET encoders do emit identical bytes for every fixture in the
-cross-language suite, which is asserted there, but do not depend on it.
+不同编码器之间不保证逐字节一致的输出：`Struct` 是一个 `map<string, Value>`，而 protobuf 的 map 条目顺序并无规范。能保证的是双方解码出相同的值。实际上，TypeScript 与 .NET 编码器对跨语言测试套件中的每个样例都恰好输出相同的字节——套件里对此有断言——但请不要依赖这一点。
 
-## SDK reference
+## SDK 参考
 
 <Note>
-  Metadata is open by key in every SDK, so the type is deliberately permissive.
-  It is your responsibility to keep the contents JSON-serializable — a function
-  or a `bigint` will be accepted at the type level and then fail when encoded.
+  元数据在每个 SDK 中都按键开放，因此类型刻意保持宽松。保证内容可被 JSON 序列化是你自己的责任——函数或 `bigint` 在类型层面能通过，到编码时就会失败。
 </Note>
 
-**TypeScript** — `metadata?: Record<string, any>` on events, messages, tool
-calls and resume entries. `mergeMetadata(existing, incoming)` is exported from
-`@ag-ui/core` if you are assembling messages yourself, along with
-`AGUI_METADATA_KEY` for the reserved key.
+**TypeScript**——事件、消息、工具调用与恢复条目上都有 `metadata?: Record<string, any>`。如果你要自己组装消息，可以从 `@ag-ui/core` 导入 `mergeMetadata(existing, incoming)`，以及表示保留键的 `AGUI_METADATA_KEY`。
 
-**Python** — `metadata: Optional[Dict[str, Any]]`. The base model omits any
-unset optional field on every serialization path, so an absent object is omitted
-rather than emitted as `null` — no `exclude_none=True` needed. `Metadata` and
-`AGUI_METADATA_KEY` are exported from `ag_ui.core`.
+**Python**——`metadata: Optional[Dict[str, Any]]`。基础模型在所有序列化路径上都会省略未设置的可选字段，因此缺省的对象会被省略，而不会输出成 `null`——无需 `exclude_none=True`。`Metadata` 与 `AGUI_METADATA_KEY` 可从 `ag_ui.core` 导入。
 
-**.NET** — `JsonElement? Metadata` on `BaseEvent`, `AGUIMessage`, `AGUIToolCall`
-and `AGUIResume`, with `AGUIMetadata.ReservedKey` for the reserved key.
+**.NET**——`BaseEvent`、`AGUIMessage`、`AGUIToolCall` 与 `AGUIResume` 上都有 `JsonElement? Metadata`，保留键则由 `AGUIMetadata.ReservedKey` 提供。
 
-It is a **wire-level field**. It round-trips faithfully through JSON and
-protobuf, so a server reading `RunAgentInput` or a client decoding the stream
-sees it intact, and `AGUIMessage.Metadata` carries it on messages inside a
-`MESSAGES_SNAPSHOT`. It is deliberately not surfaced on
-`Microsoft.Extensions.AI`'s `ChatMessage`, matching how `encryptedValue` and
-`AGUIToolMessage.Error` already behave.
+它是一个**线级字段**。它在 JSON 与 protobuf 中都能忠实往返，因此读取 `RunAgentInput` 的服务端或解码事件流的客户端看到的都是完整无损的，`AGUIMessage.Metadata` 也会把它带在 `MESSAGES_SNAPSHOT` 内的消息上。它刻意不出现在 `Microsoft.Extensions.AI` 的 `ChatMessage` 上，与 `encryptedValue` 和 `AGUIToolMessage.Error` 的既有行为保持一致。
 
-If you consume the stream through `AGUIChatClient`, note what that means in
-practice: `EventStreamConverter` emits no `ChatResponseUpdate` for
-`TEXT_MESSAGE_START`, `TEXT_MESSAGE_END`, `TOOL_CALL_START` or `TOOL_CALL_ARGS`,
-so metadata on those events — including usage placed on `TEXT_MESSAGE_END` as
-recommended above — does not reach a `RawRepresentation` either. Read it from
-the raw event stream rather than from the high-level chat client.
+如果你通过 `AGUIChatClient` 消费事件流，请注意这在实践中的含义：`EventStreamConverter` 不会为 `TEXT_MESSAGE_START`、`TEXT_MESSAGE_END`、`TOOL_CALL_START` 或 `TOOL_CALL_ARGS` 发出 `ChatResponseUpdate`，因此这些事件上的元数据——包括上文建议放在 `TEXT_MESSAGE_END` 上的用量——也不会到达 `RawRepresentation`。请从原始事件流读取，而不是从高层聊天客户端读取。
 
-## Compaction
+## 压缩
 
-`compactEvents` in the TypeScript client squashes a run of streaming events into
-fewer events for storage or replay, deliberately reordering them so each
-stream's events stay together.
+TypeScript 客户端中的 `compactEvents` 会把一段流式事件压缩成更少的事件，用于存储或重放，并有意重排它们，让每条流的事件保持在一起。
 
-Metadata adds no new order sensitivity of its own: every merge destination is
-unique — each message has its own, and each tool call carries its own rather
-than folding into a parent it may share — so two events that merge into the same
-target are never reordered relative to each other.
+元数据本身没有引入新的顺序敏感性：每个合并目标都是唯一的——每条消息有自己的，每次工具调用也带自己的，而不是折叠进可能共享的父消息——因此合并到同一目标的两个事件绝不会彼此乱序。
 
-Compaction's reordering is not semantics-preserving in general, though, and that
-predates metadata. An event that interrupts a stream is emitted after it, so a
-`MESSAGES_SNAPSHOT` arriving mid-message is replayed after that message's own
-events and overwrites what they produced — the appended content just as much as
-the merged metadata. If you rely on exact replay equivalence, avoid interleaving
-snapshots with an open stream.
+不过，压缩的重排在一般意义上并不保持语义，这一点早于元数据就存在。打断某条流的事件会在该流之后发出，因此在消息中途到达的 `MESSAGES_SNAPSHOT` 会在该消息自身的事件之后重放，并覆盖它们产出的结果——被追加的内容与被合并的元数据都一样。如果你依赖严格的重放等价性，请避免把快照与未结束的流交错在一起。

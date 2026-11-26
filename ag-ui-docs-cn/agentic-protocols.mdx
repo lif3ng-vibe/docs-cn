@@ -1,34 +1,34 @@
 ---
-title: "MCP, A2A, and AG-UI"
-description: "Understanding how AG-UI complements and works with MCP and A2A"
+title: "MCP、A2A 与 AG-UI"
+description: "理解 AG-UI 如何与 MCP 和 A2A 互补协作"
 ---
 
-## Agentic Protocols
+## 智能体协议
 
-The agentic ecosystem is rapidly organizing around a family of open, complementary protocols — each addressing a distinct layer of interaction.  AG-UI has emerged as the 3rd leg of the AI protocol landscape:
+智能体生态正在迅速围绕一组开放且互补的协议整合成型——每个协议各解决一个不同的交互层。AG-UI 已成为 AI 协议版图中的第三根支柱：
 <div style={{textAlign: 'center', margin: '2rem 0'}}>
-  <img src="/images/ai-protocol-stack.png" alt="AI Protocol Stack" style={{maxWidth: '40%', height: 'auto', borderRadius: '8px'}} />
+  <img src="/images/ai-protocol-stack.png" alt="AI 协议栈" style={{maxWidth: '40%', height: 'auto', borderRadius: '8px'}} />
 </div>
 
-You can connect your application to agents directly via **AG-UI**, **MCP**, and **A2A**.
+你可以通过 **AG-UI**、**MCP** 和 **A2A** 把应用直接连接到智能体。
 
 
-- **MCP** (Model Context Protocol) Connects agents to tools and to context — but those tools are themselves becoming agentic.
-- **A2A** (Agent to Agent) Connects agents to other agents.
-- **AG-UI (Agent–User Interaction)** Connects agents to users (through user-facing applications).  
+- **MCP**（Model Context Protocol）把智能体连接到工具与上下文——而这些工具本身也正变得越来越智能体化。
+- **A2A**（Agent to Agent）把智能体连接到其他智能体。
+- **AG-UI**（Agent–User Interaction）把智能体连接到用户（经由面向用户的应用）。
     
-    You can think of AG-UI as the **"kitchen sink" protocol** — informed by bottom-up, real-world needs for building best-in-class agentic applications.
+    你可以把 AG-UI 理解为一个**包罗万象的协议**——它源自自下而上的真实需求，为构建一流的智能体应用而生。
     
 
-These three agentic protocols are complementary and have distinct technical goals; a single agent can and often does use all 3 simultaneously.
+这三种智能体协议彼此互补、技术目标各不相同；单个智能体完全可以——而且经常——同时使用这三者。
 
-## AG-UI Handshakes with MCP and A2A
+## AG-UI 与 MCP、A2A 的握手对接
 
-AG-UI contributors have recently added handshakes, allowing AG-UI to "front for" agents through MCP and A2A protocols, which allows AG-UI client apps and libraries to seamlessly use MCP and A2A supporting agents.  
+AG-UI 的贡献者最近加入了握手对接机制，让 AG-UI 能够通过 MCP 和 A2A 协议为智能体"打头阵"，从而使 AG-UI 客户端应用与库可以无缝使用支持 MCP 和 A2A 的智能体。
 
-AG-UI's mandate is to support the full set of building blocks required by modern agentic applications.
+AG-UI 的使命是支持现代智能体应用所需的全部构建模块。
 
-## Generative UI Specs
+## 生成式 UI 规范
 
-Recently several [generative ui specs](./concepts/generative-ui-specs) (including MCP-UI, Open JSON UI, and A2UI) have been released which allow agents to deliver UI widgets through the interaction protocols.  AG-UI works with all of these.  Visit our [generative ui specs page](./concepts/generative-ui-specs) to learn more.
+最近，多个[生成式 UI 规范](./concepts/generative-ui-specs)（包括 MCP-UI、Open JSON UI 和 A2UI）相继发布，它们允许智能体通过交互协议输出 UI 组件。AG-UI 与所有这些规范都能配合使用。欢迎访问我们的[生成式 UI 规范页面](./concepts/generative-ui-specs)了解更多。
 

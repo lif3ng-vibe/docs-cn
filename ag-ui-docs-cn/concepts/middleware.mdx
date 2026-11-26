@@ -1,27 +1,27 @@
 ---
-title: "Middleware"
-description: "Transform and intercept events in AG-UI agents"
+title: "中间件"
+description: "转换与拦截 AG-UI 智能体中的事件"
 ---
 
-# Middleware
+# 中间件
 
-Middleware in AG-UI provides a powerful way to transform, filter, and augment the event streams that flow through agents. It enables you to add cross-cutting concerns like logging, authentication, rate limiting, and event filtering without modifying the core agent logic.
+AG-UI 的中间件提供了一种强大的方式，可以转换、过滤和增强流经智能体的事件流。它让你能够在不改动核心智能体逻辑的前提下，加入日志、鉴权、限流、事件过滤等横切关注点。
 
-Examples below assume the relevant RxJS operators/utilities (`map`, `tap`, `catchError`, `switchMap`, `timer`, etc.) are imported.
+以下示例假设相关 RxJS 操作符/工具（`map`、`tap`、`catchError`、`switchMap`、`timer` 等）均已导入。
 
-## What is Middleware?
+## 什么是中间件？
 
-Middleware sits between the agent execution and the event consumer, allowing you to:
+中间件位于智能体执行与事件消费方之间，让你能够：
 
-1. **Transform events** – Modify or enhance events as they flow through the pipeline
-2. **Filter events** – Selectively allow or block certain events
-3. **Add metadata** – Inject additional context or tracking information
-4. **Handle errors** – Implement custom error recovery strategies
-5. **Monitor execution** – Add logging, metrics, or debugging capabilities
+1. **转换事件**——在事件流经管道时修改或增强它们
+2. **过滤事件**——有选择地放行或拦截某些事件
+3. **添加元数据**——注入额外的上下文或追踪信息
+4. **处理错误**——实现自定义的错误恢复策略
+5. **监控执行**——增加日志、指标或调试能力
 
-## How Middleware Works
+## 中间件的工作方式
 
-Middleware forms a chain where each middleware wraps the next, creating layers of functionality. When an agent runs, the event stream flows through each middleware in sequence.
+中间件构成一条链，每个中间件包裹下一个，形成一层层叠加的功能。智能体运行时，事件流依次流过每个中间件。
 
 ```typescript
 import { AbstractAgent } from "@ag-ui/client"
@@ -35,11 +35,11 @@ agent.use(loggingMiddleware, authMiddleware, filterMiddleware)
 await agent.runAgent()
 ```
 
-Middleware added with `agent.use(...)` is applied in `runAgent()`. `connectAgent()` currently calls `connect()` directly and does not run middleware.
+通过 `agent.use(...)` 添加的中间件会在 `runAgent()` 中生效。`connectAgent()` 目前直接调用 `connect()`，不执行中间件。
 
-## Function-Based Middleware
+## 函数式中间件
 
-For simple transformations, you can use function-based middleware. This is the most concise way to add middleware:
+对于简单的转换，可以使用函数式中间件。这是添加中间件最简洁的方式：
 
 ```typescript
 import { MiddlewareFunction } from "@ag-ui/client"
@@ -65,9 +65,9 @@ const prefixMiddleware: MiddlewareFunction = (input, next) => {
 agent.use(prefixMiddleware)
 ```
 
-## Class-Based Middleware
+## 类式中间件
 
-For more complex scenarios requiring state or configuration, use class-based middleware:
+对于需要状态或配置的更复杂场景，请使用类式中间件：
 
 ```typescript
 import { Middleware } from "@ag-ui/client"
@@ -101,17 +101,17 @@ class MetricsMiddleware extends Middleware {
 agent.use(new MetricsMiddleware(metricsService))
 ```
 
-If you are writing class middleware, prefer the helper methods:
-- `runNext(input, next)` normalizes chunk events into full `TEXT_MESSAGE_*`/`TOOL_CALL_*` sequences.
-- `runNextWithState(input, next)` also provides accumulated `messages` and `state` after each event.
+如果你在编写类中间件，优先使用这些辅助方法：
+- `runNext(input, next)` 把 chunk 事件规范化为完整的 `TEXT_MESSAGE_*`/`TOOL_CALL_*` 序列。
+- `runNextWithState(input, next)` 还会在每个事件之后提供累积的 `messages` 与 `state`。
 
-## Built-in Middleware
+## 内置中间件
 
-AG-UI provides several built-in middleware components for common use cases:
+AG-UI 为常见用例提供了几个内置中间件组件：
 
 ### FilterToolCallsMiddleware
 
-Filter tool calls based on allowed or disallowed lists:
+基于允许或禁止列表过滤工具调用：
 
 ```typescript
 import { FilterToolCallsMiddleware } from "@ag-ui/client"
@@ -129,15 +129,15 @@ const blockedFilter = new FilterToolCallsMiddleware({
 agent.use(allowedFilter)
 ```
 
-`FilterToolCallsMiddleware` filters emitted `TOOL_CALL_*` events. It does not block tool execution in the upstream model/runtime.
+`FilterToolCallsMiddleware` 过滤已发出的 `TOOL_CALL_*` 事件。它不会阻止上游模型/运行时中的工具执行。
 
-## Middleware Patterns
+## 中间件模式
 
-Common patterns include logging, auth via `forwardedProps`, and rate limiting. See the [JS middleware reference](/sdk/js/client/middleware) for concrete implementations.
+常见模式包括日志、基于 `forwardedProps` 的鉴权以及限流。具体实现见 [JS 中间件参考](/sdk/js/client/middleware)。
 
-## Combining Middleware
+## 组合中间件
 
-You can combine multiple middleware to create sophisticated processing pipelines:
+你可以组合多个中间件，构建复杂的处理管道：
 
 ```typescript
 const logMiddleware: MiddlewareFunction = (input, next) => next.run(input)
@@ -147,14 +147,14 @@ const filterMiddleware = new FilterToolCallsMiddleware({ allowedToolCalls: ["sea
 agent.use(logMiddleware, metricsMiddleware, filterMiddleware)
 ```
 
-## Execution Order
+## 执行顺序
 
-Middleware executes in the order it's added, with each middleware wrapping the next:
+中间件按添加顺序执行，每个中间件包裹下一个：
 
-1. First middleware receives the original input
-2. It can modify the input before passing to the next middleware
-3. Each middleware processes events from the next in the chain
-4. The final middleware calls the actual agent
+1. 第一个中间件接收原始输入
+2. 它可以在传给下一个中间件之前修改输入
+3. 每个中间件处理链中下一个中间件的事件
+4. 最后一个中间件调用真正的智能体
 
 ```typescript
 agent.use(middleware1, middleware2, middleware3)
@@ -169,27 +169,15 @@ agent.use(middleware1, middleware2, middleware3)
 // ← events flow back through middleware1
 ```
 
-## Protocol Version on `RUN_STARTED`
+## `RUN_STARTED` 上的协议版本
 
-Each run's `RUN_STARTED.protocolVersion` names the version the run's stream
-speaks, not who relays it
-([Versioning](/spec/1.0/basic/versioning#version-negotiation)). For middleware
-that means one rule, decided by who produced the run:
+每次运行的 `RUN_STARTED.protocolVersion` 标明的是这次运行的事件流所“说”的版本，而不是谁来转发它（[版本管理](/spec/1.0/basic/versioning#version-negotiation)）。对中间件而言，这意味着一条规则，由这次运行的产出方决定：
 
-- **Forwarding a run.** When the `RUN_STARTED` comes from the next agent in the
-  chain, pass it through with its `protocolVersion` untouched. Don't add one,
-  overwrite it, or remove it. If the downstream agent predates the field, the
-  missing declaration is the truthful one.
-- **Synthesizing a run.** When the middleware answers the request itself and
-  emits its own `RUN_STARTED` (no downstream agent runs), the middleware is the
-  run's producer. Declare the version it was built against with the SDK's
-  `PROTOCOL_VERSION` constant. Don't mirror the client's
-  `RunAgentInput.protocolVersion` and don't omit the field.
-- **Translating a run.** A middleware that rewrites the stream into a different
-  protocol version declares the version it emits.
+- **转发运行**。当 `RUN_STARTED` 来自链中的下一个智能体时，原样透传，不要动它的 `protocolVersion`：不要新增、覆盖或删除。如果下游智能体早于该字段出现，缺失声明才是如实的情况。
+- **合成运行**。当中间件自行响应请求并发出自己的 `RUN_STARTED`（没有下游智能体运行）时，中间件就是这次运行的产出方。请用 SDK 的 `PROTOCOL_VERSION` 常量声明它构建时所针对的版本。不要照抄客户端的 `RunAgentInput.protocolVersion`，也不要省略该字段。
+- **转译运行**。把事件流改写成另一种协议版本的中间件，声明它所发出的版本。
 
-A synthesized run uses the input's `threadId` and `runId`, like any other
-producer:
+与任何其他产出方一样，合成运行使用输入中的 `threadId` 与 `runId`：
 
 ```typescript
 import { EventType, PROTOCOL_VERSION, type RunStartedEvent } from "@ag-ui/client"
@@ -202,20 +190,20 @@ const runStarted: RunStartedEvent = {
 }
 ```
 
-## Best Practices
+## 最佳实践
 
-1. **Keep middleware focused** – Each middleware should have a single responsibility
-2. **Handle errors gracefully** – Use RxJS error handling operators
-3. **Avoid blocking operations** – Use async patterns for I/O operations
-4. **Document side effects** – Clearly indicate if middleware modifies state
-5. **Test middleware independently** – Write unit tests for each middleware
-6. **Consider performance** – Be mindful of processing overhead in the event stream
+1. **保持中间件聚焦**——每个中间件应只承担单一职责
+2. **优雅处理错误**——使用 RxJS 的错误处理操作符
+3. **避免阻塞操作**——I/O 操作使用异步模式
+4. **记录副作用**——如果中间件会修改状态，要明确说明
+5. **独立测试中间件**——为每个中间件编写单元测试
+6. **关注性能**——注意事件流中的处理开销
 
-## Advanced Use Cases
+## 高级用例
 
-### Conditional Middleware
+### 条件中间件
 
-Apply middleware based on runtime conditions:
+根据运行时条件应用中间件：
 
 ```typescript
 const conditionalMiddleware: MiddlewareFunction = (input, next) => {
@@ -229,8 +217,8 @@ const conditionalMiddleware: MiddlewareFunction = (input, next) => {
 }
 ```
 
-For event transformation and stream-control variants, see the [JS middleware reference](/sdk/js/client/middleware).
+事件转换与流控制的更多变体见 [JS 中间件参考](/sdk/js/client/middleware)。
 
-## Conclusion
+## 结语
 
-Middleware provides a flexible and powerful way to extend AG-UI agents without modifying their core logic. Whether you need simple event transformation or complex stateful processing, the middleware system offers the tools to build robust, maintainable agent applications.
+中间件提供了一种灵活而强大的方式，无需修改核心逻辑即可扩展 AG-UI 智能体。无论你需要简单的事件转换，还是复杂的有状态处理，中间件系统都提供了构建健壮、可维护的智能体应用所需的工具。

@@ -1,21 +1,21 @@
 ---
-title: "Generative UI"
-description: "Understanding AG-UI's relationship with generative UI specifications"
+title: "生成式 UI"
+description: "理解 AG-UI 与各生成式 UI 规范之间的关系"
 ---
 
-## **AG-UI and Generative UI Specs**
+## **AG-UI 与生成式 UI 规范**
 
-Several recently released specs have enabled agents to return generative UI, increasing the power and flexibility of the Agent&lt;-&gt;User conversation.
+多个近期发布的规范让智能体能够返回生成式 UI，大大增强了智能体与用户对话的能力和灵活性。
 
-A2UI, MCP-UI, and Open-JSON-UI are all **generative UI specifications.** Generative UIs allow agents to respond to users not only with text but also with dynamic UI components.
+A2UI、MCP-UI 与 Open-JSON-UI 都是**生成式 UI 规范**。生成式 UI 让智能体对用户的响应不再局限于文本，还可以是动态的 UI 组件。
 
-| **Specification** | **Origin / Maintainer** | **Purpose** |
+| **规范** | **来源/维护方** | **用途** |
 | --- | --- | --- |
-| **A2UI** | Google | A declarative, LLM-friendly Generative UI spec. JSONL-based and streaming, designed for platform-agnostic rendering. |
-| **Open-JSON-UI** | OpenAI | An open standardization of OpenAI's internal declarative Generative UI schema. |
-| **MCP-UI** | Microsoft + Shopify | A fully open, iframe-based Generative UI standard extending MCP for user-facing experiences. |
+| **A2UI** | Google | 一套声明式、对 LLM 友好的生成式 UI 规范。基于 JSONL 且支持流式，面向与平台无关的渲染而设计。 |
+| **Open-JSON-UI** | OpenAI | 对 OpenAI 内部声明式生成式 UI schema 的公开标准化。 |
+| **MCP-UI** | Microsoft + Shopify | 一个完全开放的、基于 iframe 的生成式 UI 标准，扩展 MCP 以支持面向用户的体验。 |
 
-Despite the naming similarities, **AG-UI is not a generative UI specification** — it's a **User Interaction protocol** that provides the **bi-directional runtime connection** between the agent and the application.
+尽管名字相近，**AG-UI 并不是生成式 UI 规范**——它是一个**用户交互协议**，在智能体与应用之间提供**双向的运行时连接**。
 
-AG-UI natively supports all of the above generative UI specs and allows developers to define **their own custom generative UI standards** as well.
+AG-UI 原生支持上述所有生成式 UI 规范，同时也允许开发者定义**自己的自定义生成式 UI 标准**。
 

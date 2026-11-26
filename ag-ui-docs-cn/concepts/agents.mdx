@@ -1,40 +1,36 @@
 ---
-title: "Agents"
-description: "Learn about agents in the Agent User Interaction Protocol"
+title: "智能体"
+description: "了解智能体–用户交互协议（AG-UI）中的智能体"
 ---
 
-# Agents
+# 智能体
 
-Agents are the core components in the AG-UI protocol that process requests and
-generate responses. They establish a standardized way for front-end applications
-to communicate with AI services through a consistent interface, regardless of
-the underlying implementation.
+智能体（agent）是 AG-UI 协议中处理请求并生成响应的核心组件。它为前端应用与 AI 服务之间的通信建立了一套标准化方式：无论底层实现如何，双方都通过一致的接口进行交互。
 
-## What is an Agent?
+## 什么是智能体？
 
-In AG-UI, an agent is a class that:
+在 AG-UI 中，智能体是一个类（class），它负责：
 
-1. Manages conversation state and message history
-2. Processes incoming messages and context
-3. Generates responses through an event-driven streaming interface
-4. Follows a standardized protocol for communication
+1. 管理对话状态与消息历史
+2. 处理传入的消息与上下文
+3. 通过事件驱动的流式接口生成响应
+4. 遵循标准化的通信协议
 
-Agents can be implemented to connect with any AI service, including:
+智能体可以接入任何 AI 服务，包括：
 
-- Large language models (LLMs) like GPT-4 or Claude
-- Custom AI systems
-- Retrieval augmented generation (RAG) systems
-- Multi-agent systems
+- GPT-4、Claude 等大语言模型（LLM）
+- 自定义 AI 系统
+- 检索增强生成（RAG）系统
+- 多智能体系统
 
-## Agent Architecture
+## 智能体架构
 
-All agents in AG-UI extend the `AbstractAgent` class, which provides the
-foundation for:
+AG-UI 中的所有智能体都继承自 `AbstractAgent` 类，它为以下能力打下基础：
 
-- State management
-- Message history tracking
-- Event stream processing
-- Tool usage
+- 状态管理
+- 消息历史追踪
+- 事件流处理
+- 工具使用
 
 ```typescript
 import { AbstractAgent } from "@ag-ui/client"
@@ -46,28 +42,27 @@ class MyAgent extends AbstractAgent {
 }
 ```
 
-### Core Components
+### 核心组件
 
-AG-UI agents have several key components:
+AG-UI 智能体包含几个关键组件：
 
-1. **Configuration**: Agent ID, thread ID, and initial state
-2. **Messages**: Conversation history with user and assistant messages
-3. **State**: Structured data that persists across interactions
-4. **Events**: Standardized messages for communication with clients
-5. **Tools**: Functions that agents can use to interact with external systems
+1. **配置**：智能体 ID、线程 ID 与初始状态
+2. **消息**：包含用户消息与助手消息的对话历史
+3. **状态**：跨交互持久保存的结构化数据
+4. **事件**：用于与客户端通信的标准化消息
+5. **工具**：智能体可用来与外部系统交互的函数
 
-## Agent Types
+## 智能体类型
 
-AG-UI provides different agent implementations to suit various needs:
+AG-UI 提供了多种智能体实现，以满足不同需求：
 
 ### AbstractAgent
 
-The base class that all agents extend. It handles core event processing, state
-management, and message history.
+所有智能体都会继承的基类，负责核心的事件处理、状态管理与消息历史。
 
 ### HttpAgent
 
-A concrete implementation that connects to remote AI services via HTTP:
+一个通过 HTTP 连接远程 AI 服务的具体实现：
 
 ```typescript
 import { HttpAgent } from "@ag-ui/client"
@@ -80,10 +75,9 @@ const agent = new HttpAgent({
 })
 ```
 
-### Custom Agents
+### 自定义智能体
 
-You can create custom agents to integrate with any AI service by extending
-`AbstractAgent`:
+继承 `AbstractAgent`，你就可以创建自定义智能体来接入任何 AI 服务：
 
 ```typescript
 class CustomAgent extends AbstractAgent {
@@ -95,12 +89,11 @@ class CustomAgent extends AbstractAgent {
 }
 ```
 
-## Implementing Agents
+## 实现智能体
 
-### Basic Implementation
+### 基础实现
 
-To create a custom agent, extend the `AbstractAgent` class and implement the
-required `run` method:
+要创建自定义智能体，只需继承 `AbstractAgent` 类并实现必需的 `run` 方法：
 
 ```typescript
 import {
@@ -162,26 +155,22 @@ class SimpleAgent extends AbstractAgent {
 }
 ```
 
-## Agent Capabilities
+## 智能体能力
 
-Agents in the AG-UI protocol provide a rich set of capabilities that enable
-sophisticated AI interactions:
+AG-UI 协议中的智能体提供了一整套丰富的能力，足以支撑复杂的 AI 交互：
 
-### Interactive Communication
+### 交互式通信
 
-Agents establish bi-directional communication channels with front-end
-applications through event streams. This enables:
+智能体通过事件流与前端应用建立双向通信通道。这让以下能力成为可能：
 
-- Real-time streaming responses character-by-character
-- Immediate feedback loops between user and AI
-- Progress indicators for long-running operations
-- Structured data exchange in both directions
+- 实时逐字符流式输出响应
+- 用户与 AI 之间的即时反馈闭环
+- 为长时间运行的操作提供进度指示
+- 双向的结构化数据交换
 
-### Tool Usage
+### 工具使用
 
-Agents can use tools to perform actions and access external resources.
-Importantly, tools are defined and passed in from the front-end application to
-the agent, allowing for a flexible and extensible system:
+智能体可以使用工具来执行操作、访问外部资源。值得注意的是，工具由前端应用定义并传入智能体，这让整个系统既灵活又易于扩展：
 
 ```typescript
 // Tool definition
@@ -216,41 +205,31 @@ agent.runAgent({
 })
 ```
 
-Tools are invoked through a sequence of events:
+工具通过一系列事件来调用：
 
-1. `TOOL_CALL_START`: Indicates the beginning of a tool call
-2. `TOOL_CALL_ARGS`: Streams the arguments for the tool call
-3. `TOOL_CALL_END`: Marks the completion of the tool call
+1. `TOOL_CALL_START`：表示一次工具调用的开始
+2. `TOOL_CALL_ARGS`：流式传输工具调用的参数
+3. `TOOL_CALL_END`：标记工具调用完成
 
-Front-end applications can then execute the tool and provide results back to the
-agent. This bidirectional flow enables sophisticated human-in-the-loop workflows
-where:
+随后，前端应用可以执行该工具，并把结果回传给智能体。这种双向流转支撑起复杂的人在回路（human-in-the-loop）工作流：
 
-- The agent can request specific actions be performed
-- Humans can execute those actions with appropriate judgment
-- Results are fed back to the agent for continued reasoning
-- The agent maintains awareness of all decisions made in the process
+- 智能体可以请求执行特定操作
+- 由人类凭借恰当的判断来执行这些操作
+- 执行结果回传给智能体，供其继续推理
+- 智能体全程掌握过程中做出的每一项决策
 
-This mechanism is particularly powerful for implementing interfaces where AI and
-humans collaborate. For example, [CopilotKit](https://docs.copilotkit.ai/)
-leverages this exact pattern with their
-[`useCopilotAction`](https://docs.copilotkit.ai/guides/frontend-actions) hook,
-which provides a simplified way to define and handle tools in React
-applications.
+这一机制在实现 AI 与人类协作的界面时尤为强大。例如，[CopilotKit](https://docs.copilotkit.ai/) 的 [`useCopilotAction`](https://docs.copilotkit.ai/guides/frontend-actions) hook 用的正是这套模式，它为 React 应用中定义和处理工具提供了更简洁的方式。
 
-By keeping the AI informed about human decisions through the tool mechanism,
-applications can maintain context and create more natural collaborative
-experiences between users and AI assistants.
+借助工具机制让 AI 了解人类做出的决策，应用就能保持上下文连贯，在用户与 AI 助手之间营造更自然的协作体验。
 
-### State Management
+### 状态管理
 
-Agents maintain a structured state that persists across interactions. This state
-can be:
+智能体维护着一份跨交互持久保存的结构化状态。这份状态可以：
 
-- Updated incrementally through `STATE_DELTA` events
-- Completely refreshed with `STATE_SNAPSHOT` events
-- Accessed by both the agent and front-end
-- Used to store user preferences, conversation context, or application state
+- 通过 `STATE_DELTA` 事件增量更新
+- 通过 `STATE_SNAPSHOT` 事件整体刷新
+- 被智能体与前端共同访问
+- 用于存储用户偏好、对话上下文或应用状态
 
 ```typescript
 // Accessing agent state
@@ -265,39 +244,36 @@ agent.runAgent().subscribe((event) => {
 })
 ```
 
-### Multi-Agent Collaboration
+### 多智能体协作
 
-AG-UI supports agent-to-agent handoff and collaboration:
+AG-UI 支持智能体之间的交接（handoff）与协作：
 
-- Agents can delegate tasks to other specialized agents
-- Multiple agents can work together in a coordinated workflow
-- State and context can be transferred between agents
-- The front-end maintains a consistent experience across agent transitions
+- 智能体可以把任务委派给其他专职智能体
+- 多个智能体可以在协同工作流中配合完成工作
+- 状态与上下文可以在智能体之间传递
+- 前端在智能体切换的全程保持一致的体验
 
-For example, a general assistant agent might hand off to a specialized coding
-agent when programming help is needed, passing along the conversation context
-and specific requirements.
+例如，通用助手智能体在需要编程协助时，可以交接给专职的编程智能体，同时带上对话上下文和具体需求。
 
-### Human-in-the-Loop Workflows
+### 人在回路工作流
 
-Agents support human intervention and assistance:
+智能体支持人类介入与协助：
 
-- Agents can request human input on specific decisions
-- Front-ends can pause agent execution and resume it after human feedback
-- Human experts can review and modify agent outputs before they're finalized
-- Hybrid workflows combine AI efficiency with human judgment
+- 智能体可以就特定决策请求人类输入
+- 前端可以暂停智能体执行，并在收到人类反馈后恢复运行
+- 人类专家可以在智能体输出定稿前审查并修改
+- 混合工作流将 AI 的效率与人类的判断结合在一起
 
-This enables applications where the agent acts as a collaborative partner rather
-than an autonomous system.
+这让智能体得以在应用中扮演协作伙伴，而非完全自主的系统。
 
-### Conversational Memory
+### 对话记忆
 
-Agents maintain a complete history of conversation messages:
+智能体维护着完整的对话消息历史：
 
-- Past interactions inform future responses
-- Message history is synchronized between client and server
-- Messages can include rich content (text, structured data, references)
-- The context window can be managed to focus on relevant information
+- 过往的交互会影响后续响应
+- 消息历史在客户端与服务端之间保持同步
+- 消息可以包含富内容（文本、结构化数据、引用）
+- 可以管理上下文窗口，聚焦于相关信息
 
 ```typescript
 // Accessing message history
@@ -311,21 +287,20 @@ agent.messages.push({
 })
 ```
 
-### Metadata and Instrumentation
+### 元数据与埋点
 
-Agents can emit metadata about their internal processes:
+智能体可以发出描述其内部过程的元数据：
 
-- Reasoning steps through custom events
-- Performance metrics and timing information
-- Source citations and reference tracking
-- Confidence scores for different response options
+- 通过自定义事件输出推理步骤
+- 性能指标与耗时信息
+- 来源引用与参考信息追踪
+- 不同响应选项的置信度评分
 
-This allows front-ends to provide transparency into the agent's decision-making
-process and help users understand how conclusions were reached.
+这让前端得以透明展示智能体的决策过程，帮助用户理解结论是如何得出的。
 
-## Using Agents
+## 使用智能体
 
-Once you've implemented or instantiated an agent, you can use it like this:
+实现或实例化智能体之后，就可以这样使用它：
 
 ```typescript
 // Create an agent instance
@@ -364,9 +339,9 @@ agent
   })
 ```
 
-## Agent Configuration
+## 智能体配置
 
-Agents accept configuration through the constructor:
+智能体通过构造函数接受配置：
 
 ```typescript
 interface AgentConfig {
@@ -389,9 +364,9 @@ const agent = new HttpAgent({
 })
 ```
 
-## Agent State Management
+## 智能体状态管理
 
-AG-UI agents maintain state across interactions:
+AG-UI 智能体会在多次交互之间维护状态：
 
 ```typescript
 // Access current state
@@ -404,13 +379,8 @@ console.log(agent.messages)
 const clonedAgent = agent.clone()
 ```
 
-## Conclusion
+## 结语
 
-Agents are the foundation of the AG-UI protocol, providing a standardized way to
-connect front-end applications with AI services. By implementing the
-`AbstractAgent` class, you can create custom integrations with any AI service
-while maintaining a consistent interface for your applications.
+智能体是 AG-UI 协议的基石，为前端应用连接 AI 服务提供了标准化方式。通过实现 `AbstractAgent` 类，你可以创建接入任何 AI 服务的自定义集成，同时为应用保持一致的接口。
 
-The event-driven architecture enables real-time, streaming interactions that are
-essential for modern AI applications, and the standardized protocol ensures
-compatibility across different implementations.
+事件驱动架构带来了现代 AI 应用必不可少的实时流式交互，而标准化协议则确保了不同实现之间的兼容性。

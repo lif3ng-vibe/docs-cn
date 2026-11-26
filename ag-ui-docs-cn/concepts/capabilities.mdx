@@ -1,23 +1,15 @@
 ---
-title: "Capabilities"
-description: "Dynamic capability discovery for agents in the AG-UI protocol"
+title: "能力"
+description: "AG-UI 协议中智能体的动态能力发现"
 ---
 
-# Capabilities
+# 能力
 
-Agents in the AG-UI protocol can declare what they support at runtime through
-**capability discovery**. This allows clients to query an agent and adapt their
-behavior based on what features are available — without guessing or hardcoding
-assumptions.
+AG-UI 协议中的智能体可以通过**能力发现**（capability discovery）在运行时声明自己支持哪些特性。这让客户端能够查询智能体，并根据可用特性调整自身行为——无需猜测，也不必硬编码假设。
 
-## How It Works
+## 工作原理
 
-`AbstractAgent` declares an optional `getCapabilities()` method that returns a
-typed snapshot of everything the agent currently supports. It is implemented by
-agent subclasses that know their own capabilities — the LangGraph and ADK
-integrations, or your own — not by the bare `HttpAgent`, which is a transport
-and has no discovery endpoint to ask. The optional call below returns
-`undefined` for an agent that does not implement it:
+`AbstractAgent` 声明了一个可选的 `getCapabilities()` 方法，返回一个带类型的快照，涵盖智能体当前支持的一切。该方法由清楚自身能力的智能体子类实现——例如 LangGraph、ADK 集成，或你自己写的子类——而不是由单纯的 `HttpAgent` 实现：后者只是一层传输层，没有可供查询的发现端点。下面这个可选调用在智能体未实现该方法时会返回 `undefined`：
 
 ```typescript
 // Any AbstractAgent subclass that implements getCapabilities(); a plain
@@ -35,20 +27,16 @@ if (capabilities?.reasoning?.supported) {
 }
 ```
 
-### Key Principles
+### 关键原则
 
-- **Discovery only** — the agent declares what it can do, there is no
-  negotiation
-- **Dynamic** — returns the current state at the time of the call (e.g., if
-  tools are added, the next call reflects them)
-- **Optional** — agents that don't implement it return `undefined`
-- **Absent = unknown** — only declare what you support, omitted fields mean the
-  capability is not declared
+- **只做声明**——智能体声明自己能做什么，不存在协商过程
+- **动态**——返回调用时刻的最新状态（例如新增了工具，下一次调用就会反映出来）
+- **可选**——未实现该方法的智能体返回 `undefined`
+- **缺省即未知**——只声明你支持的能力，省略的字段表示该能力未声明
 
-## The AgentCapabilities Interface
+## AgentCapabilities 接口
 
-Capabilities are organized into typed categories, each representing a different
-aspect of agent functionality:
+能力按带类型的类别组织，每个类别对应智能体功能的一个侧面：
 
 ```typescript
 interface AgentCapabilities {
@@ -77,16 +65,13 @@ interface AgentCapabilities {
 }
 ```
 
-The `custom` field is an escape hatch for integration-specific capabilities that
-don't fit into the standard categories.
+`custom` 字段是一个兜底出口，用于承载不适合放进标准类别的集成专属能力。
 
-## Capability Categories
+## 能力类别
 
-### Identity
+### 身份信息
 
-Basic metadata about the agent. Useful for discovery UIs, agent marketplaces,
-and debugging. Set these when you want clients to display agent information or
-when multiple agents are available and users need to pick one.
+关于智能体的基本元数据。对发现型 UI、智能体市场和调试都很有用。当你希望客户端展示智能体信息，或者在多个智能体可供选择、需要用户挑选其一时，可以设置这些字段。
 
 ```typescript
 interface IdentityCapabilities {
@@ -107,11 +92,9 @@ interface IdentityCapabilities {
 }
 ```
 
-### Transport
+### 传输层
 
-Declares which transport mechanisms the agent supports. Clients use this to pick
-the best connection strategy. Only set flags to `true` for transports your agent
-actually handles — omit or set `false` for unsupported ones.
+声明智能体支持哪些传输机制。客户端据此选择最佳的连接策略。只为你实际支持的传输把对应标志设为 `true`——不支持的就省略或设为 `false`。
 
 ```typescript
 interface TransportCapabilities {
@@ -128,12 +111,9 @@ interface TransportCapabilities {
 }
 ```
 
-### Tools
+### 工具
 
-Tool calling capabilities. Distinguishes between tools the agent itself provides
-(listed in `items`) and tools the client passes at runtime via
-`RunAgentInput.tools`. Enable this when your agent can call functions, search the
-web, execute code, etc.
+工具调用能力。它区分了智能体自己提供的工具（列在 `items` 中）与客户端在运行时通过 `RunAgentInput.tools` 传入的工具。当你的智能体能够调用函数、搜索网页、执行代码等，就启用这一项。
 
 ```typescript
 interface ToolsCapabilities {
@@ -150,11 +130,9 @@ interface ToolsCapabilities {
 }
 ```
 
-### Output
+### 输出
 
-Output format support. Enable `structuredOutput` when your agent can return
-responses conforming to a JSON schema, which is useful for programmatic
-consumption.
+输出格式支持。当你的智能体能返回符合 JSON schema 的响应时，启用 `structuredOutput`，这对程序化消费非常有用。
 
 ```typescript
 interface OutputCapabilities {
@@ -166,10 +144,9 @@ interface OutputCapabilities {
 }
 ```
 
-### State
+### 状态
 
-State and memory management capabilities. These tell the client how the agent
-handles shared state and whether conversation context persists across runs.
+状态与记忆管理能力。它们告诉客户端智能体如何处理共享状态，以及对话上下文是否会跨运行保留。
 
 ```typescript
 interface StateCapabilities {
@@ -186,10 +163,9 @@ interface StateCapabilities {
 }
 ```
 
-### Multi-Agent
+### 多智能体
 
-Multi-agent coordination capabilities. Enable these when your agent can
-orchestrate or hand off work to other agents.
+多智能体协作能力。当你的智能体能够编排工作，或把工作交接给其他智能体时，启用这些字段。
 
 ```typescript
 interface MultiAgentCapabilities {
@@ -204,10 +180,9 @@ interface MultiAgentCapabilities {
 }
 ```
 
-### Reasoning
+### 推理
 
-Reasoning and thinking capabilities. Enable these when your agent exposes its
-internal thought process (e.g., chain-of-thought, extended thinking).
+推理（reasoning）与思考（thinking）能力。当你的智能体会暴露内部思考过程（例如思维链、扩展思考）时，启用这些字段。
 
 ```typescript
 interface ReasoningCapabilities {
@@ -221,12 +196,9 @@ interface ReasoningCapabilities {
 }
 ```
 
-### Multimodal
+### 多模态
 
-Multimodal input and output support, organized into `input` and `output`
-sub-objects so clients can independently query what the agent accepts versus what
-it produces. Clients use this to show/hide file upload buttons, audio recorders,
-image pickers, etc.
+多模态输入与输出支持，拆分为 `input` 和 `output` 两个子对象，客户端因此可以分别查询智能体接受什么输入、产出什么输出。客户端据此显示或隐藏文件上传按钮、录音控件、图片选择器等。
 
 ```typescript
 interface MultimodalInputCapabilities {
@@ -257,10 +229,9 @@ interface MultimodalCapabilities {
 }
 ```
 
-### Execution
+### 执行控制
 
-Execution control and limits. Declare these so clients can set expectations about
-how long or how many steps an agent run might take.
+执行控制与限制。声明这些信息后，客户端就能对一次智能体运行可能耗费的时长或步数建立合理预期。
 
 ```typescript
 interface ExecutionCapabilities {
@@ -277,10 +248,9 @@ interface ExecutionCapabilities {
 }
 ```
 
-### Human-in-the-Loop
+### 人在回路
 
-Human-in-the-loop interaction support. Enable these when your agent can pause
-execution to request human input, approval, or feedback before continuing.
+人在回路（human-in-the-loop）交互支持。当你的智能体能暂停执行、请求人类输入意见、批准或反馈后再继续时，启用这些字段。
 
 ```typescript
 interface HumanInTheLoopCapabilities {
@@ -305,15 +275,14 @@ interface HumanInTheLoopCapabilities {
 ```
 
 <Note>
-  See [Interrupts](/concepts/interrupts) for the full protocol specification.
+  完整的协议规范见[中断](/concepts/interrupts)。
 </Note>
 
-## Implementing getCapabilities()
+## 实现 getCapabilities()
 
-### Custom Agents
+### 自定义智能体
 
-Implement `getCapabilities()` on your agent subclass, returning only the
-capabilities you actually support:
+在你的智能体子类上实现 `getCapabilities()`，只返回你真正支持的能力：
 
 ```typescript
 import { AbstractAgent, AgentCapabilities } from "@ag-ui/client"
@@ -345,10 +314,9 @@ class MyAgent extends AbstractAgent {
 }
 ```
 
-### Dynamic Capabilities
+### 动态能力
 
-Since `getCapabilities()` returns a live snapshot, it reflects the agent's
-current state:
+由于 `getCapabilities()` 返回的是实时快照，它能反映智能体的当前状态：
 
 ```typescript
 const agent = new MyAgent(config)
@@ -363,11 +331,11 @@ caps = await agent.getCapabilities()
 console.log(caps.tools?.items?.length) // 6
 ```
 
-## Client Usage Patterns
+## 客户端使用模式
 
-### Adaptive UI
+### 自适应 UI
 
-Render UI components based on what the agent supports:
+根据智能体支持的能力渲染 UI 组件：
 
 ```typescript
 const capabilities = await agent.getCapabilities?.()
@@ -388,9 +356,9 @@ if (capabilities?.humanInTheLoop?.approvals) {
 }
 ```
 
-### Feature Gating
+### 功能开关
 
-Disable features the agent doesn't support instead of failing at runtime:
+对智能体不支持的功能直接禁用，而不是在运行时报错：
 
 ```typescript
 const capabilities = await agent.getCapabilities?.()
@@ -400,9 +368,9 @@ const canUseStructuredOutput = capabilities?.output?.structuredOutput === true
 const canStream = capabilities?.transport?.streaming === true
 ```
 
-### Custom Capabilities
+### 自定义能力
 
-Access integration-specific capabilities via the `custom` field:
+通过 `custom` 字段访问集成专属能力：
 
 ```typescript
 const capabilities = await agent.getCapabilities?.()

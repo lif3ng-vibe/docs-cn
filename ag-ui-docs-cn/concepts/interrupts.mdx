@@ -1,16 +1,12 @@
 ---
-title: "Interrupts"
+title: "中断"
 description:
-  "Human-in-the-loop pauses and resumes in the Agent User Interaction Protocol"
+  "智能体–用户交互协议中的人在回路暂停与恢复"
 ---
 
-Agents sometimes need to pause: to get human approval before executing a
-sensitive action, to request structured input, to wait on an out-of-band policy
-decision. AG-UI exposes this as an **interrupt-aware run lifecycle** — a
-terminal model where the run ends with an interrupt outcome, and the client
-starts a new run carrying per-interrupt responses.
+智能体有时需要暂停：在执行敏感操作前等待人类批准、请求结构化输入，或等待带外的策略决策。AG-UI 把这一需求呈现为**中断感知的运行生命周期**（interrupt-aware run lifecycle）——一种终结式模型：运行以中断结果结束，客户端再启动一次新的运行，携带针对每个中断的响应。
 
-## Lifecycle
+## 生命周期
 
 ```mermaid
 sequenceDiagram
@@ -32,19 +28,13 @@ sequenceDiagram
   Agent-->>Client: RunFinished { outcome: { type: "success" }, result }
 ```
 
-## Run outcomes
+## 运行结果
 
-`RunFinished` carries an optional `outcome` field — a discriminated union with
-the variant-specific data nested inside:
+`RunFinished` 携带一个可选的 `outcome` 字段——一个可辨识联合，变体专属的数据嵌套其中：
 
-- **omitted** — legacy/back-compat. Treated as a normal completion. Pre-existing
-  AG-UI clients that did not yet know about interrupts still emit this shape,
-  and new readers should accept it.
-- `{ type: "success" }` — the run completed normally. The optional `result`
-  stays at the root of the event for back-compat.
-- `{ type: "interrupt", interrupts: [...] }` — the run paused for user input.
-  `interrupts` is a non-empty array, and it lives inside the outcome so it
-  travels with the variant that needs it.
+- **缺省**——旧式/向后兼容。按正常完成处理。尚不了解中断机制的既有 AG-UI 客户端仍会发出这种形态，新的读取方应当接受它。
+- `{ type: "success" }`——运行正常完成。可选的 `result` 仍保留在事件根节点上，以向后兼容。
+- `{ type: "interrupt", interrupts: [...] }`——运行因等待用户输入而暂停。`interrupts` 是一个非空数组，位于 outcome 内部，从而随需要它的变体一起传递。
 
 ```typescript
 type RunFinishedOutcome =
@@ -60,12 +50,9 @@ type RunFinishedEvent = {
 }
 ```
 
-Because `outcome` is optional, an old producer that has never heard of
-interrupts (no `outcome` field) still validates as a `RunFinished` event under
-the new schema — clients only need to inspect `outcome` when they care about the
-interrupt-aware variant.
+由于 `outcome` 是可选的，从未听说过中断的旧式生产方（没有 `outcome` 字段）在新 schema 下仍然能通过 `RunFinished` 事件的校验——客户端只有在关心中断感知变体时才需要检查 `outcome`。
 
-## The Interrupt type
+## Interrupt 类型
 
 ```typescript
 type Interrupt = {
@@ -80,20 +67,20 @@ type Interrupt = {
 }
 ```
 
-| Field            | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`             | Correlation key across interrupt, resume, idempotency, and audit.                                                                                                                                                                                                                                                                                                                                                            |
-| `reason`         | Categorical routing hint — see [Reason taxonomy](#reason-taxonomy).                                                                                                                                                                                                                                                                                                                                                          |
-| `message`        | Human-readable prompt. Universal fallback UI content.                                                                                                                                                                                                                                                                                                                                                                        |
-| `toolCallId`     | Binds the interrupt to a prior `ToolCall*` sequence.                                                                                                                                                                                                                                                                                                                                                                         |
-| `responseSchema` | JSON Schema for the expected `resume.payload`.                                                                                                                                                                                                                                                                                                                                                                               |
-| `expiresAt`      | Optional ISO-8601 TTL. Stale resumes produce `RunError`.                                                                                                                                                                                                                                                                                                                                                                     |
-| `metadata`       | Free-form framework-specific data.                                                                                                                                                                                                                                                                                                                                                                                           |
-| `subagentRunId`  | The subagent whose work raised this interrupt — absent for a root-raised one. Attribution lives per interrupt because one run can carry interrupts from several subagents. A producer that emits the subagent lifecycle events also closes the subagent with `outcome: { type: "suspended" }` — lifecycle events remain optional, so attribution here is valid on its own (see [Subagents](/concepts/subagents#suspension)). |
+| 字段             | 用途                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`             | 在中断、恢复、幂等与审计之间起关联作用的键。                                                                                                                                                                                                                                                                                                                                                                                    |
+| `reason`         | 分类路由提示——见[原因分类](#原因分类)。                                                                                                                                                                                                                                                                                                                                                                                        |
+| `message`        | 人类可读的提示语。通用的兜底 UI 内容。                                                                                                                                                                                                                                                                                                                                                                                          |
+| `toolCallId`     | 把中断绑定到此前的 `ToolCall*` 事件序列。                                                                                                                                                                                                                                                                                                                                                                                       |
+| `responseSchema` | 预期 `resume.payload` 的 JSON Schema。                                                                                                                                                                                                                                                                                                                                                                                          |
+| `expiresAt`      | 可选的 ISO-8601 有效期。过期后的恢复会产生 `RunError`。                                                                                                                                                                                                                                                                                                                                                                         |
+| `metadata`       | 自由格式的框架专属数据。                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `subagentRunId`  | 引发该中断的子智能体——由根级直接引发时缺省。归属信息按中断记录，因为一次运行可能携带来自多个子智能体的中断。会发出子智能体生命周期事件的生产方还会以 `outcome: { type: "suspended" }` 关闭该子智能体——生命周期事件仍然是可选的，因此这里的归属信息单独成立（见[子智能体](/concepts/subagents#suspension)）。 |
 
-## Resuming a run
+## 恢复运行
 
-The next `RunAgentInput` on the same thread carries a `resume` array:
+同一线程上的下一个 `RunAgentInput` 会携带一个 `resume` 数组：
 
 ```typescript
 type RunAgentInput = {
@@ -107,123 +94,77 @@ type RunAgentInput = {
 }
 ```
 
-- `resolved` — the user responded. `payload` carries the response, validated
-  against the interrupt's `responseSchema`. Denials are expressed inside the
-  payload (for example, `{ approved: false }`), not as a separate status.
-- `cancelled` — the user abandoned without providing meaningful input. `payload`
-  should be omitted.
-- `metadata` — optional envelope data about the response (for example a
-  signature proving the human decision was not tampered with, or routing keys),
-  as opposed to `payload`, which is the answer the agent asked for and will act
-  on. Open by key; any JSON value is allowed under a key, including `null`. The
-  object itself is either absent or an object, never `null`. The `ag-ui` key is
-  reserved for AG-UI's own use. Allowed on either status.
+- `resolved`——用户已回应。`payload` 携带响应内容，并按该中断的 `responseSchema` 校验。拒绝也在 payload 内部表达（例如 `{ approved: false }`），而不是单独的状态。
+- `cancelled`——用户放弃且未提供有效输入。应省略 `payload`。
+- `metadata`——关于该响应的可选信封数据（例如证明人类决策未被篡改的签名，或路由键），与 `payload` 相对——后者是智能体所要的、并将据此行动的答案。按键开放；键下允许任意 JSON 值，包括 `null`。对象本身要么缺省、要么是对象，绝不能是 `null`。`ag-ui` 键保留给 AG-UI 自用。两种状态下都可用。
 
-## Contract rules
+## 契约规则
 
-1. **Same thread.** Resume requests must use the same `threadId` as the
-   interrupted run.
-2. **Resume linkage.** `resume[].interruptId` must reference an `id` from the
-   interrupted run's `interrupts[]`. `parentRunId` is orthogonal — it retains
-   its existing AG-UI branching/time-travel semantics.
-3. **Cover all open interrupts.** A single `resume` array must address every
-   open interrupt from the interrupted run. Partial resumes are not supported.
-4. **Pending interrupts block new input.** If a thread has unresolved
-   interrupts, any `RunAgentInput` on that thread must include a `resume`
-   addressing them. Agents receiving a non-conforming input must emit
-   `RunError`.
-5. **Idempotency.** A resume with the same
-   `(threadId, interruptId, status, payload)` must be safe to replay.
-6. **Payload validation.** If an interrupt declares a `responseSchema`, the
-   agent may validate the corresponding resume `payload` and emit `RunError` on
-   mismatch. Clients should validate before submitting.
-7. **Expiry enforcement.** Clients must not submit a resume past an interrupt's
-   `expiresAt`. Stale resumes produce `RunError`.
-8. **Graceful handling.** Agents should handle missing or invalid resume
-   payloads via `RunError`, not silent failures.
+1. **同一线程**。恢复请求必须使用与被中断运行相同的 `threadId`。
+2. **恢复关联**。`resume[].interruptId` 必须引用被中断运行的 `interrupts[]` 中出现的 `id`。`parentRunId` 与之正交——保留其既有的 AG-UI 分支/时间旅行语义。
+3. **覆盖全部待处理中断**。单个 `resume` 数组必须逐一回应被中断运行中的每个待处理中断。不支持部分恢复。
+4. **待处理中断阻塞新输入**。如果线程上存在未解决的中断，该线程上的任何 `RunAgentInput` 都必须包含针对它们的 `resume`。收到不符合要求的输入时，智能体必须发出 `RunError`。
+5. **幂等性**。相同 `(threadId, interruptId, status, payload)` 的恢复请求必须可以安全重放。
+6. **负载校验**。如果中断声明了 `responseSchema`，智能体可以校验对应的恢复 `payload`，并在不匹配时发出 `RunError`。客户端应在提交前自行校验。
+7. **过期强制执行**。客户端不得在超过中断的 `expiresAt` 之后提交恢复。过期的恢复会产生 `RunError`。
+8. **优雅处理**。智能体应通过 `RunError` 处理缺失或无效的恢复负载，而不是静默失败。
 
-## State at the interrupt boundary
+## 中断边界处的状态
 
-At the moment of interrupt, the agent must emit any state required for resume
-via `StateSnapshot` and `MessagesSnapshot` events **before** the `RunFinished`
-event that carries the interrupt.
+中断发生时，智能体必须把恢复所需的全部状态通过 `StateSnapshot` 与 `MessagesSnapshot` 事件发出，且要在携带中断的 `RunFinished` 事件**之前**。
 
-This rule makes the protocol resume-mode-agnostic: both replay-style
-continuations (rebuild context from messages + state) and checkpoint-style
-continuations (restore a suspended coroutine) must produce identical observable
-behavior on resume. Framework-native checkpointing is an implementation
-optimization, not a protocol contract.
+这条规则让协议与恢复模式无关：无论是重放式的续跑（从消息 + 状态重建上下文），还是检查点式的续跑（恢复一个被挂起的协程），在恢复时都必须产生完全一致的可观测行为。框架原生的检查点机制是实现层面的优化，不是协议契约。
 
-## Error handling
+## 错误处理
 
-`RunError` is the sole error event. The `outcome` enum does not carry an
-`"error"` value. Interrupt-specific error conditions that produce `RunError`:
+`RunError` 是唯一的错误事件。`outcome` 枚举中没有 `"error"` 取值。会触发 `RunError` 的中断相关错误情形：
 
-- A resume arrives past an interrupt's `expiresAt`.
-- A resume payload fails validation against its `responseSchema`.
-- A resume references an `interruptId` the agent cannot correlate.
-- A resume fails to address every open interrupt (violates rule 3).
-- A `RunAgentInput` on a thread with pending interrupts omits `resume` (violates
-  rule 4).
+- 恢复请求在超过中断的 `expiresAt` 之后到达。
+- 恢复负载未通过其 `responseSchema` 的校验。
+- 恢复请求引用了智能体无法关联的 `interruptId`。
+- 恢复请求未能回应全部待处理中断（违反规则 3）。
+- 存在待处理中断的线程上的 `RunAgentInput` 省略了 `resume`（违反规则 4）。
 
-## Reason taxonomy
+## 原因分类
 
-`reason` is a required string. A small set of core values is spec-defined; any
-other string is a valid extension.
+`reason` 是必填字符串。一小部分核心取值由规范定义；其他任何字符串都是合法的扩展。
 
-### Core values
+### 核心取值
 
-| Value            | Semantics                                                  | Typical companion fields                    |
-| ---------------- | ---------------------------------------------------------- | ------------------------------------------- |
-| `tool_call`      | Interrupt bound to a specific tool call awaiting decision. | `toolCallId` must be set.                   |
-| `input_required` | Agent needs structured input to continue.                  | `responseSchema` should be set.             |
-| `confirmation`   | Free-standing yes/no decision not bound to a tool.         | `responseSchema` optional; boolean default. |
+| 取值             | 语义                                                 | 常见的伴随字段                      |
+| ---------------- | ---------------------------------------------------- | ----------------------------------- |
+| `tool_call`      | 绑定到某个等待决策的工具调用的中断。                 | 必须设置 `toolCallId`。             |
+| `input_required` | 智能体需要结构化输入才能继续。                       | 应设置 `responseSchema`。           |
+| `confirmation`   | 不绑定工具的独立“是/否”决策。                        | `responseSchema` 可选；默认布尔型。 |
 
-### Custom reasons
+### 自定义原因
 
-Any other string is valid. Agents should namespace custom reasons as
-`<framework>:<name>` (for example, `langgraph:database_modification`,
-`mastra:workflow_suspend`). The `core:` prefix is reserved for future spec
-additions.
+其他任何字符串都合法。智能体应给自定义原因加上 `<framework>:<name>` 形式的命名空间前缀（例如 `langgraph:database_modification`、`mastra:workflow_suspend`）。`core:` 前缀保留给规范未来的新增内容。
 
-### Client routing
+### 客户端路由
 
-- Clients should switch on known core values for dedicated UI.
-- For unknown reasons, clients must not error. Render from `message`,
-  `responseSchema`, and `metadata`.
+- 对于已知的核心取值，客户端应据此切换到专门的 UI。
+- 对于未知的原因，客户端不得报错。应基于 `message`、`responseSchema` 和 `metadata` 渲染。
 
-## Tool-bound interrupts
+## 绑定工具的中断
 
-When an interrupt carries `reason: "tool_call"` and a `toolCallId`, the tool
-call and its resolution span two runs. The full audit trail is:
+当中断携带 `reason: "tool_call"` 和 `toolCallId` 时，这次工具调用及其解决过程跨越两次运行。完整的审计链路是：
 
-1. `ToolCallArgs` from the interrupted run (the agent's proposal).
-2. `RunAgentInput.resume` payload from the resumed run (user decision and
-   edits).
-3. `ToolCallResult` from the resumed run (actual execution outcome).
+1. 被中断运行中的 `ToolCallArgs`（智能体的提议）。
+2. 恢复运行中 `RunAgentInput.resume` 的负载（用户决策与编辑）。
+3. 恢复运行中的 `ToolCallResult`（实际执行结果）。
 
-The agent does **not** re-emit `ToolCallStart`/`ToolCallArgs`/`ToolCallEnd` in
-the resumed run — it emits `ToolCallResult` against the original `toolCallId`.
+智能体在恢复运行中**不会**重新发出 `ToolCallStart`/`ToolCallArgs`/`ToolCallEnd`——而是针对原始的 `toolCallId` 发出 `ToolCallResult`。
 
-### Server-owned tool execution
+### 服务端持有的工具执行
 
-A producer can mark a tool-bound interrupt with
-`metadata: { "ag-ui:tool-execution": "server" }` to explicitly identify a
-server-owned tool. Clients send the user's approval or rejection in `resume` and
-must not synthesize a tool-result message from that decision. The server
-provides the actual execution outcome against the original `toolCallId`. The
-.NET adapter emits this marker for native tool approval requests.
+生产方可以用 `metadata: { "ag-ui:tool-execution": "server" }` 标记一个绑定工具的中断，以明确标识该工具由服务端持有。客户端在 `resume` 中转达用户的批准或拒绝，且不得据此自行拼造工具结果消息。服务端会针对原始的 `toolCallId` 提供实际执行结果。.NET 适配器在原生工具审批请求中会发出这个标记。
 
-Keep this metadata when persisting or restoring pending interrupts. Its absence
-does not establish tool ownership; existing frontend completion contracts remain
-unchanged. The marker describes execution ownership to clients and is not an
-authorization credential: servers must still validate decisions and reject
-client-supplied results for server-owned tools.
+持久化或恢复待处理中断时应保留这条元数据。它的缺失并不能证明工具归属；既有的前端完成契约保持不变。这个标记向客户端说明执行归属，并不是授权凭证：服务端仍必须校验决策，并拒绝客户端为服务端持有的工具提交的结果。
 
-### Approve with edits
+### 带编辑批准
 
-The recommended `responseSchema` pattern for tool-bound interrupts that support
-approve-with-edits:
+对于支持“带编辑批准”的绑定工具中断，推荐的 `responseSchema` 模式：
 
 ```json
 {
@@ -239,14 +180,13 @@ approve-with-edits:
 }
 ```
 
-`editedArgs` is a full replacement, not a partial merge. Its presence in the
-schema is the **capability signal** that the client may offer edit UI.
+`editedArgs` 是整体替换，不是部分合并。它出现在 schema 中，就是一个**能力信号**，表示客户端可以提供编辑 UI。
 
-## Examples
+## 示例
 
-### Minimal tool approval
+### 最小工具审批
 
-The agent interrupts after proposing `sendEmail`:
+智能体在提议 `sendEmail` 之后发起中断：
 
 ```json
 {
@@ -272,7 +212,7 @@ The agent interrupts after proposing `sendEmail`:
 }
 ```
 
-The client submits the resume:
+客户端提交恢复请求：
 
 ```json
 {
@@ -288,10 +228,9 @@ The client submits the resume:
 }
 ```
 
-The agent continues in `run-2`, emits `ToolCallResult` against `tc-001`, then
-`RunFinished { outcome: { type: "success" } }`.
+智能体在 `run-2` 中继续执行，针对 `tc-001` 发出 `ToolCallResult`，然后发出 `RunFinished { outcome: { type: "success" } }`。
 
-### Approve with edits (full audit)
+### 带编辑批准（完整审计）
 
 ```json
 {
@@ -333,7 +272,7 @@ The agent continues in `run-2`, emits `ToolCallResult` against `tc-001`, then
 }
 ```
 
-Client resume with edits:
+客户端带编辑提交恢复请求：
 
 ```json
 {
@@ -356,13 +295,13 @@ Client resume with edits:
 }
 ```
 
-Audit trail for `tc-42`:
+`tc-42` 的审计链路：
 
-- `run-10` `ToolCallArgs` — original proposal.
-- `run-11` `RunAgentInput.resume[0].payload.editedArgs` — user edits.
-- `run-11` `ToolCallResult` — actual outcome.
+- `run-10` 的 `ToolCallArgs`——最初的提议。
+- `run-11` 的 `RunAgentInput.resume[0].payload.editedArgs`——用户的编辑。
+- `run-11` 的 `ToolCallResult`——实际结果。
 
-### Parallel interrupts
+### 并行中断
 
 ```json
 {
@@ -395,7 +334,7 @@ Audit trail for `tc-42`:
 }
 ```
 
-Client approves two, cancels one:
+客户端批准两个、取消一个：
 
 ```json
 {
@@ -417,10 +356,9 @@ Client approves two, cancels one:
 }
 ```
 
-In `run-21` the agent emits `ToolCallResult` for `tc-a` and `tc-b` and treats
-`tc-c` as not-executed.
+在 `run-21` 中，智能体为 `tc-a` 和 `tc-b` 发出 `ToolCallResult`，并把 `tc-c` 视为未执行。
 
-### Non-tool input request
+### 非工具类输入请求
 
 ```json
 {
@@ -450,7 +388,7 @@ In `run-21` the agent emits `ToolCallResult` for `tc-a` and `tc-b` and treats
 }
 ```
 
-Client response:
+客户端响应：
 
 ```json
 {
@@ -466,16 +404,14 @@ Client response:
 }
 ```
 
-## Framework integrations
+## 框架集成
 
-| Framework   | Package                                | Interrupt support                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ----------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| LangGraph   | `@ag-ui/langgraph` / `ag-ui-langgraph` | ✅ Accepts `RunAgentInput.resume[]`. Can emit `RunFinishedEvent.outcome = {type:"interrupt"}` — opt-in via `emitInterruptOutcome` / `emit_interrupt_outcome` (default off; legacy clients that resume via `command.resume` stop resuming once they see the structured outcome). Legacy `CustomEvent(name="on_interrupt")` emitted by default; disable via `enableLegacyOnInterruptEvent: false`. Subclass hooks available for custom HITL translation. |
-| AWS Strands | `@ag-ui/aws-strands`                   | ✅ Forwards native Strands interrupts via `RunFinishedEvent.outcome`.                                                                                                                                                                                                                                                                                                                                                                                  |
+| 框架        | 包                                     | 中断支持                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ----------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| LangGraph   | `@ag-ui/langgraph` / `ag-ui-langgraph` | ✅ 接受 `RunAgentInput.resume[]`。可以发出 `RunFinishedEvent.outcome = {type:"interrupt"}`——通过 `emitInterruptOutcome` / `emit_interrupt_outcome` 选择性开启（默认关闭；经由 `command.resume` 恢复的旧式客户端一旦看到结构化 outcome 就会停止恢复）。默认仍会发出旧式的 `CustomEvent(name="on_interrupt")`，可通过 `enableLegacyOnInterruptEvent: false` 关闭。提供子类钩子用于自定义 HITL 转换。 |
+| AWS Strands | `@ag-ui/aws-strands`                   | ✅ 通过 `RunFinishedEvent.outcome` 转发 Strands 原生中断。                                                                                                                                                                                                                                                                                                                                                                                              |
 
-## Related
+## 相关页面
 
-- [Events](/concepts/events) — how `RunFinished` fits into the broader event
-  stream.
-- [Capabilities](/concepts/capabilities) — the `humanInTheLoop.interrupts` and
-  `humanInTheLoop.approveWithEdits` flags agents declare.
+- [事件](/concepts/events)——`RunFinished` 在整个事件流中的位置。
+- [能力](/concepts/capabilities)——智能体声明的 `humanInTheLoop.interrupts` 与 `humanInTheLoop.approveWithEdits` 标志。

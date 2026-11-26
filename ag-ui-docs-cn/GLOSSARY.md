@@ -95,3 +95,25 @@ AG-UI、CopilotKit、LangGraph、LangChain、CrewAI、Mastra、AG2、Pydantic AI
 - 表格表头与说明列要译；Method/命令/取值/类型列不译。
 - 代码块、命令、CLI、环境变量、配置键、API 方法名、路径、报错原文一律不译。
 - **MDX 陷阱（本站高频）**：正文大量内联 JSX（`<div style={{…}}>`、`onMouseEnter={(e) => …}`、`<Note>`、`<Card>` 等）。只译 JSX 标签之间的可见文本与 `title=`、`alt=`、`aria-label=` 等**字符串字面量**属性；JSX 属性名、事件处理器表达式、style 值、className 一律不动。`<img src="/images/…">` 的 src 路径不动。
+
+## 批次补充术语（随批并入，全站以此为准）
+
+| 英文 | 中文 |
+|---|---|
+| content part / media part | 内容部分 / 媒体部分 |
+| shim | 垫片（shim） |
+| producer / consumer / forwarder | 生产者 / 消费者 / 转发方 |
+| wire key / wire format | 线上 key / 线上格式 |
+| peer dependency | peer 依赖 |
+| reasoning span | 推理区段（span） |
+| type narrowing | 收窄 |
+| handle | 句柄 |
+| fixture corpus | 测试样例库（fixture corpus） |
+| control plane | 控制平面 |
+| stub server / stub agent | 占位服务端 / 占位智能体 |
+| agent steering | 智能体引导 |
+| attribution | 归因 |
+| resume payload | resume 负载 |
+| enforcement stage | 强制执行阶段 |
+| 1st party / Supported / In Progress / Community / Partnership | 一方官方 / 已支持 / 进行中 / 社区 / 合作伙伴（introduction 集成大表取值列按此译） |
+| additional（保留英文） | harness、resolver、discriminator、dojo、AOT、profile（Omnara） |

@@ -1,36 +1,27 @@
 ---
-title: "Reasoning"
-description: "Support for LLM reasoning visibility and continuity in AG-UI"
+title: "推理"
+description: "AG-UI 对 LLM 推理可见性与连续性的支持"
 ---
 
-# Reasoning
+# 推理
 
-AG-UI provides first-class support for LLM reasoning, enabling chain-of-thought
-visibility while maintaining privacy and state continuity across conversation
-turns.
+AG-UI 为 LLM 推理（reasoning）提供一等公民级的支持，在保持隐私与跨轮次状态延续的同时，实现思维链的可见性。
 
-## Overview
+## 概览
 
-Modern LLMs increasingly use chain-of-thought reasoning to improve response
-quality. AG-UI's reasoning support addresses three key challenges:
+现代 LLM 越来越多地使用思维链推理来提升响应质量。AG-UI 的推理支持针对三个关键挑战：
 
-- **Reasoning visibility**: Surface reasoning signals (e.g., summaries) to users
-  without exposing raw chain-of-thought
-- **State continuity**: Maintain reasoning context across turns using encrypted
-  reasoning items, even under `store:false` or zero data retention (ZDR)
-  policies
-- **Privacy compliance**: Support enterprise privacy requirements while
-  preserving reasoning capabilities
+- **推理可见性**：向用户呈现推理信号（例如摘要），而不暴露原始思维链
+- **状态延续**：借助加密推理条目跨轮次维护推理上下文，即使在 `store:false` 或零数据保留（ZDR）策略下也能做到
+- **隐私合规**：在保留推理能力的同时，满足企业隐私要求
 
 <Tip>
-  Unlike Activity messages, Reasoning messages are intended to represent the
-  agent's internal thought process and may be encrypted for privacy and are
-  meant to be sent back to the agent for further processing on subsequent turns.
+  与活动消息不同，推理消息用来表示智能体的内部思考过程，可以出于隐私考虑加密，并且会在后续轮次回传给智能体做进一步处理。
 </Tip>
 
 ## ReasoningMessage
 
-The `ReasoningMessage` type represents reasoning content in the message history:
+`ReasoningMessage` 类型表示消息历史中的推理内容：
 
 ```typescript
 interface ReasoningMessage {
@@ -41,29 +32,26 @@ interface ReasoningMessage {
 }
 ```
 
-| Property         | Type          | Description                                          |
+| 属性             | 类型          | 说明                                                 |
 | ---------------- | ------------- | ---------------------------------------------------- |
-| `id`             | `string`      | Unique identifier for the reasoning message          |
-| `role`           | `"reasoning"` | Message role discriminator                           |
-| `content`        | `string`      | Reasoning content visible to the client              |
-| `encryptedValue` | `string?`     | Encrypted chain-of-thought blob for state continuity |
+| `id`             | `string`      | 推理消息的唯一标识符                                 |
+| `role`           | `"reasoning"` | 消息角色判别值                                       |
+| `content`        | `string`      | 对客户端可见的推理内容                               |
+| `encryptedValue` | `string?`     | 用于状态延续的加密思维链数据块                       |
 
-Key characteristics:
+关键特性：
 
-- **Separate from assistant messages**: Reasoning is kept distinct from final
-  responses to avoid polluting conversation history
-- **Streamable**: Content arrives via streaming events
-- **Optional encryption**: When `encryptedValue` is present, it represents
-  encrypted chain-of-thought that the client stores and forwards opaquely
+- **与助手消息分离**：推理与最终响应分开保存，避免污染对话历史
+- **可流式**：内容通过流式事件到达
+- **可选加密**：当 `encryptedValue` 存在时，它代表加密的思维链，客户端对其只做不透明的存储与转发
 
-## Reasoning Events
+## 推理事件
 
-Reasoning events manage the lifecycle of reasoning messages. See
-[Events](/concepts/events#reasoning-events) for the complete event reference.
+推理事件管理推理消息的生命周期。完整的事件参考见[事件](/concepts/events#reasoning-events)。
 
-### Event Flow
+### 事件流程
 
-A typical reasoning flow follows this pattern:
+典型的推理流程遵循如下模式：
 
 ```mermaid
 sequenceDiagram
@@ -86,57 +74,52 @@ sequenceDiagram
     Agent->>Client: ReasoningEnd
 ```
 
-### Event Types
+### 事件类型
 
-| Event                     | Purpose                                                       |
+| 事件                      | 用途                                                          |
 | ------------------------- | ------------------------------------------------------------- |
-| `ReasoningStart`          | Marks beginning of reasoning phase                            |
-| `ReasoningMessageStart`   | Begins a streaming reasoning message                          |
-| `ReasoningMessageContent` | Delivers reasoning content chunks                             |
-| `ReasoningMessageEnd`     | Completes a reasoning message                                 |
-| `ReasoningMessageChunk`   | Convenience event that auto-manages message lifecycle         |
-| `ReasoningEnd`            | Marks completion of reasoning                                 |
-| `ReasoningEncryptedValue` | Attaches encrypted chain-of-thought to a message or tool call |
+| `ReasoningStart`          | 标志推理阶段的开始                                            |
+| `ReasoningMessageStart`   | 开启一条流式推理消息                                          |
+| `ReasoningMessageContent` | 送达推理内容片段                                              |
+| `ReasoningMessageEnd`     | 结束一条推理消息                                              |
+| `ReasoningMessageChunk`   | 自动管理消息生命周期的便捷事件                                |
+| `ReasoningEnd`            | 标志推理完成                                                  |
+| `ReasoningEncryptedValue` | 把加密思维链附加到消息或工具调用                              |
 
-## Privacy and Compliance
+## 隐私与合规
 
-AG-UI reasoning is designed with privacy-first principles:
+AG-UI 的推理设计遵循隐私优先原则：
 
-### Zero Data Retention (ZDR)
+### 零数据保留（ZDR）
 
-For deployments requiring zero data retention:
+对要求零数据保留的部署：
 
-1. **Encrypted reasoning values** can carry state across turns without storing
-   decryptable content on the client
-2. The client receives and forwards `encryptedValue` blobs opaquely via
-   `ReasoningEncryptedValue` events
-3. Only the agent (or authorized backend) can decrypt the reasoning content
+1. **加密推理值**可以跨轮次携带状态，而无需在客户端存储可解密的内容
+2. 客户端通过 `ReasoningEncryptedValue` 事件接收并转发 `encryptedValue` 数据块，全程不透明
+3. 只有智能体（或经授权的后端）能解密推理内容
 
-### Visibility Control
+### 可见性控制
 
-Agents control what reasoning is visible to users:
+智能体控制哪些推理对用户可见：
 
-- **Full visibility**: Stream the complete chain-of-thought via
-  `ReasoningMessageContent` events
-- **Summary only**: Emit a condensed summary while attaching detailed reasoning
-  as encrypted values
-- **Hidden**: Use only `ReasoningEncryptedValue` events with no visible
-  streaming
+- **完全可见**：通过 `ReasoningMessageContent` 事件流式输出完整思维链
+- **仅摘要**：发出精简摘要，同时把详细推理作为加密值附加
+- **隐藏**：只使用 `ReasoningEncryptedValue` 事件，不做任何可见的流式输出
 
-### Compliance Considerations
+### 合规考量
 
-| Requirement             | Solution                                                                            |
+| 要求                    | 解决方案                                                                            |
 | ----------------------- | ----------------------------------------------------------------------------------- |
-| GDPR right to erasure   | Encrypted content can be discarded without losing reasoning capability              |
-| SOC 2 data handling     | Reasoning content never stored in plaintext on client                               |
-| HIPAA minimum necessary | Only summaries exposed; detailed reasoning stays encrypted                          |
-| Audit logging           | `ReasoningStart`/`ReasoningEnd` events provide audit trail without content exposure |
+| GDPR 的删除权           | 加密内容可以随时丢弃，而不损失推理能力                                              |
+| SOC 2 数据处理          | 推理内容从不在客户端以明文存储                                                      |
+| HIPAA 最小必要原则      | 只暴露摘要；详细推理保持加密                                                        |
+| 审计日志                | `ReasoningStart`/`ReasoningEnd` 事件提供审计线索而不暴露内容                        |
 
-## Example Implementations
+## 实现示例
 
-### Basic Reasoning Flow
+### 基础推理流程
 
-A simple implementation showing visible reasoning:
+一个展示可见推理的简单实现：
 
 ```typescript
 // Agent emits reasoning start
@@ -188,11 +171,9 @@ yield {
 }
 ```
 
-### Encrypted Content for State Continuity
+### 用于状态延续的加密内容
 
-When maintaining reasoning state across turns without exposing content, use the
-`ReasoningEncryptedValue` event to attach encrypted chain-of-thought to messages
-or tool calls:
+在跨轮次维护推理状态而不暴露内容时，使用 `ReasoningEncryptedValue` 事件把加密思维链附加到消息或工具调用上：
 
 ```typescript
 // Agent emits reasoning start
@@ -236,10 +217,9 @@ yield {
 // which the agent can decrypt to restore reasoning context
 ```
 
-### Attaching Encrypted Reasoning to Tool Calls
+### 把加密推理附加到工具调用
 
-You can also attach encrypted reasoning to tool calls to capture why the agent
-chose specific arguments or how it interpreted results:
+你也可以把加密推理附加到工具调用上，记录智能体为何选择特定参数、如何解读结果：
 
 ```typescript
 // Tool call with encrypted reasoning
@@ -270,9 +250,9 @@ yield {
 }
 ```
 
-### ZDR-Compliant Implementation
+### 符合 ZDR 的实现
 
-For zero data retention scenarios:
+针对零数据保留场景：
 
 ```typescript
 // Server-side: encrypt reasoning before sending
@@ -315,10 +295,9 @@ yield {
 // Full reasoning is never persisted in plaintext
 ```
 
-### Using the Convenience Chunk Event
+### 使用便捷 chunk 事件
 
-The `ReasoningMessageChunk` event simplifies implementation by auto-managing
-message lifecycle:
+`ReasoningMessageChunk` 事件自动管理消息生命周期，简化了实现：
 
 ```typescript
 // First chunk with messageId starts the message automatically
@@ -343,9 +322,9 @@ yield {
 }
 ```
 
-## Client Integration
+## 客户端集成
 
-### Handling Reasoning Events
+### 处理推理事件
 
 ```typescript
 import { EventType, type BaseEvent } from "@ag-ui/core"
@@ -379,9 +358,9 @@ function handleEvent(event: BaseEvent) {
 }
 ```
 
-### Passing Encrypted Reasoning Back
+### 回传加密推理
 
-When making subsequent requests, include stored encrypted values:
+在后续请求中，带上已存储的加密值：
 
 ```typescript
 const response = await agent.run({
@@ -403,16 +382,15 @@ const response = await agent.run({
 })
 ```
 
-## Migration from Thinking Events
+## 从 Thinking 事件迁移
 
 <Warning>
-  The `THINKING_*` events are deprecated and will be removed in version 1.0.0.
-  New implementations should use `REASONING_*` events.
+  `THINKING_*` 事件已废弃，将在 1.0.0 版本中移除。新的实现应使用 `REASONING_*` 事件。
 </Warning>
 
-### Deprecated Events
+### 已废弃事件
 
-The following events are deprecated:
+以下事件已废弃：
 
 | Deprecated Event                | Replacement                 |
 | ------------------------------- | --------------------------- |
@@ -422,20 +400,16 @@ The following events are deprecated:
 | `THINKING_TEXT_MESSAGE_CONTENT` | `REASONING_MESSAGE_CONTENT` |
 | `THINKING_TEXT_MESSAGE_END`     | `REASONING_MESSAGE_END`     |
 
-### Migration Steps
+### 迁移步骤
 
-1. **Update event types**: Replace all `THINKING_*` event types with their
-   `REASONING_*` equivalents
-2. **Update message types**: Use `ReasoningMessage` with `role: "reasoning"`
-   instead of any thinking-specific message types
-3. **Add encrypted value support**: Consider using `ReasoningEncryptedValue`
-   events for improved privacy compliance
-4. **Test thoroughly**: Ensure existing functionality works with the new event
-   types
+1. **更新事件类型**：把所有 `THINKING_*` 事件类型替换为对应的 `REASONING_*`
+2. **更新消息类型**：使用带 `role: "reasoning"` 的 `ReasoningMessage`，取代任何 thinking 专属的消息类型
+3. **增加加密值支持**：考虑使用 `ReasoningEncryptedValue` 事件，提升隐私合规性
+4. **充分测试**：确保既有功能在新事件类型下正常工作
 
-### Example Migration
+### 迁移示例
 
-Before (deprecated):
+迁移前（已废弃）：
 
 ```typescript
 // ❌ Deprecated - do not use
@@ -446,7 +420,7 @@ yield { type: "THINKING_TEXT_MESSAGE_END", messageId: "msg-001" }
 yield { type: "THINKING_END", messageId: "think-001" }
 ```
 
-After (current):
+迁移后（当前实现）：
 
 ```typescript
 // ✅ Current implementation
@@ -457,22 +431,16 @@ yield { type: "REASONING_MESSAGE_END", messageId: "msg-001" }
 yield { type: "REASONING_END", messageId: "reasoning-001" }
 ```
 
-## Best Practices
+## 最佳实践
 
-1. **Always pair start/end events**: Every `ReasoningStart` should have a
-   corresponding `ReasoningEnd`
-2. **Use encrypted values for sensitive reasoning**: When chain-of-thought
-   contains sensitive information, use `ReasoningEncryptedValue` to attach
-   encrypted content to messages or tool calls
-3. **Provide user feedback**: Even with encrypted reasoning, emit visible
-   summaries so users know the agent is working
-4. **Handle missing events gracefully**: Clients should be resilient to
-   incomplete event streams
-5. **Consider bandwidth**: For very long reasoning chains, consider emitting
-   only summaries to reduce data transfer
+1. **始终成对使用 start/end 事件**：每个 `ReasoningStart` 都应有对应的 `ReasoningEnd`
+2. **敏感推理使用加密值**：当思维链包含敏感信息时，用 `ReasoningEncryptedValue` 把加密内容附加到消息或工具调用上
+3. **给用户反馈**：即使推理已加密，也要发出可见摘要，让用户知道智能体在工作
+4. **优雅处理缺失事件**：客户端应对不完整的事件流具备容错能力
+5. **考虑带宽**：对特别长的推理链，考虑只发出摘要以减少数据传输
 
-## Related Documentation
+## 相关文档
 
-- [Events](/concepts/events#reasoning-events) - Complete event type reference
-- [Messages](/concepts/messages#reasoning-messages) - Message type documentation
-- [Serialization](/concepts/serialization) - State continuity and lineage
+- [事件](/concepts/events#reasoning-events)——完整的事件类型参考
+- [消息](/concepts/messages#reasoning-messages)——消息类型文档
+- [序列化](/concepts/serialization)——状态延续与血统

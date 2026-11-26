@@ -1,45 +1,29 @@
 ---
-title: "Core architecture"
-description: "Understand how AG-UI connects front-end applications to AI agents"
+title: "核心架构"
+description: "了解 AG-UI 如何将前端应用连接到 AI 智能体"
 ---
 
-Agent User Interaction Protocol (AG-UI) is built on a flexible, event-driven
-architecture that enables seamless, efficient communication between front-end
-applications and AI agents. This document covers the core architectural
-components and concepts.
+智能体–用户交互协议（AG-UI）构建在一套灵活的事件驱动架构之上，让前端应用与 AI 智能体之间实现顺畅而高效的通信。本文介绍核心的架构组件与概念。
 
-## Design Principles
+## 设计原则
 
-AG-UI is designed to be lightweight and minimally opinionated, making it easy to
-integrate with a wide range of agent implementations. The protocol's flexibility
-comes from its simple requirements:
+AG-UI 的设计轻量且尽量少做限定，因此可以轻松集成各种各样的智能体实现。协议的灵活性来自它极简的硬性要求：
 
-1. **Event-Driven Communication**: Agents need to emit any of the 16
-   standardized event types during execution, creating a stream of updates that
-   clients can process.
+1. **事件驱动通信**：智能体在执行过程中需发出 16 种标准化事件类型中的若干事件，形成客户端可处理的更新流。
 
-2. **Bidirectional Interaction**: Agents accept input from users, enabling
-   collaborative workflows where humans and AI work together seamlessly.
+2. **双向交互**：智能体接受用户输入，支撑起人与 AI 无缝协作的工作流。
 
-The protocol includes a built-in middleware layer that maximizes compatibility
-in two key ways:
+协议内置了一层中间件，从两个关键方面最大化兼容性：
 
-- **Flexible Event Structure**: Events don't need to match AG-UI's format
-  exactly—they just need to be AG-UI-compatible. This allows existing agent
-  frameworks to adapt their native event formats with minimal effort.
+- **灵活的事件结构**：事件无需与 AG-UI 的格式完全一致——只要与 AG-UI 兼容即可。这让现有的智能体框架只需少量改动就能适配自己的原生事件格式。
 
-- **Transport Agnostic**: AG-UI doesn't mandate how events are delivered,
-  supporting various transport mechanisms including Server-Sent Events (SSE),
-  webhooks, WebSockets, and more. This flexibility lets developers choose the
-  transport that best fits their architecture.
+- **传输层无关**：AG-UI 不限定事件的投递方式，支持多种传输机制，包括服务器推送事件（SSE）、webhook、WebSocket 等。这种灵活性让开发者可以为自己的架构选择最合适的传输层。
 
-This pragmatic approach makes AG-UI easy to adopt without requiring major
-changes to existing agent implementations or frontend applications.
+这种务实的做法让 AG-UI 易于采用，无需对现有的智能体实现或前端应用做大规模改造。
 
-## Architectural Overview
+## 架构总览
 
-AG-UI follows a client-server architecture that standardizes communication
-between agents and applications:
+AG-UI 采用客户端–服务端架构，将智能体与应用之间的通信标准化：
 
 ```mermaid
 flowchart LR
@@ -72,25 +56,20 @@ flowchart LR
     style A3 rx:5, ry:5;
 ```
 
-- **Application**: User-facing apps (i.e. chat or any AI-enabled application).
-- **AG-UI Client**: Generic communication clients like `HttpAgent` or
-  specialized clients for connecting to existing protocols.
-- **Agents**: Backend AI agents that process requests and generate streaming
-  responses.
-- **Secure Proxy**: Backend services that provide additional capabilities and
-  act as a secure proxy.
+- **应用**：面向用户的应用（如对话应用，或任何具备 AI 能力的应用）。
+- **AG-UI 客户端**：通用通信客户端（如 `HttpAgent`），或用于对接现有协议的专用客户端。
+- **智能体**：在后端处理请求并生成流式响应的 AI 智能体。
+- **安全代理**：提供额外能力并充当安全代理的后端服务。
 
-## Core components
+## 核心组件
 
-### Protocol layer
+### 协议层
 
-AG-UI's protocol layer provides a flexible foundation for agent communication.
+AG-UI 的协议层为智能体通信提供了灵活的基础。
 
-- **Universal compatibility**: Connect to any protocol by implementing
-  `run(input: RunAgentInput) -> Observable<BaseEvent>`
+- **普适兼容**：实现 `run(input: RunAgentInput) -> Observable<BaseEvent>` 即可接入任何协议
 
-The protocol's primary abstraction enables applications to run agents and
-receive a stream of events:
+协议的核心抽象让应用能够运行智能体并接收事件流：
 
 {/* prettier-ignore */}
 ```typescript
@@ -115,51 +94,48 @@ class MyAgent extends AbstractAgent {
 }
 ```
 
-### Standard HTTP client
+### 标准 HTTP 客户端
 
-AG-UI offers a standard HTTP client `HttpAgent` that can be used to connect to
-any endpoint that accepts POST requests with a body of type `RunAgentInput` and
-sends a stream of `BaseEvent` objects.
+AG-UI 提供标准 HTTP 客户端 `HttpAgent`，可用于连接任何这样的端点：接受请求体类型为 `RunAgentInput` 的 POST 请求，并返回 `BaseEvent` 对象流。
 
-`HttpAgent` supports the following transports:
+`HttpAgent` 支持以下传输层：
 
-- **HTTP SSE (Server-Sent Events)**
+- **HTTP SSE（服务器推送事件）**
 
-  - Text-based streaming for wide compatibility
-  - Easy to read and debug
+  - 基于文本的流式传输，兼容性广
+  - 易于阅读和调试
 
-- **HTTP binary protocol**
-  - Highly performant and space-efficient custom transport
-  - Robust binary serialization for production environments
+- **HTTP 二进制协议**
+  - 高性能、省空间的自定义传输
+  - 可靠的二进制序列化，适合生产环境
 
-### Message types
+### 消息类型
 
-AG-UI defines several event categories for different aspects of agent
-communication:
+AG-UI 针对智能体通信的不同方面定义了几类事件：
 
-- **Lifecycle events**
+- **生命周期事件**
 
-  - `RUN_STARTED`, `RUN_FINISHED`, `RUN_ERROR`
-  - `STEP_STARTED`, `STEP_FINISHED`
+  - `RUN_STARTED`、`RUN_FINISHED`、`RUN_ERROR`
+  - `STEP_STARTED`、`STEP_FINISHED`
 
-- **Text message events**
+- **文本消息事件**
 
-  - `TEXT_MESSAGE_START`, `TEXT_MESSAGE_CONTENT`, `TEXT_MESSAGE_END`
+  - `TEXT_MESSAGE_START`、`TEXT_MESSAGE_CONTENT`、`TEXT_MESSAGE_END`
 
-- **Tool call events**
+- **工具调用事件**
 
-  - `TOOL_CALL_START`, `TOOL_CALL_ARGS`, `TOOL_CALL_END`
+  - `TOOL_CALL_START`、`TOOL_CALL_ARGS`、`TOOL_CALL_END`
 
-- **State management events**
+- **状态管理事件**
 
-  - `STATE_SNAPSHOT`, `STATE_DELTA`, `MESSAGES_SNAPSHOT`
+  - `STATE_SNAPSHOT`、`STATE_DELTA`、`MESSAGES_SNAPSHOT`
 
-- **Special events**
-  - `RAW`, `CUSTOM`
+- **特殊事件**
+  - `RAW`、`CUSTOM`
 
-## Running Agents
+## 运行智能体
 
-To run an agent, you create a client instance and execute it:
+要运行智能体，先创建客户端实例，然后执行它：
 
 ```typescript
 // Create an HTTP agent client
@@ -188,31 +164,27 @@ agent.runAgent({
 });
 ```
 
-## State Management
+## 状态管理
 
-AG-UI provides efficient state management through specialized events:
+AG-UI 通过专用事件提供高效的状态管理：
 
-- `STATE_SNAPSHOT`: Complete state representation at a point in time
-- `STATE_DELTA`: Incremental state changes using JSON Patch format (RFC 6902)
-- `MESSAGES_SNAPSHOT`: Complete conversation history
+- `STATE_SNAPSHOT`：某一时刻的完整状态表示
+- `STATE_DELTA`：基于 JSON Patch 格式（RFC 6902）的增量状态变更
+- `MESSAGES_SNAPSHOT`：完整的对话历史
 
-These events enable efficient client-side state management with minimal data
-transfer.
+这些事件让客户端侧可以用最少的数据传输实现高效的状态管理。
 
-## Tools and Handoff
+## 工具与交接
 
-AG-UI supports agent-to-agent handoff and tool usage through standardized
-events:
+AG-UI 通过标准化事件支持智能体间的交接与工具使用：
 
-- Tool definitions are passed in the `runAgent` parameters
-- Tool calls are streamed as sequences of `TOOL_CALL_START` → `TOOL_CALL_ARGS` →
-  `TOOL_CALL_END` events
-- Agents can hand off to other agents, maintaining context continuity
+- 工具定义通过 `runAgent` 参数传入
+- 工具调用以 `TOOL_CALL_START` → `TOOL_CALL_ARGS` → `TOOL_CALL_END` 的事件序列流式传输
+- 智能体可以交接给其他智能体，并保持上下文连续
 
-## Events
+## 事件
 
-All communication in AG-UI is based on typed events. Every event inherits from
-`BaseEvent`:
+AG-UI 中的所有通信都基于带类型的事件。每个事件都继承自 `BaseEvent`：
 
 ```typescript
 interface BaseEvent {
@@ -222,5 +194,4 @@ interface BaseEvent {
 }
 ```
 
-Events are strictly typed and validated, ensuring reliable communication between
-components.
+事件有严格的类型定义与校验，确保组件之间通信可靠。

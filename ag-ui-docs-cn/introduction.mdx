@@ -1,186 +1,186 @@
 ---
-title: AG-UI Overview
+title: AG-UI 概览
 description: 
 ---
 
-# The Agent–User Interaction (AG-UI) Protocol
+# 智能体–用户交互协议（AG-UI）
 
 
-AG-UI is an <u><strong>open</strong></u>, <u><strong>lightweight</strong></u>, <u><strong>event-based</strong></u> protocol that standardizes how AI agents connect to user-facing applications.
+AG-UI 是一个<u><strong>开放</strong></u>、<u><strong>轻量</strong></u>、<u><strong>基于事件</strong></u>的协议，用于规范化 AI 智能体（agent）与面向用户的应用之间的连接方式。
 
-AG-UI is designed to be the general-purpose, bi-directional connection between a user-facing application and any agentic backend.
+AG-UI 的设计目标，是在面向用户的应用与任意智能体后端（agentic backend）之间，架起一条通用的双向连接。
 
-Built for simplicity and flexibility, it standardizes how agent state, UI intents, and user interactions flow between your model/agent runtime and user-facing frontend applications—to allow application developers to ship reliable, debuggable, user‑friendly agentic features fast while focusing on application needs and avoiding complex ad-hoc wiring.
+它为简洁与灵活而生，规范化了智能体状态、UI 意图（UI intent）和用户交互在模型/智能体运行时与面向用户的前端应用之间的流转方式——让应用开发者能够快速交付可靠、易调试、对用户友好的智能体功能，同时专注于应用自身的需求，避免复杂的一次性适配接线。
 
 
 
 <div style={{textAlign: 'center', margin: '2rem 0'}}>
-  <img className="block dark:hidden" src="/images/ag-ui-overview-with-partners.png" alt="AG-UI Overview" style={{maxWidth: '100%', height: 'auto', borderRadius: '8px'}} />
-  <img className="hidden dark:block" src="/images/ag-ui-overview-with-partners-dark.png" alt="AG-UI Overview" style={{maxWidth: '100%', height: 'auto', borderRadius: '8px'}} />
+  <img className="block dark:hidden" src="/images/ag-ui-overview-with-partners.png" alt="AG-UI 概览" style={{maxWidth: '100%', height: 'auto', borderRadius: '8px'}} />
+  <img className="hidden dark:block" src="/images/ag-ui-overview-with-partners-dark.png" alt="AG-UI 概览" style={{maxWidth: '100%', height: 'auto', borderRadius: '8px'}} />
 </div>
 
 ---
 
-## Agentic Protocols
+## 智能体协议
 
 <Note>
-<strong>Confused about "A2UI" and "AG-UI"?</strong>  That's understandable!  Despite the naming similarities, they are quite different and work well together.  A2UI is a [generative UI specification](./concepts/generative-ui-specs) - allowing agents to deliver UI widgets, where AG-UI is the Agent↔User Interaction protocol - which connects an agentic frontend to any agentic backend.  [Learn more](https://copilotkit.ai/ag-ui-and-a2ui)
+<strong>分不清 "A2UI" 和 "AG-UI"？</strong>这很正常！尽管名字相似，两者其实截然不同，而且能很好地配合使用。A2UI 是一套[生成式 UI 规范](./concepts/generative-ui-specs)——让智能体可以输出 UI 组件；而 AG-UI 是智能体↔用户交互协议——负责把智能体前端连接到任意智能体后端。[了解更多](https://copilotkit.ai/ag-ui-and-a2ui)
 </Note>
 
-AG-UI is one of three prominent open [agentic protocols](./agentic-protocols).
+AG-UI 是三大知名开放[智能体协议](./agentic-protocols)之一。
 
-| **Layer** | **Protocol / Example** | **Purpose** |
+| **层级** | **协议 / 示例** | **用途** |
 | --- | --- | --- |
-| **Agent ↔ User Interaction** | **AG-UI<br />(Agent–User Interaction Protocol)** | The open, event-based standard that connects agents to user-facing applications — enabling real-time, multimodal, interactive experiences. |
-| **Agent ↔ Tools & Data** | **MCP <br />(Model Context Protocol)** | Open standard (originated by Anthropic) that lets agents securely connect to external systems — tools, workflows, and data sources. |
-| **Agent ↔ Agent** | **A2A<br />(Agent to Agent)** | Open standard (originated by Google) which defines how agents coordinate and share work across distributed agentic systems. |
+| **智能体 ↔ 用户交互** | **AG-UI<br />(Agent–User Interaction Protocol)** | 开放、基于事件的标准，把智能体连接到面向用户的应用——支持实时、多模态、可交互的体验。 |
+| **智能体 ↔ 工具与数据** | **MCP <br />(Model Context Protocol)** | 开放标准（由 Anthropic 发起），让智能体能够安全地连接外部系统——工具、工作流与数据源。 |
+| **智能体 ↔ 智能体** | **A2A<br />(Agent to Agent)** | 开放标准（由 Google 发起），定义了智能体如何在分布式智能体系统之间协作与分工。 |
 
 
 
 ---
 
-## Building blocks (today & upcoming)
+## 构建模块（现有与即将推出）
 
 <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', margin: '1.5rem 0'}}>
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Streaming chat
+      流式对话
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Live token and event streaming for responsive multi turn sessions, with cancel and resume.
+        实时流式传输 token 与事件，支撑响应灵敏的多轮会话，并支持取消与恢复。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Multimodality
+      多模态
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Typed attachments and real time media (files, images, audio, transcripts); supports voice, previews, annotations, provenance.
+        类型化的附件与实时媒体（文件、图片、音频、转写文本）；支持语音、预览、标注与来源追溯。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Generative UI, static
+      生成式 UI：静态
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Render model output as stable, typed components under app control.
+        在应用的控制下，把模型输出渲染为稳定、带类型的组件。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Generative UI, declarative
+      生成式 UI：声明式
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Small declarative language for constrained yet open-ended agent UIs; agents propose trees and constraints, the app validates and mounts.
+        一门小型声明式语言，用于构建既受约束又开放的智能体 UI；智能体提出组件树与约束，由应用校验并挂载。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Shared state
+      共享状态
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        (Read-only & read-write). Typed store shared between agent and app, with streamed event-sourced diffs and conflict resolution for snappy collaboration.
+        （分只读与读写两种。）智能体与应用之间共享的类型化存储，通过流式的事件溯源增量与冲突解决机制，实现低延迟的顺畅协作。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Thinking steps
+      思考步骤
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Visualize intermediate reasoning from traces and tool events; no raw chain of thought.
+        把追踪记录与工具事件中的中间推理可视化呈现；不会暴露原始思维链。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Frontend tool calls
+      前端工具调用
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Typed handoffs from agent to frontend-executed actions, and back.
+        从智能体到前端动作（以及反向回传）的类型化交接。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Backend tool rendering
+      后端工具渲染
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Visualize backend tool outputs in app and chat, emit side effects as first-class events.
+        在应用与对话中可视化后端工具的输出，并把副作用作为一等公民事件发出。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Interrupts (human in the loop)
+      中断（human in the loop，人在回路）
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Pause, approve, edit, retry, or escalate mid flow without losing state.
+        在流程中途暂停、批准、编辑、重试或转人工处理，且不丢失状态。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Sub-agents and composition
+      子智能体与组合
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Nested delegation with scoped state, tracing, and cancellation.
+        支持嵌套委托，并带有作用域化的状态、追踪与取消机制。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Agent steering
+      智能体引导
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Dynamically redirect agent execution with real-time user input to guide behavior and outcomes.
+        用实时用户输入动态改变智能体的执行方向，引导其行为与结果。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Tool output streaming
+      工具输出流式传输
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Stream tool results and logs so UIs can render long-running effects in real time.
+        流式传输工具结果与日志，让 UI 能实时渲染耗时较长的执行效果。
       </div>
     </div>
   </div>
 
   <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer hover:border-blue-500 hover:shadow-lg" onMouseEnter={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '200px'; e.currentTarget.querySelector('.content').style.opacity = '1'; }} onMouseLeave={(e) => { e.currentTarget.querySelector('.content').style.maxHeight = '0px'; e.currentTarget.querySelector('.content').style.opacity = '0'; }}>
     <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 font-semibold text-gray-700 dark:text-gray-200">
-      Custom events
+      自定义事件
     </div>
     <div className="content bg-white dark:bg-gray-900 px-6" style={{maxHeight: '0px', opacity: '0', overflow: 'hidden', transition: 'all 0.3s ease'}}>
       <div className="py-4 text-gray-600 dark:text-gray-400" style={{lineHeight: '1.6'}}>
-        Open-ended data exchange for needs not covered by the protocol.
+        开放式的数据交换，满足协议未覆盖的需求。
       </div>
     </div>
   </div>
@@ -190,25 +190,25 @@ AG-UI is one of three prominent open [agentic protocols](./agentic-protocols).
 
 ---
 
-## Why Agentic Apps need AG-UI
+## 为什么智能体应用需要 AG-UI
 
-Agentic applications break the simple request/response model that dominated frontend-backend development in the pre-agentic era: a client makes a request, the server returns data, the client renders it, and the interaction ends.
+智能体应用打破了前智能体时代主导前后端开发的简单请求/响应模型：客户端发起请求，服务端返回数据，客户端完成渲染，交互随之结束。
 
-#### The requirements of user‑facing agents
+#### 面向用户的智能体有哪些特殊要求
 
-While agents are just software, they exhibit characteristics that make them challenging to serve behind traditional REST/GraphQL APIs:
+智能体虽然本质上也是软件，却表现出一些特性，使得很难用传统 REST/GraphQL API 在背后为它们提供服务：
 
-- Agents are **long‑running** and **stream** intermediate work—often across multi‑turn sessions.
-- Agents are **nondeterministic** and can **control application UI nondeterministically**.
-- Agents simultanously mix **structured + unstructured IO** (e.g. text & voice, alongside tool calls and state updates).
-- Agents need user-interactive **composition**: e.g. they may call sub‑agents, often recursively.
-- And more...
+- 智能体**长时间运行**，并会**流式输出**中间工作成果——往往跨越多轮会话。
+- 智能体的行为是**非确定性的**，还能**以非确定的方式控制应用 UI**。
+- 智能体会同时混合**结构化 + 非结构化 IO**（例如文本与语音，以及工具调用和状态更新）。
+- 智能体需要支持用户交互的**组合**：例如它们可能调用子智能体，而且常常是递归调用。
+- 还有更多……
 
-AG-UI is an event-based protocol that enables dynamic communication between agentic frontends and backends. It builds on top of the foundational protocols of the web (HTTP, WebSockets) as an abstraction layer designed for the agentic age—bridging the gap between traditional client-server architectures and the dynamic, stateful nature of AI agents.
+AG-UI 是一个基于事件的协议，让智能体前端与后端之间能够动态通信。它构建在 Web 的基础协议（HTTP、WebSockets）之上，是一个为智能体时代设计的抽象层——弥合了传统客户端-服务端架构与 AI 智能体动态、有状态特性之间的鸿沟。
 
 ---
 
-## AG-UI in Action
+## AG-UI 实战演示
 
 <div style={{textAlign: 'center', margin: '3rem 0 1rem 0'}}>
   <video 
@@ -221,239 +221,219 @@ AG-UI is an event-based protocol that enables dynamic communication between agen
     style={{maxWidth: '800px', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)'}}
   >
     <source src="/videos/Dojo-overview.mp4" type="video/mp4" />
-    Your browser does not support the video tag.
+    你的浏览器不支持视频播放。
   </video>
 </div>
 
 <Callout type="info" icon="lightbulb">
-You can see demo apps of the AG-UI features with the framework of your choice, with preview, code, and walkthrough docs in the [AG-UI Dojo](https://dojo.ag-ui.com/)
+你可以在 [AG-UI Dojo](https://dojo.ag-ui.com/) 中查看任意所选框架下 AG-UI 各项功能的演示应用，并附有预览、代码与操作指南文档。
 </Callout>
 
 ---
 
-## Supported Integrations
+## 已支持的集成
 
-AG-UI was born from CopilotKit's initial **partnership** with LangChain and CrewAI - and brings the incredibly popular agent-user-interactivity infrastructure to the wider agentic ecosystem.
+AG-UI 诞生于 CopilotKit 与 LangChain、CrewAI 的最初**合作**——如今它把这套极受欢迎的智能体-用户交互基础设施带向了更广阔的智能体生态。
 
-**1st party** = the platforms that have AG‑UI built in and provide documentation for guidance.
+**一方官方**（1st party）= 已内置 AG-UI 并提供配套文档指导的平台。
 
-### Direct to LLM
+### 直连 LLM
 
-| Framework | Status | AG-UI Resources |
+| 框架 | 状态 | AG-UI 资源 |
 | :-------- | ------ | --------------- |
-| Direct to LLM | Supported | [Docs](https://docs.copilotkit.ai/direct-to-llm) |
+| 直连 LLM | 已支持 | [文档](https://docs.copilotkit.ai/direct-to-llm) |
 
-### Agent Framework - Partnerships
-| Framework | Status | AG-UI Resources |
+### 智能体框架——合作伙伴
+| 框架 | 状态 | AG-UI 资源 |
 | :-------- | ------ | --------------- |
-| [LangChain](https://www.langchain.com/langgraph) | Supported | [Docs](https://docs.copilotkit.ai/langgraph/), [Demos](https://dojo.ag-ui.com/langgraph-fastapi/feature/shared_state) |
-| [CrewAI](https://crewai.com/) | Supported | [Docs](https://docs.copilotkit.ai/crewai-flows), [Demos](https://dojo.ag-ui.com/crewai/feature/shared_state) |
+| [LangChain](https://www.langchain.com/langgraph) | 已支持 | [文档](https://docs.copilotkit.ai/langgraph/), [演示](https://dojo.ag-ui.com/langgraph-fastapi/feature/shared_state) |
+| [CrewAI](https://crewai.com/) | 已支持 | [文档](https://docs.copilotkit.ai/crewai-flows), [演示](https://dojo.ag-ui.com/crewai/feature/shared_state) |
 
-### Agent Framework - 1st Party
-| Framework | Status | AG-UI Resources |
+### 智能体框架——一方官方
+| 框架 | 状态 | AG-UI 资源 |
 | :-------- | ------ | --------------- |
-| [Microsoft Agent Framework](https://azure.microsoft.com/en-us/blog/introducing-microsoft-agent-framework/) | Supported | [Docs](https://docs.copilotkit.ai/microsoft-agent-framework), [Demos](https://dojo.ag-ui.com/microsoft-agent-framework-dotnet/feature/shared_state) |
-| [Google ADK](https://google.github.io/adk-docs/get-started/) | Supported | [Docs](https://docs.copilotkit.ai/adk), [Demos](https://dojo.ag-ui.com/adk-middleware/feature/shared_state?openCopilot=true) |
-| [Google ADK (JavaScript)](https://adk.dev/get-started/typescript/) | Supported | [Quickstart](/integrations/google-adk-js), [Demos](https://dojo.ag-ui.com/adk-js/feature/agentic_chat?openCopilot=true) |
-| [Google Antigravity](https://github.com/google-antigravity/antigravity-sdk-python) | Supported | [Docs](https://docs.copilotkit.ai/google-antigravity), [Demos](https://dojo.ag-ui.com/antigravity/feature/shared_state) |
-| [AWS Strands Agents](https://github.com/strands-agents/sdk-python) | Supported | [Docs](https://docs.copilotkit.ai/aws-strands), [Demos](https://dojo.ag-ui.com/aws-strands/feature/shared_state) |
-| [AWS Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-agui-protocol-contract.html) | Supported | [Docs](https://github.com/awslabs/fullstack-solution-template-for-agentcore) |
-| [Mastra](https://mastra.ai/) | Supported | [Docs](https://docs.copilotkit.ai/mastra/), [Demos](https://dojo.ag-ui.com/mastra/feature/tool_based_generative_ui) |
-| [Pydantic AI](https://github.com/pydantic/pydantic-ai) | Supported | [Docs](https://docs.copilotkit.ai/pydantic-ai/), [Demos](https://dojo.ag-ui.com/pydantic-ai/feature/shared_state) |
-| [Agno](https://github.com/agno-agi/agno) | Supported | [Docs](https://docs.copilotkit.ai/agno/), [Demos](https://dojo.ag-ui.com/agno/feature/tool_based_generative_ui) |
-| [LlamaIndex](https://github.com/run-llama/llama_index) | Supported | [Docs](https://docs.copilotkit.ai/llamaindex/), [Demos](https://dojo.ag-ui.com/llamaindex/feature/shared_state) |
-| [AG2](https://ag2.ai/) | Supported | [Docs](https://docs.copilotkit.ai/ag2/) [Demos](https://dojo.ag-ui.com/ag2/feature/shared_state) |
-| [AWS Bedrock Agents](https://aws.amazon.com/bedrock/agents/) | In Progress | – |
+| [Microsoft Agent Framework](https://azure.microsoft.com/en-us/blog/introducing-microsoft-agent-framework/) | 已支持 | [文档](https://docs.copilotkit.ai/microsoft-agent-framework), [演示](https://dojo.ag-ui.com/microsoft-agent-framework-dotnet/feature/shared_state) |
+| [Google ADK](https://google.github.io/adk-docs/get-started/) | 已支持 | [文档](https://docs.copilotkit.ai/adk), [演示](https://dojo.ag-ui.com/adk-middleware/feature/shared_state?openCopilot=true) |
+| [Google ADK (JavaScript)](https://adk.dev/get-started/typescript/) | 已支持 | [快速上手](/integrations/google-adk-js), [演示](https://dojo.ag-ui.com/adk-js/feature/agentic_chat?openCopilot=true) |
+| [Google Antigravity](https://github.com/google-antigravity/antigravity-sdk-python) | 已支持 | [文档](https://docs.copilotkit.ai/google-antigravity), [演示](https://dojo.ag-ui.com/antigravity/feature/shared_state) |
+| [AWS Strands Agents](https://github.com/strands-agents/sdk-python) | 已支持 | [文档](https://docs.copilotkit.ai/aws-strands), [演示](https://dojo.ag-ui.com/aws-strands/feature/shared_state) |
+| [AWS Bedrock AgentCore](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-agui-protocol-contract.html) | 已支持 | [文档](https://github.com/awslabs/fullstack-solution-template-for-agentcore) |
+| [Mastra](https://mastra.ai/) | 已支持 | [文档](https://docs.copilotkit.ai/mastra/), [演示](https://dojo.ag-ui.com/mastra/feature/tool_based_generative_ui) |
+| [Pydantic AI](https://github.com/pydantic/pydantic-ai) | 已支持 | [文档](https://docs.copilotkit.ai/pydantic-ai/), [演示](https://dojo.ag-ui.com/pydantic-ai/feature/shared_state) |
+| [Agno](https://github.com/agno-agi/agno) | 已支持 | [文档](https://docs.copilotkit.ai/agno/), [演示](https://dojo.ag-ui.com/agno/feature/tool_based_generative_ui) |
+| [LlamaIndex](https://github.com/run-llama/llama_index) | 已支持 | [文档](https://docs.copilotkit.ai/llamaindex/), [演示](https://dojo.ag-ui.com/llamaindex/feature/shared_state) |
+| [AG2](https://ag2.ai/) | 已支持 | [文档](https://docs.copilotkit.ai/ag2/) [演示](https://dojo.ag-ui.com/ag2/feature/shared_state) |
+| [AWS Bedrock Agents](https://aws.amazon.com/bedrock/agents/) | 进行中 | – |
 
 
-### Agent Framework - Community
-| Framework | Status | AG-UI Resources |
+### 智能体框架——社区
+| 框架 | 状态 | AG-UI 资源 |
 | :-------- | ------ | --------------- |
-| [Claude Agent SDK](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/claude-agent-sdk) | Supported | [Demos](https://dojo.ag-ui.com/claude-agent-sdk-python/feature/shared_state) |
-| [Claude Managed Agents SDK](https://platform.claude.com/docs/en/managed-agents/overview) | Supported | [Integration](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/claude-managed-agents), [Demos](https://dojo.ag-ui.com/claude-managed-agents-python/feature/tool_based_generative_ui) |
-| [Langroid](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/langroid) | Supported | [Demos](https://dojo.ag-ui.com/langroid/feature/shared_state) |
-| [Omnara](https://omnara.com) | Supported | [Quickstart](/integrations/omnara), [Integration](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/community/omnara/typescript), [Demos](https://dojo.ag-ui.com/omnara/feature/tool_based_generative_ui) |
-| [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) | Supported | [Integration](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/openai-agents), [Demos](https://dojo.ag-ui.com/openai-agents-python/feature/tool_based_generative_ui) |
-| [Cloudflare Agents](https://developers.cloudflare.com/agents/) | Supported | [Integration](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/community/cloudflare-agents) |
+| [Claude Agent SDK](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/claude-agent-sdk) | 已支持 | [演示](https://dojo.ag-ui.com/claude-agent-sdk-python/feature/shared_state) |
+| [Claude Managed Agents SDK](https://platform.claude.com/docs/en/managed-agents/overview) | 已支持 | [集成](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/claude-managed-agents), [演示](https://dojo.ag-ui.com/claude-managed-agents-python/feature/tool_based_generative_ui) |
+| [Langroid](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/langroid) | 已支持 | [演示](https://dojo.ag-ui.com/langroid/feature/shared_state) |
+| [Omnara](https://omnara.com) | 已支持 | [快速上手](/integrations/omnara), [集成](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/community/omnara/typescript), [演示](https://dojo.ag-ui.com/omnara/feature/tool_based_generative_ui) |
+| [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) | 已支持 | [集成](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/openai-agents), [演示](https://dojo.ag-ui.com/openai-agents-python/feature/tool_based_generative_ui) |
+| [Cloudflare Agents](https://developers.cloudflare.com/agents/) | 已支持 | [集成](https://github.com/ag-ui-protocol/ag-ui/tree/main/integrations/community/cloudflare-agents) |
 
-### Agent Interaction Protocols
+### 智能体交互协议
 
-| Protocol | Status | AG-UI Resources | Integrations |
+| 协议 | 状态 | AG-UI 资源 | 集成 |
 | :------- | ------ | --------------- | ------------ |
-| [A2A Middleware](https://a2a-protocol.org/) | Supported | [Docs](https://docs.copilotkit.ai/a2a-protocol) | Partnership |
+| [A2A Middleware](https://a2a-protocol.org/) | 已支持 | [文档](https://docs.copilotkit.ai/a2a-protocol) | 官方合作 |
 
 
-### Infrastructure / Deployment
-| Platform | Status | AG-UI Resources | Integrations |
+### 基础设施与部署
+| 平台 | 状态 | AG-UI 资源 | 集成 |
 | :------- | ------ | --------------- | ------------ |
-| [Amazon Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/) | Supported | [Docs](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-agui.html) | 1st Party |
+| [Amazon Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/) | 已支持 | [文档](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-agui.html) | 一方官方 |
 
 
-### Specification (standard)
-| Framework | Status | AG-UI Resources |
+### 规范（标准）
+| 框架 | 状态 | AG-UI 资源 |
 | :-------- | ------ | --------------- |
-| [Oracle Agent Spec](http://oracle.github.io/agent-spec/) | Supported | [Docs](https://go.copilotkit.ai/copilotkit-oracle-docs), [Demos](https://dojo.ag-ui.com/agent-spec-langgraph/feature/tool_based_generative_ui) |
+| [Oracle Agent Spec](http://oracle.github.io/agent-spec/) | 已支持 | [文档](https://go.copilotkit.ai/copilotkit-oracle-docs), [演示](https://dojo.ag-ui.com/agent-spec-langgraph/feature/tool_based_generative_ui) |
 
-### Generative UI
-| Framework | Status | AG-UI Resources |
+### 生成式 UI
+| 框架 | 状态 | AG-UI 资源 |
 | :-------- | ------ | --------------- |
-| [A2UI](https://github.com/google/A2UI) | Supported | [Docs](./concepts/generative-ui-specs) |
-| [MCP Apps](https://blog.modelcontextprotocol.io/posts/2025-11-21-mcp-apps/) | Supported | [Docs](https://docs.copilotkit.ai/generative-ui-specs/mcp-apps) |
+| [A2UI](https://github.com/google/A2UI) | 已支持 | [文档](./concepts/generative-ui-specs) |
+| [MCP Apps](https://blog.modelcontextprotocol.io/posts/2025-11-21-mcp-apps/) | 已支持 | [文档](https://docs.copilotkit.ai/generative-ui-specs/mcp-apps) |
 
-### SDKs
+### SDK
 
-| SDK | Status | AG-UI Resources | Integrations |
+| SDK | 状态 | AG-UI 资源 | 集成 |
 | :-- | ------- | ---------------- | ------------- |
-| [Kotlin]() | Supported | [Getting Started](https://github.com/ag-ui-protocol/ag-ui/blob/main/docs/sdk/kotlin/overview.mdx) | Community |
-| [Golang]() | Supported | [Getting Started](https://github.com/ag-ui-protocol/ag-ui/blob/main/docs/sdk/go/overview.mdx) | Community |
-| [Dart]() | Supported | [Getting Started](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/dart) | Community |
-| [Java]() | Supported | [Getting Started](https://github.com/ag-ui-protocol/ag-ui/blob/main/docs/sdk/java/overview.mdx) | Community |
-| [Rust]() | Supported | [Getting Started](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/rust/crates/ag-ui-client) | Community |
-| [Ruby]() | Supported | [Getting Started](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/ruby) | Community |
-| [C++]() | Supported | [GitHub Source](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/c%2B%2B) | Community |
-| [.NET]() | Supported | [Getting Started](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/dotnet/samples/GettingStarted) | Community |
-| [Nim]() | In Progress | [PR](https://github.com/ag-ui-protocol/ag-ui/pull/29) | Community |
-| [Flowise]() | In Progress | [GitHub Source](https://github.com/ag-ui-protocol/ag-ui/issues/367) | Community |
-| [Langflow]() | In Progress | [GitHub Source](https://github.com/ag-ui-protocol/ag-ui/issues/366) | Community |
+| [Kotlin]() | 已支持 | [入门](https://github.com/ag-ui-protocol/ag-ui/blob/main/docs/sdk/kotlin/overview.mdx) | 社区 |
+| [Golang]() | 已支持 | [入门](https://github.com/ag-ui-protocol/ag-ui/blob/main/docs/sdk/go/overview.mdx) | 社区 |
+| [Dart]() | 已支持 | [入门](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/dart) | 社区 |
+| [Java]() | 已支持 | [入门](https://github.com/ag-ui-protocol/ag-ui/blob/main/docs/sdk/java/overview.mdx) | 社区 |
+| [Rust]() | 已支持 | [入门](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/rust/crates/ag-ui-client) | 社区 |
+| [Ruby]() | 已支持 | [入门](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/ruby) | 社区 |
+| [C++]() | 已支持 | [GitHub 源码](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/c%2B%2B) | 社区 |
+| [.NET]() | 已支持 | [入门](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/dotnet/samples/GettingStarted) | 社区 |
+| [Nim]() | 进行中 | [PR](https://github.com/ag-ui-protocol/ag-ui/pull/29) | 社区 |
+| [Flowise]() | 进行中 | [GitHub 源码](https://github.com/ag-ui-protocol/ag-ui/issues/367) | 社区 |
+| [Langflow]() | 进行中 | [GitHub 源码](https://github.com/ag-ui-protocol/ag-ui/issues/366) | 社区 |
 
-### Clients
+### 客户端
 
-| Client | Status | AG-UI Resources | Integrations |
+| 客户端 | 状态 | AG-UI 资源 | 集成 |
 | :----- | ------ | --------------- | ------------ |
-| [CopilotKit](https://github.com/CopilotKit/CopilotKit) | Supported | [Getting Started](https://docs.copilotkit.ai/direct-to-llm/guides/quickstart) | 1st Party |
-| [Terminal + Agent]() | Supported | [Getting Started](https://docs.ag-ui.com/quickstart/clients) | Community |
-| Chat platforms (Slack, Microsoft Teams) | Supported | [Channels SDK](https://github.com/CopilotKit/channels-sdk), [OpenTag example](https://github.com/CopilotKit/OpenTag) | 1st Party |
-| [React Native](https://reactnative.dev/) | Supported | [Example](https://github.com/CopilotKit/CopilotKit/tree/main/examples/v2/react-native/demo) | 1st Party |
-| [OpenBot](https://open.bot) | Supported | [Getting Started](https://open.bot/builders), [Source](https://github.com/CopilotKit/OpenBot) | 1st Party |
+| [CopilotKit](https://github.com/CopilotKit/CopilotKit) | 已支持 | [入门](https://docs.copilotkit.ai/direct-to-llm/guides/quickstart) | 一方官方 |
+| [Terminal + Agent]() | 已支持 | [入门](https://docs.ag-ui.com/quickstart/clients) | 社区 |
+| 聊天平台（Slack、Microsoft Teams） | 已支持 | [Channels SDK](https://github.com/CopilotKit/channels-sdk), [OpenTag 示例](https://github.com/CopilotKit/OpenTag) | 一方官方 |
+| [React Native](https://reactnative.dev/) | 已支持 | [示例](https://github.com/CopilotKit/CopilotKit/tree/main/examples/v2/react-native/demo) | 一方官方 |
+| [OpenBot](https://open.bot) | 已支持 | [入门](https://open.bot/builders), [源码](https://github.com/CopilotKit/OpenBot) | 一方官方 |
 
-An AG-UI client does not have to be a web application. The protocol describes an
-event stream rather than a rendering target, so a terminal, a mobile app, or a
-chat platform can each act as a client.
+AG-UI 客户端并不非得是 Web 应用。协议描述的是事件流，而不是某个渲染目标，因此终端（terminal）、移动应用或聊天平台都可以充当客户端。
 
-A chat-platform client is something anyone can build against AG-UI. The
-[Channels SDK](https://github.com/CopilotKit/channels-sdk) is one implementation
-of it, and [OpenTag](https://github.com/CopilotKit/OpenTag)
-is a complete application built on it: a Python LangGraph agent served over AG-UI
-into Slack and Microsoft Teams. In that application the agent and its runtime are
-self-hosted, while platform credentials and message delivery are handled by
-CopilotKit Intelligence — a hosted service, not part of the protocol.
+聊天平台客户端是任何人都能够基于 AG-UI 构建的东西。[Channels SDK](https://github.com/CopilotKit/channels-sdk) 就是它的一个实现，而 [OpenTag](https://github.com/CopilotKit/OpenTag) 则是构建在其上的一个完整应用：一个 Python LangGraph 智能体，通过 AG-UI 接入 Slack 和 Microsoft Teams。在这个应用里，智能体及其运行时由使用者自行托管，而平台凭据与消息投递则交给 CopilotKit Intelligence 处理——这是一项托管服务，并不属于协议的一部分。
 
-[OpenBot](https://open.bot) is a complete application on the client side of
-the protocol: an open-source workspace for AI coworkers that connects to any
-AG-UI agent endpoint. Each coworker can get a computer of its own, with a
-browser, files and tools, and every action it takes is checked against the
-deployment's policy before it runs. You host the application yourself. It
-keeps threads and memory in CopilotKit Intelligence, a separate service that
-is not part of the protocol, which CopilotKit can host for you or you can run
-yourself.
+[OpenBot](https://open.bot) 是位于协议客户端侧的一个完整应用：一个面向 AI 协作者（AI coworker）的开源工作区，可以连接任意 AG-UI 智能体端点。每位协作者都可以分到一台属于自己的"电脑"，配有浏览器、文件与工具，而且它执行的每一个动作都会先对照部署方的策略校验通过后才运行。这个应用由你自己托管。它的会话线程与记忆保存在 CopilotKit Intelligence 中——这是一项独立于协议之外的服务，既可以由 CopilotKit 代为托管，也可以自行部署运行。
 
 ---
 
-## Quick Start
+## 快速上手
 
-Choose the path that fits your needs:
+选择适合你需求的路径：
 
 <CardGroup cols={3}>
   <Card
-    title="Build agentic applications"
+    title="构建智能体应用"
     icon="rocket"
     href="/quickstart/applications"
     color="#3B82F6"
     iconType="solid"
   >
-    Build agentic applications powered by AG-UI compatible agents.
+    构建由兼容 AG-UI 的智能体驱动的智能体应用。
   </Card>
 
   <Card
-    title="Build new AG-UI integrations"
+    title="构建新的 AG-UI 集成"
     icon="plug"
     href="/quickstart/introduction"
     color="#3B82F6"
     iconType="solid"
   >
-    Build integrations for new agent frameworks, custom in-house solutions, or use AG-UI without any agent framework.
+    为新的智能体框架或自研的内部方案构建集成，也可以在不依赖任何智能体框架的情况下使用 AG-UI。
   </Card>
 
   <Card
-    title="Build AG-UI compatible clients"
+    title="构建兼容 AG-UI 的客户端"
     icon="desktop"
     href="/quickstart/clients"
     color="#3B82F6"
     iconType="solid"
   >
-    Build new clients for AG-UI-compatible agents (web, mobile, slack, messaging, etc.)
+    为兼容 AG-UI 的智能体构建新的客户端（Web、移动端、Slack、即时通讯等）。
   </Card>
 
 </CardGroup>
 
-## Explore AG-UI
+## 探索 AG-UI
 
-Dive deeper into AG-UI's core concepts and capabilities:
+深入了解 AG-UI 的核心概念与能力：
 
 <CardGroup cols={2}>
   <Card
-    title="Core architecture"
+    title="核心架构"
     icon="sitemap"
     iconType="light"
     color="#3B82F6"
     href="/concepts/architecture"
   >
-    Understand how AG-UI connects agents, protocols, and front-ends
+    理解 AG-UI 如何连接智能体、协议与前端
   </Card>
 
   <Card
-    title="Events"
+    title="事件"
     icon="bolt"
     iconType="light"
     color="#3B82F6"
     href="/concepts/events"
   >
-    Learn about AG-UI's event-driven protocol
+    了解 AG-UI 的事件驱动协议
   </Card>
 </CardGroup>
 
-## Resources
+## 资源
 
-Explore guides, tools, and integrations to help you build, optimize, and extend
-your AG-UI implementation. These resources cover everything from practical
-development workflows to debugging techniques.
+探索各类指南、工具与集成，帮助你构建、优化并扩展自己的 AG-UI 实现。这些资源涵盖了从实用开发工作流到调试技巧的方方面面。
 
 <CardGroup cols={2}>
   <Card
-    title="Developing with Cursor"
+    title="使用 Cursor 开发"
     icon="rocket"
     iconType="light"
     color="#3B82F6"
     href="/tutorials/cursor"
   >
-    Use Cursor to build AG-UI implementations faster
+    借助 Cursor 更快地构建 AG-UI 实现
   </Card>
   <Card
-    title="Troubleshooting AG-UI"
+    title="AG-UI 疑难排查"
     icon="bug"
     iconType="light"
     color="#3B82F6"
     href="/tutorials/debugging"
   >
-    Fix common issues when working with AG-UI servers and clients
+    解决使用 AG-UI 服务端与客户端时的常见问题
   </Card>
 </CardGroup>
 
 
-## Contributing
+## 参与贡献
 
-Want to contribute? Check out our
-[Contributing Guide](/development/contributing) to learn how you can help
-improve AG-UI.
+想要参与贡献？请查看[贡献指南](/development/contributing)，了解你可以如何帮助改进 AG-UI。
 
-## Support and Feedback
+## 支持与反馈
 
-Here's how to get help or provide feedback:
+获取帮助或提供反馈的方式如下：
 
-- For bug reports and feature requests related to the AG-UI specification, SDKs,
-  or documentation (open source), please
-  [create a GitHub issue](https://github.com/ag-ui-protocol/ag-ui/issues)
-- For discussions or Q&A about AG-UI, please join the
-  [Discord community](https://discord.gg/Jd3FzfdJa8)
-- For production architecture or implementation help, see
-  [Production support](/talk-to-us)
+- 与 AG-UI 规范、SDK 或文档（开源项目）相关的缺陷报告与功能请求，请
+  [创建 GitHub issue](https://github.com/ag-ui-protocol/ag-ui/issues)
+- 有关 AG-UI 的讨论或问答，请加入
+  [Discord 社区](https://discord.gg/Jd3FzfdJa8)
+- 生产环境架构或实现方面的帮助，请参阅
+  [生产支持](/talk-to-us)

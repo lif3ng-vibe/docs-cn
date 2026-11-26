@@ -1,41 +1,35 @@
 ---
-title: "State Management"
+title: "状态管理"
 description:
-  "Understanding state synchronization between agents and frontends in AG-UI"
+  "理解 AG-UI 中智能体与前端之间的状态同步"
 ---
 
-# State Management
+# 状态管理
 
-State management is a core feature of the AG-UI protocol that enables real-time
-synchronization between agents and frontend applications. By providing efficient
-mechanisms for sharing and updating state, AG-UI creates a foundation for
-collaborative experiences where both AI agents and human users can work together
-seamlessly.
+状态管理是 AG-UI 协议的核心特性之一，让智能体与前端应用之间实现实时同步。通过提供高效的共享与更新状态机制，AG-UI 为协作体验打下基础，让 AI 智能体与人类用户能够无缝配合。
 
-## Shared State Architecture
+## 共享状态架构
 
-In AG-UI, state is a structured data object that:
+在 AG-UI 中，状态是一个结构化数据对象，它：
 
-1. Persists across interactions with an agent
-2. Can be accessed by both the agent and the frontend
-3. Updates in real-time as the interaction progresses
-4. Provides context for decision-making on both sides
+1. 在与智能体的多次交互之间持久保存
+2. 可以被智能体与前端双方访问
+3. 随交互进行实时更新
+4. 为双方的决策提供上下文
 
-This shared state architecture creates a bidirectional communication channel
-where:
+这种共享状态架构建立了一条双向通信通道：
 
-- Agents can access the application's current state to make informed decisions
-- Frontends can observe and react to changes in the agent's internal state
-- Both sides can modify the state, creating a collaborative workflow
+- 智能体可以访问应用当前的状态，从而做出更有依据的决策
+- 前端可以观察并响应智能体内部状态的变化
+- 双方都能修改状态，形成协作式工作流
 
-## State Synchronization Methods
+## 状态同步方式
 
-AG-UI provides two complementary methods for state synchronization:
+AG-UI 提供两种互补的状态同步方式：
 
-### State Snapshots
+### 状态快照
 
-The `STATE_SNAPSHOT` event delivers a complete representation of an agent's
-current state:
+`STATE_SNAPSHOT` 事件完整呈现智能体当前的状态：
 
 ```typescript
 interface StateSnapshotEvent {
@@ -44,20 +38,18 @@ interface StateSnapshotEvent {
 }
 ```
 
-Snapshots are typically used:
+快照的典型使用场景：
 
-- At the beginning of an interaction to establish the initial state
-- After connection interruptions to ensure synchronization
-- When major state changes occur that require a complete refresh
-- To establish a new baseline for future delta updates
+- 在交互开始时建立初始状态
+- 在连接中断之后确保同步
+- 发生需要整体刷新的重大状态变更时
+- 为后续的增量更新建立新基线
 
-When a frontend receives a `STATE_SNAPSHOT` event, it should replace its
-existing state model entirely with the contents of the snapshot.
+前端收到 `STATE_SNAPSHOT` 事件后，应当用快照内容整体替换自己现有的状态模型。
 
-### State Deltas
+### 状态增量
 
-The `STATE_DELTA` event delivers incremental updates to the state using JSON
-Patch format (RFC 6902):
+`STATE_DELTA` 事件使用 JSON Patch 格式（RFC 6902）送达状态的增量更新：
 
 ```typescript
 interface StateDeltaEvent {
@@ -66,17 +58,15 @@ interface StateDeltaEvent {
 }
 ```
 
-Deltas are bandwidth-efficient, sending only what has changed rather than the
-entire state. This approach is particularly valuable for:
+增量只传输变化的部分而非整个状态，节省带宽。这种方式在以下情况尤其有价值：
 
-- Frequent small updates during streaming interactions
-- Large state objects where most properties remain unchanged
-- High-frequency updates that would be inefficient to send as full snapshots
+- 流式交互期间频繁的小更新
+- 大型状态对象中绝大多数属性保持不变的情况
+- 若用完整快照发送会非常低效的高频更新
 
-## JSON Patch Format
+## JSON Patch 格式
 
-AG-UI uses the JSON Patch format (RFC 6902) for state deltas, which defines a
-standardized way to express changes to a JSON document:
+AG-UI 的状态增量采用 JSON Patch 格式（RFC 6902），它定义了一种表达 JSON 文档变更的标准化方式：
 
 ```typescript
 interface JsonPatchOperation {
@@ -87,39 +77,36 @@ interface JsonPatchOperation {
 }
 ```
 
-Common operations include:
+常见操作包括：
 
-1. **add**: Adds a value to an object or array
+1. **add**：向对象或数组添加一个值
 
    ```json
    { "op": "add", "path": "/user/preferences", "value": { "theme": "dark" } }
    ```
 
-2. **replace**: Replaces a value
+2. **replace**：替换一个值
 
    ```json
    { "op": "replace", "path": "/conversation_state", "value": "paused" }
    ```
 
-3. **remove**: Removes a value
+3. **remove**：移除一个值
 
    ```json
    { "op": "remove", "path": "/temporary_data" }
    ```
 
-4. **move**: Moves a value from one location to another
+4. **move**：把值从一个位置移动到另一个位置
    ```json
    { "op": "move", "path": "/completed_items", "from": "/pending_items/0" }
    ```
 
-Frontends should apply these patches in sequence to maintain an accurate state
-representation. If inconsistencies are detected after applying patches, the
-frontend can request a fresh `STATE_SNAPSHOT`.
+前端应按顺序应用这些补丁，以维持准确的状态表示。如果在应用补丁后发现不一致，前端可以请求一份新的 `STATE_SNAPSHOT`。
 
-## State Processing in AG-UI
+## AG-UI 中的状态处理
 
-In the AG-UI implementation, state deltas are applied using the
-`fast-json-patch` library:
+在 AG-UI 的实现中，状态增量通过 `fast-json-patch` 库来应用：
 
 ```typescript
 case EventType.STATE_DELTA: {
@@ -142,27 +129,22 @@ case EventType.STATE_DELTA: {
 }
 ```
 
-This implementation ensures that:
+这一实现确保：
 
-- Patches are applied atomically (all or none)
-- The original state is not mutated during the application process
-- Errors are caught and handled gracefully
+- 补丁原子化应用（要么全部成功，要么全部不做）
+- 应用过程中不改动原始状态
+- 错误被捕获并妥善处理
 
-## Human-in-the-Loop Collaboration
+## 人在回路协作
 
-The shared state system is fundamental to human-in-the-loop workflows in AG-UI.
-It enables:
+共享状态系统是 AG-UI 人在回路工作流的基础。它让以下能力成为可能：
 
-1. **Real-time visibility**: Users can observe the agent's thought process and
-   current status
-2. **Contextual awareness**: The agent can access user actions, preferences, and
-   application state
-3. **Collaborative decision-making**: Both human and AI can contribute to the
-   evolving state
-4. **Feedback loops**: Humans can correct or guide the agent by modifying state
-   properties
+1. **实时可见**：用户可以观察智能体的思考过程与当前状态
+2. **上下文感知**：智能体可以获取用户的操作、偏好与应用状态
+3. **协作决策**：人类与 AI 都能为不断演进的状态贡献力量
+4. **反馈闭环**：人类可以通过修改状态属性来纠正或引导智能体
 
-For example, an agent might update its state with a proposed action:
+例如，智能体可能把一个提议的操作写入状态：
 
 ```json
 {
@@ -174,17 +156,13 @@ For example, an agent might update its state with a proposed action:
 }
 ```
 
-The frontend can display this proposal to the user, who can then approve,
-reject, or modify it before execution.
+前端可以把这个提议展示给用户，用户在执行前可以批准、拒绝或修改它。
 
-## CopilotKit Implementation
+## CopilotKit 实现
 
-[CopilotKit](https://docs.copilotkit.ai), a popular framework for building AI
-assistants, leverages AG-UI's state management system through its "shared state"
-feature. This implementation enables bidirectional state synchronization between
-agents (particularly LangGraph agents) and frontend applications.
+[CopilotKit](https://docs.copilotkit.ai) 是一个流行的 AI 助手构建框架，它通过“共享状态”（shared state）特性利用 AG-UI 的状态管理系统。这一实现让智能体（尤其是 LangGraph 智能体）与前端应用之间实现双向状态同步。
 
-CopilotKit's shared state system is implemented through:
+CopilotKit 的共享状态系统通过以下方式实现：
 
 ```jsx
 // In the frontend React application
@@ -194,13 +172,13 @@ const { state: agentState, setState: setAgentState } = useCoAgent({
 })
 ```
 
-This hook creates a real-time connection to the agent's state, allowing:
+这个 hook 建立了到智能体状态的实时连接，从而支持：
 
-1. Reading the agent's current state in the frontend
-2. Updating the agent's state from the frontend
-3. Rendering UI components based on the agent's state
+1. 在前端读取智能体当前状态
+2. 从前端更新智能体状态
+3. 基于智能体状态渲染 UI 组件
 
-On the backend, LangGraph agents can emit state updates using:
+在后端，LangGraph 智能体可以用如下方式发出状态更新：
 
 ```python
 # In the LangGraph agent
@@ -219,34 +197,21 @@ async def tool_node(self, state: ResearchState, config: RunnableConfig):
     return tool_state
 ```
 
-These state updates are transmitted using AG-UI's state snapshot and delta
-mechanisms, creating a seamless shared context between agent and frontend.
+这些状态更新通过 AG-UI 的状态快照与增量机制传输，在智能体与前端之间建立起无缝的共享上下文。
 
-## Best Practices
+## 最佳实践
 
-When implementing state management in AG-UI:
+在 AG-UI 中实现状态管理时：
 
-1. **Use snapshots judiciously**: Full snapshots should be sent only when
-   necessary to establish a baseline.
-2. **Prefer deltas for incremental changes**: Small state updates should use
-   deltas to minimize data transfer.
-3. **Structure state thoughtfully**: Design state objects to support partial
-   updates and minimize patch complexity.
-4. **Handle state conflicts**: Implement strategies for resolving conflicting
-   updates from agent and frontend.
-5. **Include error recovery**: Provide mechanisms to resynchronize state if
-   inconsistencies are detected.
-6. **Consider security implications**: Avoid storing sensitive information in
-   shared state.
+1. **审慎使用快照**：只在必要时才发送完整快照以建立基线。
+2. **增量变更优先用增量**：小的状态更新应使用增量，把数据传输降到最低。
+3. **精心设计状态结构**：让状态对象支持部分更新，并把补丁复杂度降到最低。
+4. **处理状态冲突**：制定解决智能体与前端更新冲突的策略。
+5. **包含错误恢复**：提供在发现不一致时重新同步状态的机制。
+6. **考虑安全问题**：避免在共享状态中存储敏感信息。
 
-## Conclusion
+## 结语
 
-AG-UI's state management system provides a powerful foundation for building
-collaborative applications where humans and AI agents work together. By
-efficiently synchronizing state between frontend and backend through snapshots
-and JSON Patch deltas, AG-UI enables sophisticated human-in-the-loop workflows
-that combine the strengths of both human intuition and AI capabilities.
+AG-UI 的状态管理系统为人机协作的应用提供了坚实的构建基础。通过快照与 JSON Patch 增量在前端与后端之间高效同步状态，AG-UI 支撑起精细的人在回路工作流，把人类直觉与 AI 能力的优势结合在一起。
 
-The implementation in frameworks like CopilotKit demonstrates how this shared
-state approach can create collaborative experiences that are more effective than
-either fully autonomous systems or traditional user interfaces.
+CopilotKit 等框架中的实现表明，这种共享状态方式所能创造的协作体验，比完全自主的系统或传统用户界面都更有效。

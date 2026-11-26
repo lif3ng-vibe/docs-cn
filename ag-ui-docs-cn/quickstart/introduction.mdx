@@ -1,6 +1,6 @@
 ---
-title: "Introduction"
-description: "Learn how to get started building an AG-UI integration"
+title: "简介"
+description: "了解如何着手构建一个 AG-UI 集成"
 ---
 
 <video
@@ -11,58 +11,56 @@ description: "Learn how to get started building an AG-UI integration"
   className="w-full h-[390px] rounded-lg object-cover mx-auto block"
 />
 
-# What is an Integration?
+# 什么是集成？
 
-An AG-UI integration makes your agent speak the AG-UI protocol. This means your agent can work with any AG-UI compatible client application - like chat interfaces, copilots, or custom AI tools.
+AG-UI 集成让你的智能体（agent）会"说" AG-UI 协议。这意味着你的智能体可以与任何兼容 AG-UI 的客户端应用协作——比如对话界面、copilot 或自定义 AI 工具。
 
-Think of it like adding a universal translator to your agent. Instead of building custom APIs for each client, you implement AG-UI once and instantly work with any compatible application.
+可以把它想象成给你的智能体装上一个通用翻译器。你无需为每个客户端分别定制 API，只需实现一次 AG-UI，就能立刻与任何兼容应用协同工作。
 
-Agents integrating with AG-UI can:
-- **Stream responses** - Real-time text that appears as it's generated
-- **Call client-side tools** - Your agent can use functions and services defined by clients
-- **Share state** - Your agent's state is bidirectional shared state
-- **Execute universally** - Integrate with any AG-UI compatible client application
-- **And much more!** - Check out the full specification [here](/concepts/events).
+接入 AG-UI 的智能体可以：
+- **流式输出响应**——文本边生成边实时呈现
+- **调用客户端侧工具**——你的智能体可以使用客户端定义的函数与服务
+- **共享状态**——智能体状态成为双向的共享状态
+- **通用执行**——可与任何兼容 AG-UI 的客户端应用集成
+- **还有更多**——完整规范请见[这里](/concepts/events)。
 
-### When should I make any integration?
-If the integration you're looking for is not listed on our [integrations page](/integrations), you'll need to make an integration. We've got a few guides on this below!
+### 什么时候需要自己做集成？
+如果你要找的集成不在[集成页面](/integrations)的列表里，就需要自己动手做一个。下文提供了几份相关指南！
 
-However, if you're looking to utilize an existing integration (like LangGraph, CrewAI, Mastra, etc.), you can skip this step and go straight to [building an application](/quickstart/applications).
+不过，如果你想使用现成的集成（比如 LangGraph、CrewAI、Mastra 等），可以跳过这一步，直接前往[构建应用](/quickstart/applications)。
 
-# Types of Integrations
-So you've decided you need an integration! Great, there are **two main ways** to implement an AG-UI integration:
+# 集成的类型
+你已经决定要做一个集成了！很好，实现 AG-UI 集成主要有**两种方式**：
 
 <CardGroup cols={2}>
   <Card
     icon="server"
-    title="Server Implementation"
+    title="服务端实现"
     href="/quickstart/server"
   >
-    Emit AG-UI events **directly from your agent** or server.
+    **直接从你的智能体**或服务端发出 AG-UI 事件。
   </Card>
   <Card
     icon="code"
-    title="Middleware Implementation"
+    title="中间件实现"
     href="/quickstart/middleware"
   >
-    **Translate existing protocols** and applications to AG-UI events.
+    **把现有协议**与应用翻译成 AG-UI 事件。
   </Card>
 </CardGroup>
 
-### When to use a server implementation
-Server implementations allow you to directly emit AG-UI events from your agent or server. If you are not using an
-agent framework or haven't created a protocol for your agent framework yet, this is the best way to get started.
+### 何时使用服务端实现
+服务端实现让你可以直接从智能体或服务端发出 AG-UI 事件。如果你没有使用智能体框架，或者还没有为所用框架设计过协议，这是最好的入门方式。
 
-Server implementations are also great for:
-- Building a **new agent frameworks** from scratch
-- **Maximum control** over how and what events are emitted
-- Exposing your agent as a **standalone API**
+服务端实现也适合以下场景：
+- 从零开始构建**全新的智能体框架**
+- 对事件如何发出、发出哪些事件拥有**最大限度的控制**
+- 把你的智能体暴露为**独立的 API**
 
-### When to use a middleware implementation
-Middleware is the flexible option. It allows you to translate existing protocols and applications to AG-UI events
-creating a bridge between your existing system and AG-UI.
+### 何时使用中间件实现
+中间件是更灵活的方案。它让你能把现有协议与应用翻译成 AG-UI 事件，在现有系统与 AG-UI 之间架起一座桥梁。
 
-Middleware is great for:
-- Taking your **existing protocol or API** and **translating it universally**
-- Working within the confines of **an existing system or framework**
-- **When you don't have direct control** over the agent framework or system
+中间件适合以下场景：
+- 拿着你的**现有协议或 API**，把它**翻译成通用格式**
+- 在**现有系统或框架**的约束下工作
+- **当你无法直接控制**智能体框架或系统时

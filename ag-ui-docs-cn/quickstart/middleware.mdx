@@ -1,62 +1,55 @@
 ---
-title: "Middleware"
+title: "中间件"
 description:
-  "Connect to existing protocols, in process agents or custom solutions via
-  AG-UI"
+  "通过 AG-UI 连接现有协议、进程内智能体或自定义方案"
 ---
 
-# Introduction
+# 简介
 
-A middleware implementation allows you to **translate existing protocols and
-applications to AG-UI events**. This approach creates a bridge between your
-existing system and AG-UI, making it perfect for adding agent capabilities to
-current applications.
+中间件实现让你可以**把现有协议与应用翻译成 AG-UI 事件**。这种方式会在现有系统与 AG-UI 之间架起一座桥梁，非常适合为现有应用添加智能体（agent）能力。
 
-## When to use a middleware implementation
+## 何时使用中间件实现
 
-Middleware is the flexible option. It allows you to translate existing protocols
-and applications to AG-UI events creating a bridge between your existing system
-and AG-UI.
+中间件是更灵活的方案。它让你能把现有协议与应用翻译成 AG-UI 事件，在现有系统与 AG-UI 之间架起一座桥梁。
 
-Middleware is great for:
+中间件适合以下场景：
 
-- Taking your **existing protocol or API** and **translating it universally**
-- Working within the confines of **an existing system or framework**
-- **When you don't have direct control** over the agent framework or system
+- 拿着你的**现有协议或 API**，把它**翻译成通用格式**
+- 在**现有系统或框架**的约束下工作
+- **当你无法直接控制**智能体框架或系统时
 
-## What you'll build
+## 我们要构建什么
 
-In this guide, we'll create a middleware agent that:
+在本指南中，我们将创建一个中间件智能体，它能够：
 
-1. Extends the `AbstractAgent` class
-2. Connects to OpenAI's GPT-4o model
-3. Translates OpenAI responses to AG-UI events
-4. Runs in-process with your application
+1. 继承 `AbstractAgent` 类
+2. 连接 OpenAI 的 GPT-4o 模型
+3. 把 OpenAI 的响应翻译成 AG-UI 事件
+4. 以进程内方式随你的应用一起运行
 
-This approach gives you maximum flexibility to integrate with existing codebases
-while maintaining the full power of the AG-UI protocol.
+这种方式让你在保留 AG-UI 协议全部能力的同时，最大限度地灵活对接现有代码库。
 
-Let's get started!
+我们开始吧！
 
-## Prerequisites
+## 前置要求
 
-Before we begin, make sure you have:
+开始之前，请确认你已具备：
 
-- [Node.js](https://nodejs.org/) **v16 or later**
-- An **OpenAI API key**
+- [Node.js](https://nodejs.org/) **v16 或更高版本**
+- 一个 **OpenAI API key**
 
-### 1. Provide your OpenAI API key
+### 1. 提供你的 OpenAI API key
 
-First, let's set up your API key:
+首先，设置你的 API key：
 
 ```bash
-# Set your OpenAI API key
+# 设置你的 OpenAI API key
 export OPENAI_API_KEY=your-api-key-here
 ```
 
-### 2. Install build utilities
+### 2. 安装构建工具
 
-Install the following tools:
+安装以下工具：
 
 ```bash
 brew install protobuf
@@ -70,25 +63,24 @@ npm i nx
 curl -fsSL https://get.pnpm.io/install.sh | sh -
 ```
 
-## Step 1 – Scaffold your integration
+## 第 1 步——搭建你的集成骨架
 
-Start by cloning the repo
+首先克隆仓库
 
 ```bash
 git clone git@github.com:ag-ui-protocol/ag-ui.git
 cd ag-ui/
 ```
 
-Copy the middleware-starter template to create your OpenAI integration:
+复制 middleware-starter 模板来创建你的 OpenAI 集成：
 
 ```bash
 cp -r integrations/middleware-starter integrations/openai
 ```
 
-### Update metadata
+### 更新元数据
 
-Open `integrations/openai/package.json` and update the fields to match your new
-folder:
+打开 `integrations/openai/package.json`，把其中的字段更新为与新文件夹匹配的值：
 
 ```json
 {
@@ -100,15 +92,14 @@ folder:
 }
 ```
 
-Next, update the class name inside `integrations/openai/src/index.ts`:
+接下来，更新 `integrations/openai/src/index.ts` 中的类名：
 
 ```ts
 // change the name to OpenAIAgent
 export class OpenAIAgent extends AbstractAgent {}
 ```
 
-Finally, introduce your integration to the dojo by adding it to
-`apps/dojo/src/menu.ts`:
+最后，把它加进 `apps/dojo/src/menu.ts`，向 dojo 介绍你的集成：
 
 ```ts
 // ...
@@ -123,7 +114,7 @@ export const menuIntegrations: MenuIntegrationConfig[] = [
 ]
 ```
 
-And `apps/dojo/src/agents.ts`:
+以及 `apps/dojo/src/agents.ts`：
 
 ```ts
 // ...
@@ -143,9 +134,9 @@ export const agentsIntegrations: AgentIntegrationConfig[] = [
 ]
 ```
 
-## Step 2 – Add package to dojo dependencies
+## 第 2 步——把包加入 dojo 依赖
 
-Open `apps/dojo/package.json` and add the package `@ag-ui/openai`:
+打开 `apps/dojo/package.json`，加入 `@ag-ui/openai` 包：
 
 ```json
 {
@@ -172,23 +163,21 @@ Open `apps/dojo/package.json` and add the package `@ag-ui/openai`:
 }
 ```
 
-## Step 3 – Start the dojo
+## 第 3 步——启动 dojo
 
-Now let's see your work in action:
+现在来看看你的成果：
 
 ```bash
-# Install dependencies
+# 安装依赖
 pnpm install
 
-# Compile the project and run the dojo
+# 编译项目并运行 dojo
 pnpm dev
 ```
 
-Head over to [http://localhost:3000](http://localhost:3000) and choose
-**OpenAI** from the drop-down. You'll see the stub agent replies with **Hello
-world!** for now.
+打开 [http://localhost:3000](http://localhost:3000)，在下拉框中选择 **OpenAI**。你会看到这个占位智能体目前只会回复 **Hello world!**。
 
-Here's what's happening with that stub agent:
+这个占位智能体目前的逻辑如下：
 
 ```ts
 // integrations/openai/src/index.ts
@@ -238,36 +227,31 @@ export class OpenAIAgent extends AbstractAgent {
 }
 ```
 
-## Step 4 – Bridge OpenAI with AG-UI
+## 第 4 步——把 OpenAI 接入 AG-UI
 
-Let's transform our stub into a real agent that streams completions from OpenAI.
+我们来把这个占位实现改造成一个真正从 OpenAI 流式获取补全结果的智能体。
 
-### Install the OpenAI SDK
+### 安装 OpenAI SDK
 
-First, we need the OpenAI SDK:
+首先，我们需要 OpenAI SDK：
 
 ```bash
 cd integrations/openai
 pnpm install openai
 ```
 
-### AG-UI recap
+### AG-UI 要点回顾
 
-An AG-UI agent extends `AbstractAgent` and emits a sequence of events to signal:
+一个 AG-UI 智能体会继承 `AbstractAgent`，并发出一串事件来表示：
 
-- lifecycle events (`RUN_STARTED`, `RUN_FINISHED`, `RUN_ERROR`)
-- content events (`TEXT_MESSAGE_*`, `TOOL_CALL_*`, and more)
+- 生命周期事件（`RUN_STARTED`、`RUN_FINISHED`、`RUN_ERROR`）
+- 内容事件（`TEXT_MESSAGE_*`、`TOOL_CALL_*` 等）
 
-### Implement the streaming agent
+### 实现流式智能体
 
-Now we'll transform our stub agent into a real OpenAI integration. The key
-difference is that instead of sending a hardcoded "Hello world!" message, we'll
-connect to OpenAI's API and stream the response back through AG-UI events.
+现在我们把这个占位智能体改造成一个真正的 OpenAI 集成。关键区别在于：我们将不再发送硬编码的 "Hello world!" 消息，而是连接 OpenAI 的 API，并通过 AG-UI 事件把响应流式传回。
 
-The implementation follows the same event flow as our stub, but we'll add the
-OpenAI client initialization in the constructor and replace our mock response
-with actual API calls. We'll also handle tool calls if they're present in the
-response, making our agent fully capable of using functions when needed.
+实现沿用与占位实现相同的事件流，但我们会把 OpenAI 客户端的初始化放进构造函数，并用真实的 API 调用取代模拟响应。如果响应中包含工具调用，我们也会进行处理，让智能体在需要时能够完整地使用函数。
 
 ```typescript
 // integrations/openai/src/index.ts
@@ -379,63 +363,49 @@ export class OpenAIAgent extends AbstractAgent {
 }
 ```
 
-### What happens under the hood?
+### 底层发生了什么？
 
-Let's break down what your agent is doing:
+我们来拆解一下你的智能体在做什么：
 
-1. **Setup** – We create an OpenAI client and emit `RUN_STARTED`
-2. **Request** – We send the user's messages to `chat.completions` with
-   `stream: true`
-3. **Streaming** – We forward each chunk as either `TEXT_MESSAGE_CHUNK` or
-   `TOOL_CALL_CHUNK`
-4. **Finish** – We emit `RUN_FINISHED` (or `RUN_ERROR` if something goes wrong)
-   and complete the observable
+1. **初始化**——创建 OpenAI 客户端并发出 `RUN_STARTED`
+2. **请求**——把用户消息连同 `stream: true` 发送给 `chat.completions`
+3. **流式传输**——把每个 chunk 转发为 `TEXT_MESSAGE_CHUNK` 或 `TOOL_CALL_CHUNK`
+4. **收尾**——发出 `RUN_FINISHED`（如果出错则发出 `RUN_ERROR`），并结束这个 observable
 
-## Step 5 – Chat with your agent
+## 第 5 步——与你的智能体对话
 
-Reload the dojo page and start typing. You'll see GPT-4o streaming its answer in
-real-time, word by word.
+刷新 dojo 页面并开始输入。你会看到 GPT-4o 实时地、一个词一个词地流式输出答案。
 
-## Bridging AG-UI to any protocol
+## 把 AG-UI 桥接到任意协议
 
-The pattern you just implemented—translate inputs, forward streaming chunks,
-emit AG-UI events—works for virtually any backend:
+你刚刚实现的那套模式——翻译输入、转发流式 chunk、发出 AG-UI 事件——几乎适用于任何后端：
 
-- REST or GraphQL APIs
+- REST 或 GraphQL API
 - WebSockets
-- IoT protocols such as MQTT
+- MQTT 之类的 IoT 协议
 
-## Connect your agent to a frontend
+## 把智能体连接到前端
 
-Tools like [CopilotKit](https://docs.copilotkit.ai) already understand AG-UI and
-provide plug-and-play React components. Point them at your agent endpoint and
-you get a full-featured chat UI out of the box.
+[CopilotKit](https://docs.copilotkit.ai) 这类工具已经原生理解 AG-UI，并提供即插即用的 React 组件。把它们指向你的智能体端点，就能直接得到一个功能齐全的对话 UI。
 
-## Share your integration
+## 分享你的集成
 
-Did you build a custom adapter that others could reuse? We welcome community
-contributions!
+你构建了一个他人也能复用的自定义适配器？我们欢迎社区贡献！
 
-1. Fork the [AG-UI repository](https://github.com/ag-ui-protocol/ag-ui)
-2. Add your package under `integrations`. See
-   [Contributing](../development/contributing) for more details and naming
-   conventions.
-3. Open a pull request describing your use-case and design decisions
+1. Fork [AG-UI 仓库](https://github.com/ag-ui-protocol/ag-ui)
+2. 把你的包放到 `integrations` 目录下。更多细节与命名约定请参阅[贡献指南](../development/contributing)。
+3. 提交一个 pull request，说明你的用例与设计决策
 
-If you have questions, need feedback, or want to validate an idea first, start a
-thread in the GitHub Discussions board:
-[AG-UI GitHub Discussions board](https://github.com/orgs/ag-ui-protocol/discussions).
+如果你有疑问、需要反馈，或者想先验证一个想法，可以在 GitHub Discussions 板块发起讨论：[AG-UI GitHub Discussions 板块](https://github.com/orgs/ag-ui-protocol/discussions)。
 
-Your integration might ship in the next release and help the entire AG-UI
-ecosystem grow.
+你的集成可能会随下一个版本发布，帮助整个 AG-UI 生态成长。
 
-## Conclusion
+## 结语
 
-You now have a fully-functional AG-UI adapter for OpenAI and a local playground
-to test it. From here you can:
+现在你有了一个功能完整的 OpenAI AG-UI 适配器，以及一个可以在本地测试它的演练场。接下来你可以：
 
-- Add tool calls to enhance your agent
-- Publish your integration to npm
-- Bridge AG-UI to any other model or service
+- 为智能体增加工具调用
+- 把你的集成发布到 npm
+- 把 AG-UI 桥接到任何其他模型或服务
 
-Happy building!
+祝你构建愉快！

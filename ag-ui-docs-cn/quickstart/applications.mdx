@@ -1,21 +1,17 @@
 ---
-title: "Build applications"
+title: "构建应用"
 description:
-  "Build agentic applications utilizing compatible event AG-UI event streams"
+  "利用兼容的 AG-UI 事件流构建智能体应用"
 ---
 
-# Introduction
+# 简介
 
-AG-UI provides a concise, event-driven protocol that lets any agent stream rich,
-structured output to any client. It can be used to connect any agentic system to
-any client.
+AG-UI 提供一套简洁的事件驱动协议，让任意智能体（agent）都能向任意客户端流式输出丰富、结构化的内容。它可以把任意智能体系统连接到任意客户端。
 
-A client is defined as any system that can receieve, display, and respond to 
-AG-UI events. For more information on existing clients and integrations, see
-the [integrations](/integrations) page.
+客户端指任何能够接收、展示并响应 AG-UI 事件的系统。有关现有客户端与集成的更多信息，请参阅[集成](/integrations)页面。
 
-# Automatic Setup
-AG-UI provides a CLI tool to automatically create or scaffold a new application with any client and server.
+# 自动化搭建
+AG-UI 提供一个 CLI 工具，可以自动创建或生成一个搭配任意客户端与服务端的新应用。
 
 ```sh
 npx create-ag-ui-app@latest
@@ -26,10 +22,10 @@ npx create-ag-ui-app@latest
   src="https://copilotkit-public-assets.s3.us-east-1.amazonaws.com/docs/ag-ui/quickstart.gif"
 />
 
-Once the setup is done, start the server with
+搭建完成后，用以下命令启动服务端
 
 ```sh
 npm run dev
 ```
 
-For the CopilotKit example, open [http://localhost:3000](http://localhost:3000) to see the app in action.
+对于 CopilotKit 示例，打开 [http://localhost:3000](http://localhost:3000) 即可看到应用运行的效果。
