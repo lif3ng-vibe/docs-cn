@@ -1,128 +1,79 @@
 ---
-title: "The Event Model"
-description: "The event envelope, its general fields, the identifiers, and the map of every event — 1.0"
+title: "事件模型"
+description: "事件信封、通用字段、标识符，以及全部事件的地图——1.0"
 ---
 
-The base protocol is what every implementation speaks regardless of which
-features it uses:
+基础协议是每个实现无论使用哪些特性都必须讲的语言：
 
-- **The event model** — this page: the envelope every event shares, its general
-  fields, and the identifiers that tie events together.
-- **[Run input](/spec/1.0/basic/run-input)** — the one message that travels
-  the other way.
-- **[Metadata](/spec/1.0/basic/metadata)** — the open channel on everything,
-  and how it merges.
-- **[Capabilities](/spec/1.0/basic/capabilities)** — what an agent declares
-  about itself before a run, and what a declaration obliges.
-- **[Event patterns](/spec/1.0/basic/patterns)** — the ways events compose
-  into streams.
-- **[Transports](/spec/1.0/basic/transports)** — how streams are framed and
-  delivered.
-- **[Processing model](/spec/1.0/basic/processing)** — what a consumer does
-  with material it does not recognise.
-- **[Versioning and compatibility](/spec/1.0/basic/versioning)** — talking to
-  an older or newer peer.
+- **事件模型**——即本页：所有事件共享的信封、其通用字段，以及把事件串联起来的标识符。
+- **[运行输入](/spec/1.0/basic/run-input)**——朝反方向传输的那条唯一消息。
+- **[元数据](/spec/1.0/basic/metadata)**——附着在一切之上的开放通道，以及它的合并方式。
+- **[能力](/spec/1.0/basic/capabilities)**——智能体在运行前对自己作出的声明，以及声明带来的义务。
+- **[事件模式](/spec/1.0/basic/patterns)**——事件组合成流的种种方式。
+- **[传输层](/spec/1.0/basic/transports)**——流如何被分帧与投递。
+- **[处理模型](/spec/1.0/basic/processing)**——消费者如何处理自己无法识别的内容。
+- **[版本管理与兼容性](/spec/1.0/basic/versioning)**——与更旧或更新的对端通信。
 
-All implementations MUST support the event model and the event patterns. The
-[event families](/spec/1.0/events) beyond the run lifecycle are features: a
-producer emits the ones it has something to say with.
+所有实现 MUST 支持事件模型与事件模式。运行生命周期之外的[事件族](/spec/1.0/events)都是特性：生产者只发出自己有内容要表达的那些。
 
-## Events
+## 事件
 
-Every event is a JSON object sharing one envelope, defined by the schema as
-`BaseEvent`:
+每个事件都是一个 JSON 对象，共享同一个信封，在 schema 中定义为 `BaseEvent`：
 
-- `type` — REQUIRED. The discriminator, one of the 31 values of `EventType`.
-  Every rule in this specification attaches to events through this field.
-- `timestamp` — OPTIONAL. When the event was created. Informational: a consumer
-  MUST NOT use it to order events — arrival order is the protocol's order. By
-  convention the unit is milliseconds since the Unix epoch.
-- `rawEvent` — OPTIONAL. The provider-native event this one was translated
-  from, carried verbatim. A consumer MUST NOT derive protocol behaviour from
-  it.
-- `metadata` — OPTIONAL. See [General fields](#general-fields).
+- `type`——REQUIRED。判别字段，取 `EventType` 的 31 个值之一。本规范的每条规则都通过这个字段附着到事件上。
+- `timestamp`——OPTIONAL。事件创建的时间。仅供参考：消费者 MUST NOT 用它来为事件排序——到达顺序就是协议的顺序。按惯例，单位是 Unix 纪元以来的毫秒数。
+- `rawEvent`——OPTIONAL。本事件由哪个提供方原生事件翻译而来，原样携带。消费者 MUST NOT 从它推导协议行为。
+- `metadata`——OPTIONAL。见[通用字段](#通用字段)。
 
-Events that can belong to a subagent's work additionally carry an OPTIONAL
-`subagentRunId` (the schema's `Attributable`); the
-[subagent rules](/spec/1.0/events/subagents) govern it. Run-scoped events —
-`RUN_STARTED`, `RUN_FINISHED`, `RUN_ERROR`, `MESSAGES_SNAPSHOT` — describe the
-run or the conversation as a whole and carry no attribution.
+可能属于子智能体工作的事件还额外携带 OPTIONAL 的 `subagentRunId`（schema 中的 `Attributable`），由[子智能体规则](/spec/1.0/events/subagents)管辖。作用于运行整体的事件——`RUN_STARTED`、`RUN_FINISHED`、`RUN_ERROR`、`MESSAGES_SNAPSHOT`——描述的是运行或对话整体，不携带归因。
 
-## General fields
+## 通用字段
 
 ### `metadata`
 
-The open channel on everything: open by key, any JSON value under a key,
-accumulated across the events that build an item — key by key, last write
-winning, no recursion — with per-family merge targets and a reserved `ag-ui`
-key. It has its own page: [Metadata](/spec/1.0/basic/metadata).
+附着在一切之上的开放通道：按 key 开放，key 下可为任意 JSON 值，在构建一个条目的事件间累积——逐 key 合并、最后写入者胜出、不递归——并按事件族确定合并目标，`ag-ui` key 为保留 key。它有独立页面：[元数据](/spec/1.0/basic/metadata)。
 
-### Absent means absent
+### 缺省即缺省
 
-An optional field that has no value MUST be omitted rather than sent as `null`.
+没有取值的可选字段 MUST 省略，而不是以 `null` 发送。
 
-This applies to every optional field, including fields that carry arbitrary JSON
-such as `rawEvent`, `RUN_FINISHED.result`, and `forwardedProps`. A whole
-optional field set to `null` MUST be omitted. A required JSON payload can be
-`null`, for example `CUSTOM.value` or `STATE_SNAPSHOT.snapshot`.
+这适用于每一个可选字段，包括承载任意 JSON 的字段，如 `rawEvent`、`RUN_FINISHED.result` 与 `forwardedProps`。整体取值为 `null` 的可选字段 MUST 省略。必填的 JSON 负载可以为 `null`，例如 `CUSTOM.value` 或 `STATE_SNAPSHOT.snapshot`。
 
 <Note>
-  This is not a style preference. A consumer that must accept both spellings
-  has to treat them as equal everywhere, and every such tolerance is permanent
-  once shipped. The protocol carries the one spelling every implementation can
-  represent.
+  这不是风格偏好。必须同时接受两种写法的消费者，不得不在所有地方把它们视为相等，而这样的宽容一旦发布便是永久的。协议只承载每个实现都能表示的那一种写法。
 </Note>
 
-A `null` *value under an open-by-key object* — a metadata value, something
-inside `state` — is data and MUST be preserved. Only a `null` standing in for a
-whole absent field is prohibited.
+*按 key 开放对象之下的* `null` 值——一个元数据值、`state` 里的某样东西——是数据，MUST 保留。只有顶替整个缺失字段的 `null` 才被禁止。
 
-Where the protocol has already shipped tolerance for a `null` in an optional
-position, it is handled by a compatibility shim rather than by this rule. See
-[Versioning and compatibility](/spec/1.0/basic/versioning).
+协议已经发布的、对可选位置上 `null` 的宽容，由兼容性垫片（shim）处理，而不是由本条规则处理。见[版本管理与兼容性](/spec/1.0/basic/versioning)。
 
-## Identifiers
+## 标识符
 
-- `threadId` identifies a conversation. It is minted by the application and is
-  stable across runs.
-- `runId` identifies one run. It MUST NOT be reused for another run on the same
-  thread.
-- `messageId` identifies a message. It crosses run boundaries — a snapshot in a
-  later run MAY restate a message by its id — so it MUST be unique within its
-  thread.
-- `toolCallId` identifies one tool call, and ties its result and any interrupt
-  concerning it back to it.
-- `subagentRunId` is an opaque handle for one subagent *invocation*, not a
-  reusable name for a subagent definition: two invocations of the same subagent
-  carry two different values.
+- `threadId` 标识一段对话。它由应用生成，跨运行保持稳定。
+- `runId` 标识一次运行。在同一线程上，它 MUST NOT 被另一次运行复用。
+- `messageId` 标识一条消息。它会跨越运行边界——后续运行中的快照 MAY 借 id 重述一条消息——因此它 MUST 在其线程内唯一。
+- `toolCallId` 标识一次工具调用，并把它的结果以及任何涉及它的中断绑回该调用。
+- `subagentRunId` 是一次子智能体*调用*的不透明句柄，不是子智能体定义的可复用名称：对同一子智能体的两次调用携带两个不同的值。
 
-All identifiers are opaque strings: a consumer MUST NOT parse structure out of
-them.
+所有标识符都是不透明字符串：消费者 MUST NOT 从中解析出结构。
 
-## The events
+## 事件一览
 
-Thirty-one event types, in eight families:
+三十一个事件类型，分属八个事件族：
 
-| Family | Events | Pattern |
+| 事件族 | 事件 | 模式 |
 | --- | --- | --- |
-| [Runs and steps](/spec/1.0/events/lifecycle) | `RUN_STARTED` `RUN_FINISHED` `RUN_ERROR` `STEP_STARTED` `STEP_FINISHED` | lifecycle |
-| [Text messages](/spec/1.0/events/text-messages) | `TEXT_MESSAGE_START` `TEXT_MESSAGE_CONTENT` `TEXT_MESSAGE_END` `TEXT_MESSAGE_CHUNK` | [streaming](/spec/1.0/basic/patterns/streaming) |
-| [Tool calls](/spec/1.0/events/tool-calls) | `TOOL_CALL_START` `TOOL_CALL_ARGS` `TOOL_CALL_END` `TOOL_CALL_CHUNK` `TOOL_CALL_RESULT` | [streaming](/spec/1.0/basic/patterns/streaming) |
-| [Reasoning](/spec/1.0/events/reasoning) | `REASONING_START` `REASONING_END` `REASONING_MESSAGE_START` `REASONING_MESSAGE_CONTENT` `REASONING_MESSAGE_END` `REASONING_MESSAGE_CHUNK` `REASONING_ENCRYPTED_VALUE` | [streaming](/spec/1.0/basic/patterns/streaming) |
-| [State](/spec/1.0/events/state) | `STATE_SNAPSHOT` `STATE_DELTA` `MESSAGES_SNAPSHOT` | [snapshot–delta](/spec/1.0/basic/patterns/snapshots) |
-| [Activity](/spec/1.0/events/activity) | `ACTIVITY_SNAPSHOT` `ACTIVITY_DELTA` | [snapshot–delta](/spec/1.0/basic/patterns/snapshots) |
-| [Subagents](/spec/1.0/events/subagents) | `SUBAGENT_STARTED` `SUBAGENT_FINISHED` `SUBAGENT_ERROR` | lifecycle |
-| [Passthrough](/spec/1.0/events/passthrough) | `RAW` `CUSTOM` | standalone |
+| [运行与步骤](/spec/1.0/events/lifecycle) | `RUN_STARTED` `RUN_FINISHED` `RUN_ERROR` `STEP_STARTED` `STEP_FINISHED` | 生命周期 |
+| [文本消息](/spec/1.0/events/text-messages) | `TEXT_MESSAGE_START` `TEXT_MESSAGE_CONTENT` `TEXT_MESSAGE_END` `TEXT_MESSAGE_CHUNK` | [流式](/spec/1.0/basic/patterns/streaming) |
+| [工具调用](/spec/1.0/events/tool-calls) | `TOOL_CALL_START` `TOOL_CALL_ARGS` `TOOL_CALL_END` `TOOL_CALL_CHUNK` `TOOL_CALL_RESULT` | [流式](/spec/1.0/basic/patterns/streaming) |
+| [推理](/spec/1.0/events/reasoning) | `REASONING_START` `REASONING_END` `REASONING_MESSAGE_START` `REASONING_MESSAGE_CONTENT` `REASONING_MESSAGE_END` `REASONING_MESSAGE_CHUNK` `REASONING_ENCRYPTED_VALUE` | [流式](/spec/1.0/basic/patterns/streaming) |
+| [状态](/spec/1.0/events/state) | `STATE_SNAPSHOT` `STATE_DELTA` `MESSAGES_SNAPSHOT` | [快照–增量](/spec/1.0/basic/patterns/snapshots) |
+| [活动](/spec/1.0/events/activity) | `ACTIVITY_SNAPSHOT` `ACTIVITY_DELTA` | [快照–增量](/spec/1.0/basic/patterns/snapshots) |
+| [子智能体](/spec/1.0/events/subagents) | `SUBAGENT_STARTED` `SUBAGENT_FINISHED` `SUBAGENT_ERROR` | 生命周期 |
+| [透传](/spec/1.0/events/passthrough) | `RAW` `CUSTOM` | 独立 |
 
-## Schema
+## schema
 
-The full structure of the protocol is defined by the JSON Schema at
-[`/spec/1.0/schema.json`](/spec/1.0/schema.json). It is the source of
-truth: the TypeScript, Python and .NET models are generated from it, and where
-this document mentions a field it is naming something the schema defines, never
-restating its shape.
+协议的完整结构由 [`/spec/1.0/schema.json`](/spec/1.0/schema.json) 处的 JSON Schema 定义。它是事实来源：TypeScript、Python 与 .NET 模型都由它生成，本文档提及某个字段时，指的都是 schema 定义过的东西，绝不复述其形态。
 
-The schema deliberately does not say what this document says: ordering,
-lifecycle, attribution, error handling and compatibility are behavioural, and
-the schema cannot express them. If the two ever disagree about structure, the
-schema wins and this document has a bug.
+schema 有意不说本文档所说的内容：顺序、生命周期、归因（attribution）、错误处理与兼容性都属于行为，schema 无法表达它们。若两者在结构上不一致，以 schema 为准，本文档视为有误。

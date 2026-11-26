@@ -1,124 +1,41 @@
 ---
-title: "Key Changes"
-description: "What 1.0 changes against the 0.x line — 1.0"
+title: "关键变化"
+description: "1.0 相对 0.x 系列的变化——1.0"
 ---
 
-This page lists the behavioural changes 1.0 makes against the 0.x
-line of the protocol, for reviewers who know 0.x and want the differences
-rather than the whole document. It is informative: the linked pages are the
-specification.
+本页列出 1.0 相对协议 0.x 系列所做的行为变化，供了解 0.x、只想看差异而非全文的读者使用。本页仅供参考：所链接的页面才是规范本体。
 
-## Major changes
+## 重大变化
 
-1. **The specification exists.** 0.x defined shapes; behaviour lived in the
-   TypeScript client. The rules on these pages — sequencing, unknown versus
-   malformed, warnings, attribution — are now normative, written in
-   [BCP 14](https://datatracker.ietf.org/doc/html/bcp14) language, with the
-   [schema](/spec/1.0/schema) authoritative for structure and this
-   document authoritative for behaviour.
+1. **规范本身出现了**。0.x 只定义形态，行为规则散落在 TypeScript 客户端里。这些页面上的规则——顺序、无法识别与格式错误的区分、警告、归因（attribution）——如今都是规范性的，以 [BCP 14](https://datatracker.ietf.org/doc/html/bcp14) 语言书写；[schema](/spec/1.0/schema) 是结构上的权威，本文档是行为上的权威。
 
-2. **Runs report how they ended.** `RUN_FINISHED` carries an optional
-   `outcome`: absent or success means success, the interrupt outcome carries
-   what the run is waiting for, and the
-   [cancelled outcome](/spec/1.0/events/lifecycle#cancelled-runs) marks a
-   run stopped on purpose before it completed. With it come `Interrupt`,
-   resume entries on the [run input](/spec/1.0/basic/run-input), and the
-   [interrupt–resume pattern](/spec/1.0/basic/patterns/interrupt-resume).
-   Every producer written before outcomes existed is already conformant.
+2. **运行会报告自己如何结束**。`RUN_FINISHED` 携带可选的 `outcome`：缺省或 success 表示成功，interrupt 取值携带运行正在等待的内容，[cancelled 取值](/spec/1.0/events/lifecycle#cancelled-runs)则标记一次在完成前被有意终止的运行。随之而来的是 `Interrupt`、[运行输入](/spec/1.0/basic/run-input)上的 resume 条目，以及[中断–恢复模式](/spec/1.0/basic/patterns/interrupt-resume)。在 outcome 出现之前编写的每个生产者都已符合规范。
 
-3. **Subagents.** Delegated work is attributed with `subagentRunId` on the
-   events that can carry it, optionally announced by `SUBAGENT_STARTED` and
-   closed by `SUBAGENT_FINISHED` or `SUBAGENT_ERROR`, with
-   [rules for ownership, nesting, parallelism and termination](/spec/1.0/events/subagents).
+3. **子智能体**。可承载 `subagentRunId` 的事件用它为委派的工作归因，并可选地由 `SUBAGENT_STARTED` 宣告开始、由 `SUBAGENT_FINISHED` 或 `SUBAGENT_ERROR` 收尾，配套[所有权、嵌套、并行与终止的规则](/spec/1.0/events/subagents)。
 
-4. **Reasoning replaces thinking.** The 0.x `THINKING_*` events are retired in
-   favour of the [reasoning family](/spec/1.0/events/reasoning): spans,
-   streamed reasoning messages matched by `messageId`, and
-   `REASONING_ENCRYPTED_VALUE` for provider artefacts a consumer stores and
-   returns without reading. Retired shapes are translated at the
-   [compatibility boundary](/spec/1.0/basic/versioning#retired-shapes), not
-   dropped.
+4. **推理取代思考**。0.x 的 `THINKING_*` 事件已退役，由[推理事件族](/spec/1.0/events/reasoning)接替：推理区段（span）、以 `messageId` 配对的流式推理消息，以及 `REASONING_ENCRYPTED_VALUE`——用于消费者只存储并原样返回、并不读取其内容的提供方产物。已退役的形态会在[兼容性边界](/spec/1.0/basic/versioning#retired-shapes)处被翻译，而不是直接丢弃。
 
-5. **Activity events.** `ACTIVITY_SNAPSHOT` and `ACTIVITY_DELTA` carry
-   [structured progress](/spec/1.0/events/activity) as messages whose
-   content is an object, amended by JSON Patch.
+5. **活动事件**。`ACTIVITY_SNAPSHOT` 与 `ACTIVITY_DELTA` 以内容为对象的消息承载[结构化进度](/spec/1.0/events/activity)，并用 JSON Patch 修订。
 
-6. **Unknown versus malformed, normatively.** Unrecognised events, fields and
-   union members survive translation to enforcement, which drops an unknown
-   event and strips unknown members, warning as it goes; a malformed known
-   value is fatal. Nothing is removed before
-   the translators have had their chance, and both transports feed one
-   [processing pipeline](/spec/1.0/basic/processing), which also states the
-   pipeline's one admitted narrowing for chunk fields.
+6. **无法识别与格式错误，成为规范**。无法识别的事件、字段与联合成员会在翻译阶段存活并进入强制执行：强制执行丢弃未知事件、剥离未知成员并沿途给出警告；而已知值的格式错误则是致命的。在翻译器得到处理机会之前，任何东西都不会被移除；两种传输层汇入同一条[处理管线](/spec/1.0/basic/processing)，管线也写明了对 chunk 字段唯一允许的收窄（narrowing）。
 
-7. **The chunked form has rules.** First chunks MUST carry what opening
-   requires (`messageId` and role semantics for text, `toolCallId` and
-   `toolCallName` for tool calls); later chunks MAY omit them; a continuation
-   repeating an opener field with a conflicting value is fatal
-   ([streaming pattern](/spec/1.0/basic/patterns/streaming)).
+7. **分片（chunk）形式有了规则**。首个分片 MUST 携带开启所需的信息（文本消息的 `messageId` 与角色语义，工具调用的 `toolCallId` 与 `toolCallName`）；后续分片 MAY 省略它们；后续分片若重复某个开头字段但取值冲突，则为致命错误（[流式模式](/spec/1.0/basic/patterns/streaming)）。
 
-8. **A binary wire.** The [HTTP + Protobuf binding](/spec/1.0/basic/transports/http-protobuf)
-   is specified — negotiated by media type, 4-byte length-prefixed frames,
-   generated from the same schema, with cross-implementation parity pinned by
-   a shared byte corpus.
+8. **二进制线上格式（wire）**。[HTTP + Protobuf 绑定](/spec/1.0/basic/transports/http-protobuf)已成为规范——按媒体类型协商、以 4 字节长度前缀分帧、由同一份 schema 生成，跨实现的一致性由共享的字节测试样例库（fixture corpus）钉死。
 
-9. **Capabilities are in the schema.** The `AgentCapabilities` declaration
-   the SDKs carried as three hand-written copies is now defined once, in the
-   schema, and generated for every SDK. Its semantics are stated:
-   omitted means undeclared, declarations are informative and the stream is
-   authoritative, and retrieval is deliberately left to the implementation
-   ([Capabilities](/spec/1.0/basic/capabilities)). The subagent list is
-   spelled `subagents`, matching `subagentRunId`; the earlier `subAgents`
-   key is not read.
+9. **能力声明进入 schema**。原先由各 SDK 手写三份的 `AgentCapabilities` 声明，现在在 schema 中定义一次，并为每个 SDK 生成。其语义已写明：省略即未声明；声明仅供参考，事件流才是权威；如何获取声明则有意留给实现自行决定（[能力](/spec/1.0/basic/capabilities)）。子智能体列表的拼写为 `subagents`，与 `subagentRunId` 一致；更早的 `subAgents` key 不再被读取。
 
-10. **Tool results carry content parts.** `TOOL_CALL_RESULT.content` and the
-    tool message it mints accept a string or an ordered list of the same
-    parts a user message carries, so a tool can return a document, an image
-    or a search hit without encoding it into a string
-    ([Tool calls](/spec/1.0/events/tool-calls#result-content)). The parts
-    are renamed for it — `InputContent` → `ContentPart`, `TextInputContent` →
-    `TextPart`, `ImageInputContent` → `ImagePart` and so on, `InputContentSource`
-    → `PartSource` with `DataSource` and `UrlSource` — because a part named by
-    direction is misnamed the moment it travels the other way. The wire is
-    unchanged: every `type` value is the same, only the definition names and
-    anchors move, and the SDKs keep the old names as aliases. Every part gains
-    an optional `id`, and the text part gains the `metadata` the media parts
-    already had. `ReasoningPart`, `ToolCallPart` and `AssistantPart` are
-    reserved for the release in which assistant messages carry parts too.
+10. **工具调用结果可承载内容部分**。`TOOL_CALL_RESULT.content` 及它生成的工具消息既接受字符串，也接受与用户消息相同的内容部分（content part）有序列表，因此工具可以直接返回文档、图片或搜索结果，而不必把它们编码成字符串（[工具调用](/spec/1.0/events/tool-calls#result-content)）。为此，各部分更名——`InputContent` → `ContentPart`、`TextInputContent` → `TextPart`、`ImageInputContent` → `ImagePart` 等等，`InputContentSource` → `PartSource`（含 `DataSource` 与 `UrlSource`）——因为以传输方向命名的部分，一旦朝反方向传输就叫错了。线上格式不变：每个 `type` 取值都相同，只有定义名称与锚点移动，SDK 保留旧名称作为别名。每个部分新增可选的 `id`，文本部分则获得了媒体部分早已具备的 `metadata`。`ReasoningPart`、`ToolCallPart` 与 `AssistantPart` 保留给助手消息也开始携带内容部分的那次发布。
 
-## Minor changes
+## 次要变化
 
-1. `tools` and `context` on the run input are optional: absent and empty mean
-   the same thing ([Run input](/spec/1.0/basic/run-input)).
-2. Metadata merge semantics are normative: per key, last write wins, no
-   recursion, per-family merge targets; the `ag-ui` key is reserved
-   ([Metadata](/spec/1.0/basic/metadata)).
-3. Absent means absent: optional fields are omitted, never `null`
-   ([The event model](/spec/1.0/basic#absent-means-absent)).
-4. `RUN_FINISHED` and `RUN_ERROR` MAY carry per-provider token usage, in one
-   accounting: the input and output counts are totals, cached and reasoning
-   tokens are parts of them, cache reads and cache writes are reported
-   separately, and usage follows the run boundary — subagents' calls in,
-   child and resumed runs' calls out
-   ([Runs and steps](/spec/1.0/events/lifecycle#token-usage)).
-5. A run that stops on a frontend tool call finishes as success, never as an
-   interrupt, and the success outcome MAY name the calls it left unanswered
-   in `pendingToolCallIds`
-   ([Tool calls](/spec/1.0/events/tool-calls#frontend-tools)).
-6. Input messages MAY carry multimodal content parts (text, image, audio,
-   video, document), by URL, as inline data or as a provider file handle —
-   the `file` source, new in 1.0, for bytes already uploaded to the model
-   provider ([Run input](/spec/1.0/basic/run-input#provider-file-handles)).
-7. `TOOL_CALL_RESULT` is a message in its own right and does not reopen the
-   call it answers ([Tool calls](/spec/1.0/events/tool-calls)).
-8. A late `RUN_ERROR` after `RUN_FINISHED` is admitted, reporting a failure
-   that surfaced after success was already reported
-   ([Runs and steps](/spec/1.0/events/lifecycle)).
-9. A consumer keeps a stream it rejects apart from a run that reports its own
-   failure, and "treat the run as failed" is defined: surface it, never report
-   success, with the API shape left to the implementation
-   ([Runs and steps](/spec/1.0/events/lifecycle#error-handling)).
-10. The protocol version travels in-band: consumers declare theirs on
-   `RunAgentInput.protocolVersion`, producers answer with their own on
-   `RUN_STARTED.protocolVersion`, and absence identifies a pre-versioning
-   peer ([Versioning](/spec/1.0/basic/versioning#version-negotiation)).
+1. 运行输入上的 `tools` 与 `context` 为可选：缺省与空表示同一含义（[运行输入](/spec/1.0/basic/run-input)）。
+2. 元数据合并语义成为规范：按 key 逐个合并、最后写入者胜出、不递归、按事件族确定合并目标；`ag-ui` key 为保留 key（[元数据](/spec/1.0/basic/metadata)）。
+3. 缺省即缺省：可选字段直接省略，绝不为 `null`（[事件模型](/spec/1.0/basic#absent-means-absent)）。
+4. `RUN_FINISHED` 与 `RUN_ERROR` MAY 携带按提供方统计的 token 用量，采用统一口径：输入与输出计数为总量，缓存 token 与推理 token 是总量的组成部分；缓存读与缓存写单独报告；用量跟随运行边界——子智能体的调用计入，子运行与恢复运行的调用不计入（[运行与步骤](/spec/1.0/events/lifecycle#token-usage)）。
+5. 因前端工具调用而停止的运行以 success 结束，绝不作为 interrupt 结束；success outcome MAY 在 `pendingToolCallIds` 中列出它未应答的调用（[工具调用](/spec/1.0/events/tool-calls#frontend-tools)）。
+6. 输入消息 MAY 携带多模态内容部分（文本、图片、音频、视频、文档），可以 URL、内联数据或提供方文件句柄（handle）的形式给出——`file` 来源为 1.0 新增，用于已经上传到模型提供方的字节（[运行输入](/spec/1.0/basic/run-input#provider-file-handles)）。
+7. `TOOL_CALL_RESULT` 本身就是一条消息，不会重新打开它所应答的调用（[工具调用](/spec/1.0/events/tool-calls)）。
+8. `RUN_FINISHED` 之后再出现迟到的 `RUN_ERROR` 是被允许的，用于报告在已报告成功之后才暴露的失败（[运行与步骤](/spec/1.0/events/lifecycle)）。
+9. 消费者会把拒绝的流与自行报告失败的运行区分开，且"将运行视为失败"有了定义：把它暴露出来，绝不报告成功，API 形态留给实现决定（[运行与步骤](/spec/1.0/events/lifecycle#error-handling)）。
+10. 协议版本随带内数据传输：消费者在 `RunAgentInput.protocolVersion` 上声明自己的版本，生产者在 `RUN_STARTED.protocolVersion` 上应答自己的版本；缺省则表明对端是版本机制出现之前的参与者（[版本管理](/spec/1.0/basic/versioning#version-negotiation)）。

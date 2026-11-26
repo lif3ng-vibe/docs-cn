@@ -1,78 +1,37 @@
 ---
-title: "Snapshots and Deltas"
-description: "How evolving values travel: replacement wholesale, amendment by JSON Patch — 1.0"
+title: "快照与增量"
+description: "会演化的值如何传输：整体替换，按 JSON Patch 修订——1.0"
 ---
 
-Some of what a producer reports is not a stream of text but a value that
-evolves: the agent's state, an activity's content, the conversation itself.
-These travel as **snapshots**, which replace, and **deltas**, which amend.
+生产者报告的东西里，有一些不是文本流，而是会演化的值：智能体的状态、活动的内容、对话本身。它们以**快照**（替换）与**增量**（修订）的形式传输。
 
-Three families use the pattern:
-[state](/spec/1.0/events/state) (`STATE_SNAPSHOT`, `STATE_DELTA`, and
-`MESSAGES_SNAPSHOT` for the conversation) and
-[activity](/spec/1.0/events/activity) (`ACTIVITY_SNAPSHOT`,
-`ACTIVITY_DELTA`). This page states what they share; the family pages state
-what each replaces and amends.
+使用这个模式的事件族有：[状态](/spec/1.0/events/state)（`STATE_SNAPSHOT`、`STATE_DELTA`，以及对话用的 `MESSAGES_SNAPSHOT`）与[活动](/spec/1.0/events/activity)（`ACTIVITY_SNAPSHOT`、`ACTIVITY_DELTA`）。本页说明它们共有的东西；各事件族页面说明各自替换与修订的对象。
 
-## Snapshots
+## 快照
 
-A snapshot carries the whole value. A consumer MUST replace its copy with the
-snapshot's content — a snapshot is not a merge — unless the snapshot itself
-opts out through a field its family defines
-([activity](/spec/1.0/events/activity)'s `replace: false` is the one case).
-Whatever deltas came before it are spent: the snapshot, applied or declined,
-is the new baseline moment.
+快照携带完整的值。消费者 MUST 用快照的内容替换自己手中的副本——快照不是合并——除非快照本身通过其事件族定义的字段选择退出（[活动](/spec/1.0/events/activity)的 `replace: false` 是唯一一例）。它之前的增量全部作废：无论快照被应用还是被搁置，它都是新的基准时刻。
 
-A producer MAY send a snapshot at any time, and SHOULD send one whenever it
-cannot guarantee that the consumer's baseline matches its own — after an error,
-after content a delta cannot express, or at the start of a run that continues
-an old thread.
+生产者 MAY 随时发送快照，且 SHOULD 在无法保证消费者基准与自己一致时发送一份——发生错误之后、出现了增量无法表达的内容之后，或在延续旧线程的运行开始时。
 
-## Deltas
+## 增量
 
-A delta amends the current value, expressed as an
-[RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902) JSON Patch: an array
-of operations applied in order, atomically — if any operation fails, the
-document is left as it was.
+增量修订当前值，以 [RFC 6902](https://datatracker.ietf.org/doc/html/rfc6902) JSON Patch 表达：一组按顺序、原子化应用的操作——任何一个操作失败，文档保持原样。
 
-- A delta applies against the consumer's current value: the last snapshot as
-  amended by every delta since. For state, the value a run starts from is the
-  input's `state`, or the empty object when the input
-  [carried none](/spec/1.0/basic/run-input#state).
-- A producer MUST NOT send a delta for a value it has given the consumer no
-  baseline for. What counts as a baseline is the family's business — state has
-  one from the input, an activity only after its first snapshot.
-- Patch operations are deliberately open objects: the schema marks them so, and
-  a member RFC 6902 does not define is protocol-legal material the
-  [processing model](/spec/1.0/basic/processing) MUST NOT strip.
+- 增量作用于消费者的当前值：最后一个快照加上其后所有增量修正后的结果。对状态而言，一次运行起始的值是输入的 `state`，输入[未携带时](/spec/1.0/basic/run-input#state)则为空对象。
+- 生产者 MUST NOT 为没有给过消费者基准的值发送增量。什么算基准由事件族决定——状态从输入获得基准，活动则要等它的第一个快照。
+- Patch 操作是有意开放的对象：schema 如此标注，RFC 6902 未定义的成员是协议上合法的材料，[处理模型](/spec/1.0/basic/processing) MUST NOT 剥离。
 
-## When a patch does not apply
+## 补丁不适用时
 
-Structural validity does not mean a patch applies: a well-formed operation may
-point at a path that does not exist, and RFC 6902 leaves that to the applier. A
-malformed *operation* — a patch that is not an array, an operation missing a
-required member or carrying one of the wrong type — is a malformed known value
-and fatal like any other. An operation whose `op` names something RFC 6902
-does not define is not malformed but unrecognised — a member of a
-discriminated union added after this consumer shipped — and the
-[processing model](/spec/1.0/basic/processing)'s list rule applies: the
-element is dropped from the patch with a warning and the run survives. A
-well-formed patch that fails to apply is different again:
+结构上有效不代表补丁能实际应用：一个格式良好的操作可能指向并不存在的路径，RFC 6902 把这一点留给应用方。格式错误的*操作*——不是数组的补丁、缺失必填成员或携带错误类型成员的操作——是格式错误的已知值，与其他格式错误一样致命。`op` 指名了 RFC 6902 未定义之物的操作不是格式错误，而是无法识别——本消费者发布之后才加入判别联合的成员——适用[处理模型](/spec/1.0/basic/processing)的列表规则：该元素从补丁中丢弃并给出警告，运行存活。而格式良好却应用失败的补丁又是另一种情形：
 
-- The consumer MUST NOT keep a partially applied result — RFC 6902 application
-  is atomic.
-- The consumer MUST surface the failure — a warning that identifies what
-  failed and why, well enough to diagnose — and MAY continue with its prior
-  value rather than failing the run.
-- A `test` operation that fails is this same case: the patch does not apply,
-  and the consumer keeps its prior value.
+- 消费者 MUST NOT 保留部分应用的结果——RFC 6902 的应用是原子的。
+- 消费者 MUST 把失败暴露出来——一条足以诊断的警告，指明什么失败了、为何失败——并且 MAY 带着先前的值继续，而不让运行失败。
+- 失败的 `test` 操作就是这一情形：补丁不适用，消费者保留先前的值。
 
-From that point the consumer's value may have diverged from the producer's. A
-producer that learns of it, or that cannot rule it out, SHOULD resynchronise
-with a snapshot; a consumer MUST adopt the next snapshot regardless of what it
-skipped before it — that is what makes recovery possible.
+从那一刻起，消费者的值可能与生产者的分道扬镳。得知此事、或无法排除此事的生产者，SHOULD 用快照重新同步；消费者 MUST 采纳下一个快照，无论之前跳过了什么——这正是恢复成为可能的原因。
 
-## Message Flow
+## 消息流
 
 ```mermaid
 sequenceDiagram
@@ -86,7 +45,6 @@ sequenceDiagram
     Producer->>Consumer: STATE_SNAPSHOT (resynchronises)
 ```
 
-## Data Types
+## 数据类型
 
-The patch shape — [`JsonPatch`](/spec/1.0/schema#jsonpatch), its operations, [`JsonPointer`](/spec/1.0/schema#jsonpointer) — is defined by
-the [schema reference](/spec/1.0/schema), by reference to RFC 6902.
+补丁的形态——[`JsonPatch`](/spec/1.0/schema#jsonpatch)、它的操作、[`JsonPointer`](/spec/1.0/schema#jsonpointer)——由 [schema 参考](/spec/1.0/schema)参照 RFC 6902 定义。

@@ -1,28 +1,21 @@
 ---
-title: "Tool Calls"
-description: "How an agent proposes a call, streams its arguments, and receives its result — 1.0"
+title: "工具调用"
+description: "智能体如何提议一次调用、流式传输其参数、并接收其结果——1.0"
 ---
 
-A tool call is the agent asking for something to be done. When the tool is one
-the application advertised in its [run input](/spec/1.0/basic/run-input), the
-application executes it — which makes tool calls the protocol's
-human-in-the-loop core: the agent proposes, the application disposes.
+工具调用是智能体在请求把某件事做成。当这个工具是应用在[运行输入](/spec/1.0/basic/run-input)里声明过的那一个时，由应用执行它——这使工具调用成为协议的人在回路（human-in-the-loop）核心：智能体提议，应用裁决。
 
-## User Interaction Model
+## 用户交互模型
 
-Applications typically surface a tool call as it streams — a card naming the
-tool, arguments filling in — and, for side-effectful tools, ask the user before
-executing. The protocol does not mandate any particular interaction model, but
-see [Security Considerations](#security-considerations) below.
+应用通常在工具调用流式传输时就把它呈现出来——一张指名工具的卡片、逐渐填入的参数——并且对有副作用的工具，在执行前征求用户同意。协议不强制任何具体交互模型，但可参见下文的[安全考量](#安全考量)。
 
-## Events
+## 事件
 
-Tool calls follow the [streaming pattern](/spec/1.0/basic/patterns/streaming),
-matched by `toolCallId`.
+工具调用遵循[流式模式](/spec/1.0/basic/patterns/streaming)，以 `toolCallId` 配对。
 
 ### `TOOL_CALL_START`
 
-Opens a call.
+开启一次调用。
 
 ```json
 {
@@ -33,52 +26,28 @@ Opens a call.
 }
 ```
 
-- `toolCallName` names the tool being called.
-- `parentMessageId` is OPTIONAL and attaches the call to the assistant message
-  that carries it. When the parent message is attributed to a subagent, the
-  call MUST agree with that attribution — a tool call belongs to the message
-  that carries it (see [Subagents](/spec/1.0/events/subagents)).
+- `toolCallName` 指名被调用的工具。
+- `parentMessageId` 是 OPTIONAL 的，把这次调用挂到承载它的助手消息上。父消息归因于某个子智能体时，调用 MUST 与该归因一致——工具调用属于承载它的那条消息（见[子智能体](/spec/1.0/events/subagents)）。
 
 ### `TOOL_CALL_ARGS`
 
-Extends the open call. `delta` carries the next piece of the call's arguments;
-the concatenated deltas form the call's argument text, conventionally a JSON
-document — but the protocol carries it as text and does not validate it, which
-is deliberate: providers emit malformed argument strings, and the application
-deciding what to do with one beats the transport killing the run.
+延展开启中的调用。`delta` 携带调用参数的下一段；拼接起来的 delta 构成调用的参数文本，按惯例是一份 JSON 文档——但协议以文本承载它且不校验，这是有意的：提供方会发出格式错误的参数字符串，让应用来决定如何处置，总好过传输层直接杀掉运行。
 
-A consumer MUST NOT act on the arguments before `TOOL_CALL_END`: until the call
-closes, the text is a prefix of whatever the producer is sending, not the
-thing itself.
+消费者 MUST NOT 在 `TOOL_CALL_END` 之前就据参数行事：调用关闭之前，那些文本只是生产者正在发送内容的前缀，不是东西本身。
 
 ### `TOOL_CALL_END`
 
-Closes the call. The argument text is complete — closing establishes
-completeness, not validity. Whoever executes the tool parses it, and what to
-do with text that does not parse is the application's decision, not a
-protocol violation.
+关闭调用。参数文本已完整——关闭确立的是完整性，不是有效性。执行工具的一方负责解析它，如何处置解析不了的文本是应用的决定，不是协议违例。
 
-A closed call, like a closed message, MAY be reopened by a new
-`TOOL_CALL_START` with the same `toolCallId`, and further arguments append. A
-reopening start MUST agree with the call it reopens — the same
-`toolCallName`, the same `parentMessageId`, the same owner. A consumer is not
-required to detect a disagreement, and unlike a
-[reopened text message](/spec/1.0/events/text-messages#text_message_end),
-the protocol makes no promise about which of the two values a consumer that
-missed the violation ends up holding.
+已关闭的调用与已关闭的消息一样，MAY 由携带同一 `toolCallId` 的新 `TOOL_CALL_START` 重开，后续参数继续追加。重开的 start MUST 与它重开的调用一致——相同的 `toolCallName`、相同的 `parentMessageId`、同一个所有者。消费者无须检测不一致；而且与[重开的文本消息](/spec/1.0/events/text-messages#text_message_end)不同，协议不承诺漏检违例的消费者最终手里拿着的是两个值中的哪一个。
 
 ### `TOOL_CALL_CHUNK`
 
-The compact spelling. A consumer MUST expand chunks as the
-[streaming pattern](/spec/1.0/basic/patterns/streaming#the-chunked-form)
-specifies: the first chunk MUST carry `toolCallId` and `toolCallName`, and a
-continuation repeating `toolCallName` or `parentMessageId` with a conflicting
-value is fatal.
+紧凑写法。消费者 MUST 按[流式模式](/spec/1.0/basic/patterns/streaming#the-chunked-form)的规定展开 chunk：首个 chunk MUST 携带 `toolCallId` 与 `toolCallName`，延续 chunk 以冲突值重复 `toolCallName` 或 `parentMessageId` 则是致命的。
 
 ### `TOOL_CALL_RESULT`
 
-Carries the result of a call. It is a message in its own right — a tool message
-with its own `messageId` — and does not reopen the call it answers.
+携带调用的结果。它本身就是一条消息——一条带着自己 `messageId` 的工具消息——并且不会重开它所应答的调用。
 
 ```json
 {
@@ -89,20 +58,11 @@ with its own `messageId` — and does not reopen the call it answers.
 }
 ```
 
-A result MAY arrive in the same run as its call — an agent-executed tool — or
-never arrive in the stream at all: a client-executed tool's result returns to
-the producer as a tool message in the next run's input instead.
+结果 MAY 与它的调用在同一次运行中到达——智能体自己执行的工具——也可能根本不出现在流里：客户端执行的工具，其结果在下一次运行的输入中作为工具消息返回给生产者。
 
-#### Result content
+#### 结果内容
 
-`content` MUST be either a string or an ordered list of
-[`ContentPart`](/spec/1.0/schema#contentpart)s — the same parts a
-[user message](/spec/1.0/basic/run-input#messages) carries: `text`, `image`,
-`audio`, `video` and `document`, each media part with a `source` that is inline
-data, a URL or a
-[provider file handle](/spec/1.0/basic/run-input#provider-file-handles). The
-tool message the event mints has the identical shape, so a result travels into
-the next run's `messages` unchanged.
+`content` MUST 是字符串，或 [`ContentPart`](/spec/1.0/schema#contentpart) 的有序列表——与[用户消息](/spec/1.0/basic/run-input#messages)所携带的部分相同：`text`、`image`、`audio`、`video` 与 `document`，每个媒体部分带一个 `source`，为内联数据、URL 或[提供方文件句柄](/spec/1.0/basic/run-input#provider-file-handles)。事件生成的工具消息形态与之完全一致，因此结果可以原封不动地进入下一次运行的 `messages`。
 
 ```json
 {
@@ -120,105 +80,33 @@ the next run's `messages` unchanged.
 }
 ```
 
-- A tool returning structured data — a JSON object, say — serialises it into
-  the string form or into a `text` part. The protocol has no JSON part: every
-  provider accepts a tool result as text, and a typed object would have to
-  become text at the provider boundary anyway.
-- Anything a part does not model — a search hit's source and title, a
-  document's filename — rides in the part's `metadata`. The protocol does not
-  define provider-specific result blocks (a citation-enabled search result, a
-  browser state); a producer that needs one maps it onto these parts or
-  carries it as passthrough.
-- A tool that uploaded its output to the model provider — a generated report
-  now sitting in the provider's file store — returns the handle as a `file`
-  source rather than re-sending the bytes; the
-  [same rules](/spec/1.0/basic/run-input#provider-file-handles) apply as on
-  input, and a consumer that renders the result treats the handle as opaque.
-- A producer handed a part its model cannot take — an image to a text-only
-  model, audio to a provider that accepts none in a tool result, a file handle
-  another provider issued — MUST NOT fail
-  the run because of it. It drops the part and continues, as the
-  [run input rules](/spec/1.0/basic/run-input#messages) already say of user
-  content, and it MUST still answer the call: a result whose every part was
-  dropped is answered with the empty string, because a tool call left
-  unanswered is one most models reject outright.
-- A consumer that can only hold a string — a renderer, a store, a legacy
-  bridge — renders a list of parts as its `text` parts concatenated in order
-  and ignores the rest. Doing so is lossy and SHOULD be announced, the way any
-  downgrade is ([Versioning](/spec/1.0/basic/versioning)).
-- A peer from before content parts existed sends no `protocolVersion`; a
-  producer that knows it is talking to one MAY flatten a result the same way
-  before emitting it, and MUST warn when the flattening dropped a part. It
-  MUST NOT put a placeholder in the dropped part's place: a downgrade
-  reshapes, it does not invent.
+- 返回结构化数据的工具——比如一个 JSON 对象——会把它序列化为字符串形式，或放进一个 `text` 部分。协议没有 JSON 部分：每个提供方都接受文本形式的工具结果，而一个带类型的对象横竖都要在提供方边界变成文本。
+- 部分不建模的东西——搜索命中的来源与标题、文档的文件名——放进该部分的 `metadata`。协议不为提供方专属的结果块下定义（带引用的搜索结果、浏览器状态等）；需要这类东西的生产者，要么把它映射到这些部分上，要么作为透传携带。
+- 把输出上传到了模型提供方的工具——生成的报告如今躺在提供方的文件库里——以 `file` 来源返回句柄，而不是重发那些字节；[同样的规则](/spec/1.0/basic/run-input#provider-file-handles)与输入端一样适用，渲染结果的消费者把句柄视为不透明。
+- 拿到自己的模型无法接受的部分的生产者——把图像交给纯文本模型、把音频交给工具结果中一概不收的提供方、拿到别的提供方签发的文件句柄——MUST NOT 因此让运行失败。它丢弃该部分并继续，正如[运行输入规则](/spec/1.0/basic/run-input#messages)对用户内容已经说过的那样；并且它 MUST 仍然应答这次调用：每个部分都被丢弃的结果以空字符串应答，因为未获应答的工具调用是多数模型会直接拒绝的东西。
+- 只能持有字符串的消费者——渲染器、存储、旧桥接——把部分列表渲染为其 `text` 部分按序拼接的结果，忽略其余。这样做是有损的，SHOULD 予以宣告，如同任何降级一样（[版本管理](/spec/1.0/basic/versioning)）。
+- 内容部分出现之前的对端不发送 `protocolVersion`；知道自己正在与这种对端通信的生产者，MAY 在发出前以同样方式把结果压平，并在压平丢弃了部分时 MUST 给出警告。它 MUST NOT 在被丢弃部分的位置放占位物：降级是重塑，不是捏造。
 
-## Frontend tools
+## 前端工具
 
-The `tools` list in [run input](/spec/1.0/basic/run-input#tools) is the
-application's: the agent proposes a call, the application executes it. The
-protocol has no mid-run channel from the consumer, so the answer can only
-cross a run boundary — which gives the round-trip its shape:
+[运行输入](/spec/1.0/basic/run-input#tools)里的 `tools` 列表是应用的地盘：智能体提议调用，应用执行。协议没有从消费者到运行的中途通道，因此答案只能跨越运行边界——这赋予了这一往返它的形状：
 
-- A producer that calls a frontend tool MUST NOT answer it: no
-  `TOOL_CALL_RESULT`, no fabricated tool message. The result is the
-  application's to produce.
-- The producer finishes the run with the call unanswered. It MUST use the
-  success outcome, or none, and MUST NOT report the run as interrupted — and
-  it SHOULD finish promptly once nothing remains that does not depend on the
-  result. Several frontend calls MAY be left unanswered by one run; the
-  application answers them all at once.
-- The success outcome's `pendingToolCallIds` names the calls left unanswered,
-  in the order they were made. A producer SHOULD send it when a run leaves
-  calls pending; when it does, the list MUST contain exactly the tool calls
-  the run started and did not answer with `TOOL_CALL_RESULT`. `RUN_FINISHED`
-  alone does not say whether a run left work for the application: when the
-  list is absent or empty, a consumer that needs to know derives it from the
-  stream — every tool call the run started that received no result — and
-  MUST NOT read absence as "nothing pending". On an interrupted run the
-  pending calls are derived the same way; the interrupt outcome does not
-  carry them.
-- After the run finishes, the application disposes of each unanswered
-  frontend call — executing it, or declining it, with whatever consent its
-  own rules require. A thread that continues MUST answer every one of them
-  first: the next
-  run's `messages` carry a tool message per call, keyed by `toolCallId` — a
-  failure is still an answer, as a tool message with `error` set, and a call
-  the user declined is answered by saying so. The tool message's `content` is a
-  string or a list of parts, exactly as on
-  [`TOOL_CALL_RESULT`](#result-content): a frontend tool that produced a
-  screenshot or picked a file answers with a media part rather than a
-  description of one. An unanswered call leaves the
-  agent mid-thought, and a history with a dangling call is one many models
-  reject outright. Abandoning the thread answers nothing and violates
-  nothing — the rule binds continuation, the same way resume coverage does.
+- 调用前端工具的生产者 MUST NOT 自己应答它：没有 `TOOL_CALL_RESULT`，没有伪造的工具消息。结果是应用的事。
+- 生产者在调用未获应答的情况下结束运行。它 MUST 使用 success outcome 或不携带 outcome，且 MUST NOT 把运行报告为被中断——并且，一旦剩下的东西都不再依赖该结果，它 SHOULD 尽快结束。一次运行 MAY 留下多个未应答的前端调用；应用一次性应答它们全部。
+- success outcome 的 `pendingToolCallIds` 按发起顺序列名未获应答的调用。运行留有待应答调用时，生产者 SHOULD 发送它；发送时，该列表 MUST 恰好包含运行发起过、且未以 `TOOL_CALL_RESULT` 应答的那些工具调用。光凭 `RUN_FINISHED` 说不出运行是否给应用留了活：列表缺省或为空时，需要知道的消费者从事件流推导——本次运行发起过、却未收到结果的每个工具调用——且 MUST NOT 把缺省读作"没有待办"。被中断的运行按同样方式推导待应答调用；interrupt outcome 不携带它们。
+- 运行结束后，应用对每个未应答的前端调用作出处置——执行它或拒绝它，采用其自身规则所要求的同意流程。要延续的线程 MUST 先把它们每一个都答掉：下一次运行的 `messages` 为每次调用携带一条工具消息，以 `toolCallId` 为键——失败也是应答，即一条设置了 `error` 的工具消息；用户拒绝的调用则明说拒绝。工具消息的 `content` 是字符串或部分列表，与 [`TOOL_CALL_RESULT`](#结果内容) 上完全一致：产出了截图或选好了文件的前端工具，用媒体部分作答，而不是用对它的描述作答。未获应答的调用会让智能体停在半截思绪上，而带着悬空调用的历史是多数模型会直接拒绝的那种。抛弃线程什么也不回答，也不违反什么——这条规则约束的是延续，与 resume 覆盖规则的约束方式相同。
 
-This is a different round-trip from
-[interrupts](/spec/1.0/basic/patterns/interrupt-resume): an interrupt is the
-producer explicitly stopping to ask, answered by resume entries; a frontend
-tool call rides the ordinary message loop, answered by conversation history.
+这与[中断](/spec/1.0/basic/patterns/interrupt-resume)是两种不同的往返：中断是生产者明确停下来发问，由 resume 条目应答；前端工具调用则搭普通消息循环的便车，由对话历史应答。
 
 <Note>
-  A run that stops on a frontend tool call is a completed run, not an
-  interrupted one, and it is not a third kind of ending either. The outcome
-  reports what the producer knows about why the run ended, and here the
-  producer does not know whether it is waiting: a frontend tool is often a
-  terminal effect — render a chart, navigate, highlight — and whether its
-  result starts another run is the application's decision, made by the
-  application's rules for that tool. So the producer says what it does know —
-  the run is complete, and these calls are unanswered — as detail on the
-  success outcome, where an older consumer that strips the field still reads a
-  successful run and derives the pending calls as it always has.
+  因前端工具调用而停止的运行是一次已完成的运行，不是被中断的运行，也不是第三种结束方式。outcome 报告的是生产者对运行结束原因的了解，而这里生产者并不知道自己是否在等待：前端工具往往是一个终态效果——渲染图表、跳转、高亮——它的结果是否开启另一次运行，是应用依照自己对那个工具的规则作出的决定。所以生产者只说自己确实知道的——运行已完成，这些调用未获应答——作为 success outcome 上的细节；剥离该字段的旧消费者照样读到一次成功的运行，并像从前一样推导待应答调用。
 </Note>
 
-A producer SHOULD call frontend tools only from the advertised list; a call
-naming a tool the input did not advertise is not by itself a protocol
-violation — what to do with it is the consumer's decision. The producer's own
-tools, executed agent-side, never needed advertising and answer in-stream via
-`TOOL_CALL_RESULT`.
+生产者 SHOULD 只调用声明列表里的前端工具；指名输入未声明工具的调用，其本身并不构成协议违例——如何处置是消费者的决定。生产者自己的工具在智能体一侧执行，从来无须声明，并经流内的 `TOOL_CALL_RESULT` 应答。
 
-## Message Flow
+## 消息流
 
-A client-executed tool spans two runs:
+客户端执行的工具横跨两次运行：
 
 ```mermaid
 sequenceDiagram
@@ -233,41 +121,21 @@ sequenceDiagram
     Application->>Agent: next RunAgentInput (messages include the tool result)
 ```
 
-## Data Types
+## 数据类型
 
-The event shapes are defined by the [schema reference](/spec/1.0/schema):
-[`ToolCallStartEvent`](/spec/1.0/schema#toolcallstartevent), [`ToolCallArgsEvent`](/spec/1.0/schema#toolcallargsevent), [`ToolCallEndEvent`](/spec/1.0/schema#toolcallendevent),
-[`ToolCallChunkEvent`](/spec/1.0/schema#toolcallchunkevent), [`ToolCallResultEvent`](/spec/1.0/schema#toolcallresultevent). In conversation history a call
-appears as a [`ToolCall`](/spec/1.0/schema#toolcall) on an [`AssistantMessage`](/spec/1.0/schema#assistantmessage), and a result as a
-[`ToolMessage`](/spec/1.0/schema#toolmessage) whose content is a string or a list of
-[`ContentPart`](/spec/1.0/schema#contentpart)s. The advertised tools are [`Tool`](/spec/1.0/schema#tool) objects on [`RunAgentInput`](/spec/1.0/schema#runagentinput).
+事件形态由 [schema 参考](/spec/1.0/schema)定义：[`ToolCallStartEvent`](/spec/1.0/schema#toolcallstartevent)、[`ToolCallArgsEvent`](/spec/1.0/schema#toolcallargsevent)、[`ToolCallEndEvent`](/spec/1.0/schema#toolcallendevent)、[`ToolCallChunkEvent`](/spec/1.0/schema#toolcallchunkevent) 与 [`ToolCallResultEvent`](/spec/1.0/schema#toolcallresultevent)。在对话历史中，一次调用表现为 [`AssistantMessage`](/spec/1.0/schema#assistantmessage) 上的一个 [`ToolCall`](/spec/1.0/schema#toolcall)，一个结果表现为一条 [`ToolMessage`](/spec/1.0/schema#toolmessage)，其 content 是字符串或 [`ContentPart`](/spec/1.0/schema#contentpart) 列表。声明过的工具是 [`RunAgentInput`](/spec/1.0/schema#runagentinput) 上的 [`Tool`](/spec/1.0/schema#tool) 对象。
 
-The parts are named by what they are — `TextPart`, `ImagePart` — rather than by
-the direction they travel, because the same part goes into the model inside a
-user message and comes out of the stream inside a tool result. The names
-`ReasoningPart`, `ToolCallPart` and `AssistantPart` are reserved for a later
-minor version, when assistant messages carry parts too; nothing defines them
-yet, and a producer MUST NOT emit them.
+这些部分按它们是什么来命名——`TextPart`、`ImagePart`——而不是按传输方向命名，因为同一个部分会随用户消息进入模型，又随工具结果从事件流中出来。`ReasoningPart`、`ToolCallPart` 与 `AssistantPart` 这些名字保留给后续次要版本——助手消息也开始携带部分的那一版；目前没有任何东西定义它们，生产者 MUST NOT 发出它们。
 
-## Error Handling
+## 错误处理
 
-The [streaming pattern](/spec/1.0/basic/patterns/streaming)'s sequence rules
-apply unchanged: continuing or closing a call that is not open, or reopening one
-that is, is fatal. A call left open when the run finishes is a violation.
+[流式模式](/spec/1.0/basic/patterns/streaming)的序列规则原样适用：延续或关闭未开启的调用、重开已开启的调用，都是致命的。运行结束时仍有调用开着是违例。
 
-## Security Considerations
+## 安全考量
 
-Tool calls are the protocol's largest attack surface, because they turn model
-output into actions.
+工具调用是协议最大的攻击面，因为它把模型输出变成动作。
 
-- Arguments are model-generated and MUST be treated as untrusted input:
-  validated against the tool's declared parameter schema where one was
-  advertised, scrutinised like any untrusted payload where none was, and
-  never interpolated into shell commands, queries or markup unescaped.
-- Applications SHOULD obtain user consent before executing a side-effectful
-  tool call, and MUST NOT represent a call as user-approved when it was not.
-- Tool results are data from wherever the tool got them. A consumer MUST NOT
-  treat text inside a result as protocol material or as instructions carrying
-  the user's authority.
-- A call naming a tool that was not advertised SHOULD NOT be executed without
-  the same scrutiny a new tool would get.
+- 参数由模型生成，MUST 被当作不可信输入：声明过参数 schema 的工具，对照该 schema 校验；没声明的，像对待任何不可信负载一样细查；并且绝不未经转义就插值进 shell 命令、查询或标记。
+- 应用 SHOULD 在执行有副作用的工具调用之前取得用户同意，且 MUST NOT 在调用并非用户批准时声称已获批准。
+- 工具结果是从工具拿到数据的任何地方来的数据。消费者 MUST NOT 把结果里的文本当作协议材料，或当作携带用户授权的指令。
+- 指名未声明工具的调用，未经与新工具同等的细查，SHOULD NOT 被执行。

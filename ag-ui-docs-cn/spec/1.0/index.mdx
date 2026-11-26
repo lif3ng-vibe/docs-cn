@@ -1,146 +1,86 @@
 ---
-title: "Specification"
-description: "The behavioural specification for the AG-UI protocol — 1.0"
+title: "规范"
+description: "AG-UI 协议的行为规范——1.0"
 ---
 
-AG-UI is an open protocol that standardizes how agents talk to user-facing
-applications: one request in, one ordered stream of typed events out, carrying
-everything the user sees of the agent — text, tool calls, reasoning, shared
-state, progress.
+AG-UI 是一个开放协议，用于规范智能体（agent）与面向用户的应用之间的通信方式：一次请求进入，输出一条有序的类型化事件流，承载用户所见智能体的一切——文本、工具调用、推理、共享状态、进度。
 
-This specification defines the authoritative protocol requirements, based on
-the JSON Schema in [`schema.json`](/spec/1.0/schema.json), rendered readably
-as the [Schema Reference](/spec/1.0/schema).
+本规范定义协议的权威要求，其依据是 [`schema.json`](/spec/1.0/schema.json) 中的 JSON Schema，并以易读的形式呈现为 [Schema 参考](/spec/1.0/schema)。
 
-For implementation guides, concepts and examples, see the
-[documentation](/introduction).
+实现指南、概念与示例请参阅[文档](/introduction)。
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
-"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
-document are to be interpreted as described in
-[BCP 14](https://datatracker.ietf.org/doc/html/bcp14)
-[[RFC2119](https://datatracker.ietf.org/doc/html/rfc2119)]
-[[RFC8174](https://datatracker.ietf.org/doc/html/rfc8174)] when, and only
-when, they appear in all capitals, as shown here.
+本文档中的关键词 "MUST"、"MUST NOT"、"REQUIRED"、"SHALL"、"SHALL NOT"、"SHOULD"、"SHOULD NOT"、"RECOMMENDED"、"NOT RECOMMENDED"、"MAY"、"OPTIONAL" 仅当（且只在）以全大写形式出现时，才按 [BCP 14](https://datatracker.ietf.org/doc/html/bcp14) [[RFC2119](https://datatracker.ietf.org/doc/html/rfc2119)] [[RFC8174](https://datatracker.ietf.org/doc/html/rfc8174)] 所述进行解释。
 
-## What this document is
+## 本文档是什么
 
-A JSON Schema says what an event looks like. It cannot say what order events
-may arrive in, what an implementation does with something it does not
-recognise, or when a warning has to be emitted. Those rules are the protocol,
-and this document states them.
+JSON Schema 只描述事件长什么样。它无法描述事件可能以何种顺序到达、实现遇到无法识别的内容时该如何处理、以及何时必须发出警告。这些规则才是协议本身，本文档正是对它们的陈述。
 
-The division of authority is deliberate and absolute:
+权威的划分是有意为之且绝对的：
 
-- **The [schema](/spec/1.0/schema) is authoritative for structure.**
-  Which fields exist, which are required, what type each carries, which values
-  a discriminator may take. Where this document mentions a field, it does so
-  to give a rule meaning — never to restate the field's shape. If the two
-  disagree about structure, the schema wins and this document has a bug.
-- **This document is authoritative for behaviour.** Ordering, lifecycle,
-  attribution, error handling, compatibility. The schema cannot express any of
-  it. If an implementation disagrees with a rule here, the implementation has
-  a bug.
+- **[schema](/spec/1.0/schema) 是结构上的权威**。哪些字段存在、哪些是必填、各字段是什么类型、判别字段（discriminator）可以取哪些值。本文档提及某个字段，只是为了赋予某条规则以意义——绝不复述字段的形态。若两者在结构上不一致，以 schema 为准，本文档视为有误。
+- **本文档是行为上的权威**。顺序、生命周期、归因（attribution）、错误处理、兼容性。这些都不是 schema 能表达的。若某个实现与本文档中的规则相悖，则该实现有误。
 
-## Roles
+## 角色
 
-Every rule names who it binds. Two roles carry obligations:
+每条规则都指明它约束谁。有两个角色承担义务：
 
-- A **producer** is whatever emits the event stream — an agent, a proxy, a
-  bridge, a test double.
-- A **consumer** is whatever reads it — a client SDK, a UI, a recorder,
-  another proxy.
+- **生产者（producer）**指发出事件流的一方——智能体、代理、桥接器、测试替身。
+- **消费者（consumer）**指读取事件流的一方——客户端 SDK、UI、录制器、另一个代理。
 
-A participant that does both is bound by both sets of rules, in each direction
-separately.
+同时承担两种角色的参与者，两组规则都对其生效，且在两个方向上各自独立适用。
 
-## Conformance
+## 一致性
 
-An implementation conforms when it satisfies every MUST and MUST NOT that
-applies to the roles it plays. SHOULD-level rules describe what a good
-implementation does; departing from one is a decision that needs a reason, not
-a violation.
+当实现满足适用于其扮演角色的每一条 MUST 与 MUST NOT 时，即为符合规范。SHOULD 级别的规则描述优秀实现的做法；偏离 SHOULD 是一个需要给出理由的决策，而不算违规。
 
-Conformance is judged per stream. A producer that emits one malformed run does
-not conform, whatever it does on other runs.
+一致性按流逐一判定。生产者只要发出过一个格式错误的运行（run），就不符合规范，无论它在其他运行中表现如何。
 
-## Overview
+## 总览
 
-The protocol decomposes into a base every implementation speaks and features a
-producer emits when it has something to say with them:
+协议可分解为每个实现都要讲的基础部分，以及生产者在有内容要表达时才发出的特性：
 
-- **[The event model](/spec/1.0/basic)** — the envelope, the general fields,
-  the identifiers.
-- **[Run input](/spec/1.0/basic/run-input)** — the one message that travels
-  from application to agent.
-- **[Metadata](/spec/1.0/basic/metadata)** — the open channel on everything,
-  and how it merges.
-- **[Event patterns](/spec/1.0/basic/patterns)** — streaming,
-  snapshot–delta, interrupt–resume.
-- **[Transports](/spec/1.0/basic/transports)** — HTTP + SSE, HTTP +
-  Protobuf, and the contract custom bindings must meet.
-- **[Processing model](/spec/1.0/basic/processing)** — middleware before
-  enforcement; unrecognised material survives, malformed known values are
-  fatal.
-- **[Versioning and compatibility](/spec/1.0/basic/versioning)** — talking
-  to older and newer peers, and what losing content obliges.
-- **[Event streams](/spec/1.0/events)** — the eight event families.
+- **[事件模型](/spec/1.0/basic)**——信封结构、通用字段、标识符。
+- **[运行输入](/spec/1.0/basic/run-input)**——从应用流向智能体的那条唯一消息。
+- **[元数据](/spec/1.0/basic/metadata)**——附着在一切之上的开放通道，以及它的合并方式。
+- **[事件模式](/spec/1.0/basic/patterns)**——流式、快照–增量、中断–恢复。
+- **[传输层](/spec/1.0/basic/transports)**——HTTP + SSE、HTTP + Protobuf，以及自定义绑定必须满足的契约。
+- **[处理模型](/spec/1.0/basic/processing)**——中间件先于强制执行；无法识别的内容原样保留，已知值格式错误则为致命错误。
+- **[版本管理与兼容性](/spec/1.0/basic/versioning)**——与更旧、更新的对端通信，以及内容丢失时需要承担什么。
+- **[事件流](/spec/1.0/events)**——八大事件族。
 
-## Security and Trust & Safety
+## 安全与信任保障
 
-AG-UI turns model output into things applications do: tool calls become
-actions, state events become writes, streamed content becomes what the user
-reads. With that come obligations the protocol cannot enforce at the wire
-level but that implementors must address.
+AG-UI 把模型输出转化为应用执行的动作：工具调用变成操作，状态事件变成写入，流式内容变成用户读到的东西。随之而来的是协议无法在线上格式（wire）层面强制执行、但实现者必须正视的义务。
 
-### Key principles
+### 关键原则
 
-1. **User consent and control.** The application decides what runs. It SHOULD
-   obtain explicit user consent before executing side-effectful
-   [tool calls](/spec/1.0/events/tool-calls), and MUST NOT represent an
-   action as user-approved when it was not.
-2. **Model output is untrusted input.** Tool arguments, tool results,
-   [state](/spec/1.0/events/state) content and
-   [passthrough](/spec/1.0/events/passthrough) payloads cross a trust
-   boundary. Applications MUST validate what they act on and MUST NOT render
-   streamed content as executable markup.
-3. **Data flows both ways.** State and messages round-trip through the
-   consumer and back on every run. Producers SHOULD NOT put secrets in them;
-   consumers SHOULD treat reasoning and encrypted artefacts with the same
-   confidentiality as the conversation.
+1. **用户同意与控制**。运行什么由应用决定。在执行有副作用的[工具调用](/spec/1.0/events/tool-calls)之前，应用 SHOULD 先取得用户的明确同意；对并非用户批准的操作，MUST NOT 声称已获用户批准。
+2. **模型输出是不可信输入**。工具参数、工具结果、[状态](/spec/1.0/events/state)内容与[透传](/spec/1.0/events/passthrough)负载都跨越信任边界。应用 MUST 校验自己据以行动的数据，并且 MUST NOT 把流式内容渲染为可执行的标记。
+3. **数据双向流动**。每次运行中，状态与消息都会经由消费者往返一圈。生产者 SHOULD NOT 在其中放置机密；消费者 SHOULD 以与对话同等的保密级别对待推理内容与加密产物。
 
-### Implementation guidelines
+### 实现指南
 
-The protocol itself cannot enforce these principles. Implementors SHOULD build
-consent flows for consequential actions, validate schema and semantics at
-every trust boundary, isolate rendering from execution, and log enough to
-audit what an agent did on a user's behalf.
+协议本身无法强制执行这些原则。实现者 SHOULD 为重要操作构建同意流程，在每个信任边界校验 schema 与语义，将渲染与执行隔离，并记录足够多的日志，以便审计智能体代表用户做了什么。
 
-## Scope
+## 范围
 
-This document specifies the protocol: the event stream, the run input, and the
-obligations of the parties exchanging them. It does not specify what any
-particular integration does with an event after receiving it, how an agent
-framework should be structured, or how a UI should render anything.
+本文档规定的是协议本身：事件流、运行输入，以及交换双方的义务。它不规定任何具体集成在收到事件之后如何处理、智能体框架应当如何组织，也不规定 UI 应当如何渲染任何东西。
 
-AG-UI is maintained with three first-party SDKs — TypeScript, Python and
-.NET — and every rule here applies to all of them equally. Other language
-bindings are community-maintained; they are bound by this document when they
-claim conformance, but nothing here is derived from them.
+AG-UI 由三个一方官方 SDK 维护——TypeScript、Python 和 .NET——本文档的每条规则对三者同等适用。其他语言绑定由社区维护；当它们声称符合规范时，同样受本文档约束，但本文档的任何内容都不源自它们。
 
-## Learn More
+## 了解更多
 
 <CardGroup cols={2}>
-  <Card title="Architecture" icon="sitemap" href="/spec/1.0/architecture">
-    The components, the run, and the design principles.
+  <Card title="架构" icon="sitemap" href="/spec/1.0/architecture">
+    组件、运行与设计原则。
   </Card>
-  <Card title="Base Protocol" icon="code" href="/spec/1.0/basic">
-    The event model, run input, patterns, transports, processing, versioning.
+  <Card title="基础协议" icon="code" href="/spec/1.0/basic">
+    事件模型、运行输入、模式、传输层、处理模型、版本管理。
   </Card>
-  <Card title="Event Streams" icon="list" href="/spec/1.0/events">
-    The eight event families and their rules.
+  <Card title="事件流" icon="list" href="/spec/1.0/events">
+    八大事件族及其规则。
   </Card>
-  <Card title="Key Changes" icon="clock-rotate-left" href="/spec/1.0/changelog">
-    What 1.0 changes against the 0.x line.
+  <Card title="关键变化" icon="clock-rotate-left" href="/spec/1.0/changelog">
+    1.0 相对 0.x 系列的变化。
   </Card>
 </CardGroup>

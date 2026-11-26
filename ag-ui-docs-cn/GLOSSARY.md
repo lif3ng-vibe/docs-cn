@@ -165,3 +165,22 @@ AG-UI、CopilotKit、LangGraph、LangChain、CrewAI、Mastra、AG2、Pydantic AI
 | informational（工具调用标记） | 仅提示性质 |
 | Stateless by design | 设计上无状态 |
 | Chaining | 链式注册 |
+
+### B3 批次补充（规范 spec/1.0）
+
+| 英文 | 中文 |
+|---|---|
+| mixin | 混入 |
+| envelope / envelope information | 信封 / 信封信息 |
+| discriminator | 判别字段 |
+| lane | 泳道 |
+| escape hatch | 逃生舱（与 B2「兜底出口」并存，spec 语境用「逃生舱」） |
+| retired shape / deprecation registry | 退役形态 / 废弃登记表 |
+| downgrade（lossless/lossy） | 降级（无损/有损） |
+| accounting（边界/口径） | 记账口径 / 记账边界 |
+| re-mint | 重新铸造 |
+| wall-clock | 墙钟时间 |
+| q 值（quality value） | 质量值（q 值） |
+| binding contract | 绑定契约 |
+| resumption | 续传 |
+| Schema Reference | Schema 参考 |

@@ -1,189 +1,86 @@
 ---
-title: "Processing Model"
-description: "What survives, what is fatal, and where middleware sits relative to enforcement — 1.0"
+title: "处理模型"
+description: "什么能存活、什么是致命的，以及中间件相对强制执行的位置——1.0"
 ---
 
-Two things look superficially alike and must never be confused: material the
-protocol does not describe, and a value the protocol does describe that is
-wrong. The first is how the protocol grows. The second is a bug.
+有两样东西表面上相似，却绝不能混淆：协议未描述的内容，以及协议描述了但取值有误的内容。前者是协议得以生长的方式；后者是一个 bug。
 
-## The rule
+## 规则
 
-**Unrecognised material is not an error. A malformed known value is.**
+**无法识别的内容不是错误；已知值的格式错误才是。**
 
-- An event of a type this implementation does not recognise MUST NOT abort the
-  run.
-- A property that is not described on an event MUST NOT abort the run.
-- A union member the implementation does not recognise — a content part of a new
-  kind, an outcome named after it shipped — MUST NOT abort the run.
-- A field the protocol DOES describe, carrying a value the schema rejects, MUST
-  be fatal: the consumer MUST fail the run rather than repair, coerce or ignore
-  the value.
+- 本实现不识别其类型的事件，MUST NOT 中止运行。
+- 事件上未被描述的属性，MUST NOT 中止运行。
+- 实现不识别的联合成员——一种新类型的内容部分、它发布之后才命名的 outcome——MUST NOT 中止运行。
+- 协议确实描述了的字段，携带被 schema 拒绝的值，MUST 视为致命：消费者 MUST 让运行失败，而不是修复、强转或忽略该值。
 
-The reasoning is asymmetric on purpose. An event type added after an
-implementation shipped is expected — the sender is newer, and the older party
-has no basis to call it invalid. But `messageId` holding a number is not a newer
-protocol; it is a defect, and a consumer that quietly coerces it hides the defect
-until it surfaces as something harder to diagnose.
+这样规定是有意非对称的。实现发布之后才新增的事件类型是预期之内的事——发送方更新，较旧的一方没有理由说它无效。但装着数字的 `messageId` 不是更新的协议；它是缺陷，悄悄把它强转的消费者会把缺陷掩盖起来，直到它以更难诊断的形式浮出水面。
 
-## Every transport answers the same way
+## 所有传输层给出同样的裁决
 
-These rules bind the protocol, not a wire format. A consumer that supports more
-than one transport MUST reach the same verdict on the same event however it
-arrived: if a stream survives as JSON, it MUST survive as protobuf, and if it
-fails, it MUST fail the same way — except where the binary encoding itself
-cannot express the difference the verdict turns on, the two cases this page
-names below (the unnameable envelope variant, and the absences protobuf
-materialises).
+这些规则约束的是协议，而不是某种线上格式。支持多种传输层的消费者，MUST 对同一事件、无论它经由哪条路径到达，都给出同样的裁决：一条流若以 JSON 形式存活，MUST 以 protobuf 形式同样存活；若失败，MUST 以同样方式失败——除非二进制编码本身无法表达裁决所依据的差异，即本页下文点名的两种情形（无法命名的信封变体，以及 protobuf 会物化出来的"缺省"）。
 
-That puts a limit on what a reader may decide for itself. Turning bytes into
-events is the reader's whole job — a frame whose bytes map to no event at all is
-a decode failure, and that judgement is properly the reader's. Whether a
-successfully read event carries something the implementation recognises is not:
-that question belongs to the one stage every transport shares. A reader that
-also validates makes its transport strictly harsher than the others, and a
-producer's choice of content type then decides whether a run survives.
+这给读取方能自行决定的事情划了界。把字节变成事件是读取方的全部职责——一帧字节映射不到任何事件的帧是解码失败，这个判断理应归读取方。而成功读出的事件是否携带实现认识的东西，则不归它管：这个问题属于所有传输层共享的那一个阶段。一个还顺带做校验的读取方，会让自己的传输层比其他传输层严格得多，于是生产者对 content type 的选择就决定了运行能否存活。
 
-The binary case needs one accommodation. A text reader can hand on an event of
-an unknown type, because the type travels as a string and the shared stage can
-drop it by name. A binary reader cannot: an envelope variant it was not compiled
-against carries no name to hand on. Such a frame MUST be dropped, with a
-warning, rather than failing the run — that is the same answer the shared stage
-would have given, spelled for a transport that cannot defer the question.
+二进制的情形需要一项通融。文本读取方可以把未知类型的事件传递下去，因为类型以字符串传输，共享阶段可以按名字丢弃它。二进制读取方做不到：一个它编译时未曾见过的信封变体没有名字可以传递。这样的帧 MUST 被丢弃并给出警告，而不是让运行失败——这正是共享阶段会给出的同样答案，只不过写给了一个无法推迟判断的传输层。
 
 <Note>
-  A binary encoding cannot honour this wherever it gives a field no presence.
-  In protobuf that covers required scalars and required lists alike: a required
-  string a producer omitted arrives as an empty string, a required array as an
-  empty array, and each is accepted where the same event as JSON is rejected as
-  malformed. The schema already forbids omitting them, so this changes how a
-  defective producer is diagnosed rather than what a conformant one may send.
+  凡是二进制编码不给字段留存在位的地方，它就无法遵守这一点。在 protobuf 中，必填标量与必填列表都在此列：生产者省略的必填字符串会以空字符串到达，必填数组会以空数组到达，而同一事件以 JSON 形式会因格式错误被拒绝，在这里却被接受。schema 本就禁止省略它们，因此这改变的是有缺陷生产者的诊断方式，而不是符合规范的实现可以发送什么。
 </Note>
 
-## What a consumer does with unrecognised material
+## 消费者如何处理无法识别的内容
 
-A consumer that exposes events to application code MUST NOT deliver unrecognised
-material as though the protocol described it. Having read it, such a consumer
-MUST do one of:
+把事件暴露给应用代码的消费者，MUST NOT 把无法识别的内容当作协议描述过的东西交付出去。读过之后，这样的消费者 MUST 在以下做法中选一：
 
-- **Drop it**, if the whole event is of an unrecognised type. The consumer
-  SHOULD emit a warning naming the type.
-- **Strip it**, if it is an unknown property or an unrecognised union member on
-  an otherwise valid event. The consumer SHOULD emit a warning naming the path
-  that was removed.
+- **丢弃**：如果整个事件的类型无法识别。消费者 SHOULD 发出指名该类型的警告。
+- **剥离**：如果是一个本已有效的事件上的未知属性或无法识别的联合成员。消费者 SHOULD 发出指名被移除路径的警告。
 
-A consumer MUST NOT let a stripped property survive into the value application
-code receives, and MUST NOT let a dropped event reach it at all.
+消费者 MUST NOT 让被剥离的属性存活到应用代码收到的值里，也 MUST NOT 让被丢弃的事件到达应用代码。
 
-This applies only where the schema closes an object, which is everywhere it
-describes one of the protocol's own. Where the schema deliberately leaves an
-object open, a member it does not describe is not unrecognised material at all
-and MUST be preserved. The JSON Patch operations are the case: RFC 6902 section
-4 requires an operation to ignore members it does not define rather than reject
-them, so a `remove` carrying a leftover `value` is a valid patch and arrives
-whole. A consumer that strips there deletes conformant data, and the warning it
-emits is about nothing.
+这只在 schema 封闭对象之处适用——也就是 schema 描述协议自有对象的所有地方。schema 有意保持开放的对象，其未描述的成员根本不算无法识别的内容，MUST 保留。JSON Patch 操作就是这样的情形：RFC 6902 第 4 节要求操作忽略而非拒绝它未定义的成员，因此带着多余 `value` 的 `remove` 也是合法补丁，会完整到达。在那里做剥离的消费者删除的是符合规范的数据，它发出的警告也是无的放矢。
 
-This binds the pipeline, not the parser. A library layer that only parses an
-event — the generated models in each SDK, say — keeps unknown properties on
-purpose, so that the middleware above it can still see them. An SDK that offers
-such a parser without an enforcement stage does not yet satisfy this rule; today
-that is Python and .NET, whose models parse leniently with no stage that strips
-before application code.
+这条规则约束的是管线，而不是解析器。只负责解析事件的库层——比如各 SDK 里生成的模型——有意保留未知属性，让位于其上的中间件仍能看到它们。提供这种解析器却没有强制执行阶段的 SDK，尚未满足本条规则；今天指的是 Python 与 .NET，它们的模型宽松解析，应用代码之前没有任何剥离阶段。
 
 <Note>
-  One case is not yet met by the reference implementation: a field whose schema
-  is a closed set of string values — a message `role`, for instance — is checked
-  as a leaf, so an unrecognised value there is fatal rather than stripped. The
-  .NET converters reject an unknown role or outcome the same way. The rule above
-  is what the protocol requires; both are gaps against it rather than a softening
-  of it.
+  参考实现尚有一处未满足：schema 是封闭字符串值集合的字段——例如消息的 `role`——是作为叶子检查的，因此那里无法识别的取值是致命错误而非被剥离。.NET 的转换器以同样方式拒绝未知的 role 或 outcome。上面的规则才是协议的要求；这两处都是与规则的差距，而不是对规则的放宽。
 </Note>
 
-Stripping reaches all the way down, and what it removes depends on where the
-unrecognisable value sits:
+剥离会层层深入，移除什么取决于无法识别的值所在的位置：
 
-- In an **optional** position, that field is removed and everything around it
-  survives.
-- In a **required** position, the value *containing* it is removed instead. A
-  media part whose source is of a kind this implementation has never heard of is
-  removed whole — leaving a part behind with no source would hand the validator
-  something it must treat as malformed, turning an addition into a fatal error.
-- Inside a **list**, the unrecognisable element is dropped and the list survives.
+- 在**可选**位置上：移除该字段，周围的一切照常存活。
+- 在**必填**位置上：改为移除*包含*它的那个值。来源类型闻所未闻的媒体部分会被整体移除——留下一个没有来源的部分，等于把一个校验器必须视为格式错误的东西递给它，把一次新增变成了致命错误。
+- 在**列表**内部：丢弃无法识别的元素，列表本身存活。
 
-## Where middleware sits
+## 中间件的位置
 
-Middleware — anything a consumer installs to translate, observe or rewrite the
-stream — MUST run before enforcement, and enforcement MUST run before
-verification and before application code sees anything.
+中间件——消费者安装的、用于翻译、观察或改写流的任何东西——MUST 在强制执行之前运行；强制执行 MUST 在校验之前、在应用代码看到任何东西之前运行。
 
 ```
 producer → compatibility boundary → middleware → enforcement
          → chunk expansion → verification → application
 ```
 
-The compatibility boundary is the always-on translator for shapes the protocol
-has retired. It MUST see the stream first, because a retired shape can be a
-chunk, and a stage that met it earlier would either fail on it or turn it into
-something the boundary can no longer recognise. A middleware *chain* MAY
-expand chunks between its own stages, so that each stage receives the
-start/content/end form — the reference implementation's chaining helper does
-exactly that. A middleware therefore MUST be prepared for either form: what it
-sees depends on where in the chain it sits.
+兼容性边界是协议已退役形态的常开翻译器。它 MUST 最先看到流，因为退役形态可能是一个 chunk，更早遇到它的阶段要么在它上面失败，要么把它变成边界再也认不出的东西。中间件*链* MAY 在自己的各阶段之间展开 chunk，让每个阶段都收到 start/content/end 形式——参考实现的链式辅助工具正是这么做的。因此中间件 MUST 为两种形式都做好准备：它看到什么，取决于它在链中的位置。
 
-Expansion between stages narrows one guarantee, and the narrowing is stated
-rather than hidden: expansion synthesizes events carrying only what the
-protocol defines, so unrecognised fields *on a chunk* survive to enforcement —
-and earn their warning — only on the canonical order above. A chain that
-expands early loses them silently. A conforming producer never emits such
-fields, so what is lost is material from a newer protocol version crossing a
-chain that expands early. The material expansion exists to deliver — deltas,
-opener fields, metadata, `rawEvent`, attribution — is carried through intact;
-a chunk's `timestamp` is not, because the synthesized events are not the
-chunk, and like unknown fields it is judged before expansion only on the
-canonical order.
+阶段之间的展开会收窄一条保证，而且这一收窄是明说的、不是藏着掖着：展开合成的事件只携带协议定义过的内容，因此 chunk *之上*的无法识别字段只有在上述规范顺序下才能存活到强制执行——并挣得它们的警告。提前展开的链会无声地丢掉它们。符合规范的生产者从不发出这类字段，所以丢掉的东西是来自更新协议版本的内容，穿过了提前展开的链。展开之所以存在的目的——交付 delta、开头字段、元数据、`rawEvent`、归因——会完整携带；chunk 的 `timestamp` 则不会，因为合成的事件不是那个 chunk，它和未知字段一样，只在规范顺序下、在展开之前被裁决。
 
-A chunk is an event in its own right, and it MUST be judged as one: whichever
-stage meets a malformed chunk first — enforcement on the canonical order
-above, expansion where a middleware chain expands early — MUST reject it
-rather than repair it, and MUST NOT normalise, default or conceal a malformed
-known value enforcement would reject. A consumer that substituted a default
-for a malformed role made the same producer defect fatal when sent plainly and
-invisible when sent as a chunk, so which form a producer happened to use
-decided whether its bug was ever reported.
+chunk 本身就是一个事件，MUST 按事件来裁决：无论哪个阶段先遇到格式错误的 chunk——规范顺序上的强制执行，还是提前展开的中间件链中的展开——都 MUST 拒绝它而不是修复它，且 MUST NOT 把强制执行会拒绝的格式错误已知值规范化、设默认值或掩盖起来。用一个默认值顶替格式错误 role 的消费者，让同一个生产者缺陷在明发时是致命的、以 chunk 形式发送时却不可见，于是生产者碰巧用了哪种形式，竟决定了它的 bug 是否曾被报告。
 
-Verification MUST run after expansion, because what it checks — that messages
-and calls open before they continue and close after — only exists once a chunk
-has become the events it stands for.
+校验 MUST 在展开之后运行，因为它检查的东西——消息与调用在继续之前已开启、在结束之后关闭——只有当 chunk 变成它所代表的事件之后才存在。
 
-The order is load-bearing in both directions:
+这个顺序在两个方向上都承重：
 
-- Middleware MUST see material before enforcement removes it. A shim exists
-  precisely to translate a shape the current protocol does not describe; if
-  enforcement stripped that shape first, the shim would receive an event with
-  nothing left to translate and the run would lose data no one could recover.
-- Application code MUST NOT see material enforcement would remove. Once the
-  translators have had their chance, whatever is still unrecognised is
-  unrecognised, and it stops there.
+- 中间件 MUST 在强制执行移除内容之前看到它。垫片（shim）存在的意义就是翻译当前协议未描述的形态；如果强制执行先剥离了那个形态，垫片收到的事件就再无可翻译之物，运行将丢掉无人能找回的数据。
+- 应用代码 MUST NOT 看到强制执行会移除的内容。一旦翻译器们得到了机会，仍然无法识别的就是无法识别的，到此为止。
 
-A consumer MUST apply this ordering on every path that produces events for
-application code, including reconnection and replay. A path that skips
-enforcement is a hole in the guarantee, not an optimisation.
+消费者 MUST 在每条为应用代码产出事件的路径上执行这一顺序，包括重连与回放。跳过强制执行的路径是保证上的一个洞，不是优化。
 
-## Outgoing material
+## 发出的内容
 
-The same boundary applies to what a consumer sends. Immediately before
-transmission, a consumer MUST remove unrecognised material from the run input,
-SHOULD warn about what it removed, and MUST treat a malformed known field as
-fatal before anything is sent.
+同样的边界也适用于消费者发送的东西。在传输前的最后一刻，消费者 MUST 从运行输入中移除无法识别的内容，SHOULD 对移除的东西给出警告，且 MUST 在任何东西发出之前把格式错误的已知字段视为致命。
 
-A producer receiving a run input MUST apply the same asymmetry to it:
-unrecognised material does not make the input invalid, a malformed known field
-does.
+接收运行输入的生产者 MUST 对它施加同样的非对称规则：无法识别的内容不会使输入无效，格式错误的已知字段才会。
 
-## What a producer must not do
+## 生产者不得做的事
 
-A producer MUST NOT emit an event type the protocol does not describe in the
-expectation that consumers will ignore it. Unrecognised events survive so the
-protocol can add them, not so a producer can smuggle private signalling through
-the stream; `CUSTOM` and `RAW` exist for that and are described by the schema.
+生产者 MUST NOT 发出协议未描述的事件类型，并指望消费者会忽略它。无法识别的事件之所以存活，是为了协议能够新增它们，而不是为了让生产者借流夹带私有信令；`CUSTOM` 与 `RAW` 就是为这个目的而存在、且由 schema 描述的。

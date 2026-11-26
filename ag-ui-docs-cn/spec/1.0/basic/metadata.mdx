@@ -1,79 +1,50 @@
 ---
-title: "Metadata"
-description: "The open channel on everything: what it carries, how it merges, and where it lands — 1.0"
+title: "元数据"
+description: "附着在一切之上的开放通道：它承载什么、如何合并、落在哪里——1.0"
 ---
 
-Nearly everything in the protocol carries an OPTIONAL `metadata` object —
-events, messages, tool calls, tools, interrupts, resume entries. It is the
-open channel for what the protocol does not model: provider names, latencies,
-finish reasons, token counts, trace keys, whatever an application wants to
-ride along with its data.
+协议中几乎所有东西都携带 OPTIONAL 的 `metadata` 对象——事件、消息、工具调用、工具、中断、resume 条目。它是协议未建模内容的开放通道：提供方名称、延迟、结束原因、token 计数、追踪 key，以及应用想让数据捎带的任何东西。
 
-## The value
+## 取值
 
-`metadata` is open by key. Any JSON value is allowed under a key, including
-`null` — a `null` there is meaningful data. The object itself is either absent
-or an object and MUST NOT be `null`.
+`metadata` 按 key 开放。key 下允许任意 JSON 值，包括 `null`——这里的 `null` 是有意义的数据。对象本身要么缺省、要么是对象，MUST NOT 为 `null`。
 
-Unknown metadata keys are protocol-legal, not unrecognised material: the
-[processing model](/spec/1.0/basic/processing) never strips them, on any
-key.
+未知的元数据 key 协议上合法，不算无法识别的内容：[处理模型](/spec/1.0/basic/processing)从不剥离它们，任何 key 都如此。
 
-## Keys
+## key
 
-The `ag-ui` key is reserved for the protocol's own use. Every other key is
-application space; producers SHOULD prefix keys they invent with a vendor or
-application name, so two parties extending the same stream do not collide.
+`ag-ui` key 为协议自用而保留。其余 key 都是应用空间；生产者 SHOULD 给自创的 key 加上厂商或应用名前缀，这样两个扩展同一条流的各方才不会相撞。
 
-## Merging
+## 合并
 
-A streamed item is assembled from several events, and the interesting values —
-token usage, a finish reason — are only known at the end. So metadata
-accumulates rather than being fixed when the item opens: a consumer MUST merge
-the metadata of every event making up an item, key by key, with the last write
-winning for each key.
+一个流式条目由多个事件组装而成，而那些有意思的值——token 用量、结束原因——要到结尾才知道。因此元数据是累积的，而不是在条目开启时定型：消费者 MUST 把组成条目的每个事件的元数据合并起来，逐 key 进行，每个 key 都由最后写入者胜出。
 
-The merge MUST NOT recurse. A key's value is replaced outright, so an object
-or array under a key is replaced wholesale rather than blended with what was
-there before.
+合并 MUST NOT 递归。key 的值被整体替换，因此 key 下的对象或数组是整个换掉，而不是与之前的值掺和。
 
-## Where each event's metadata lands
+## 各事件元数据的落点
 
-Merging needs a target, and the target is the thing the event builds — not
-always the message:
+合并需要一个目标，而目标是事件所构建的那个东西——不总是消息：
 
-| Event(s) | Merges into |
+| 事件 | 合并到 |
 | --- | --- |
-| `TEXT_MESSAGE_START` / `CONTENT` / `END` | the text message |
-| `REASONING_MESSAGE_START` / `CONTENT` / `END` | the reasoning message |
-| `TOOL_CALL_START` / `ARGS` / `END` | **the tool call itself** — not the assistant message that owns it |
-| `TOOL_CALL_RESULT` | the tool message it creates |
-| `ACTIVITY_SNAPSHOT` / `ACTIVITY_DELTA` | the activity message — accumulated metadata survives a replacing snapshot ([Activity](/spec/1.0/events/activity)) |
-| chunks (`*_CHUNK`) | whatever their synthesized events merge into ([chunk metadata](/spec/1.0/basic/patterns/streaming#chunk-metadata)) |
-| everything else (`RUN_*`, `STEP_*`, snapshots, `RAW`, `CUSTOM`, …) | nothing — see below |
+| `TEXT_MESSAGE_START` / `CONTENT` / `END` | 该文本消息 |
+| `REASONING_MESSAGE_START` / `CONTENT` / `END` | 该推理消息 |
+| `TOOL_CALL_START` / `ARGS` / `END` | **工具调用本身**——而不是拥有它的那条助手消息 |
+| `TOOL_CALL_RESULT` | 它创建的那条工具消息 |
+| `ACTIVITY_SNAPSHOT` / `ACTIVITY_DELTA` | 该活动消息——已累积的元数据会在替换型快照下存活（[活动](/spec/1.0/events/activity)） |
+| chunk（`*_CHUNK`） | 其合成事件所合并到的目标（[chunk 元数据](/spec/1.0/basic/patterns/streaming#chunk-metadata)） |
+| 其余一切（`RUN_*`、`STEP_*`、快照、`RAW`、`CUSTOM` 等） | 不合并——见下文 |
 
 <Note>
-  Tool-call metadata landing on the call rather than its parent message is
-  deliberate. One assistant message can own several tool calls, so folding
-  their metadata into the parent would make the result depend on the order
-  the calls happened to interleave. Each call keeping its own is what keeps it
-  unambiguous.
+  工具调用的元数据落在调用上而非其父消息上，是有意为之。一条助手消息可以拥有多个工具调用，把它们的元数据并入父消息，会让结果取决于调用交错发生的顺序。每个调用保留自己的元数据，才让这一切保持无歧义。
 </Note>
 
-An event that builds no durable item has no merge target: its metadata is the
-event's own, visible to middleware and to whatever observes the stream, and
-the protocol assigns it nowhere further. A consumer MAY surface it — a run's
-`RUN_FINISHED` metadata in its own bookkeeping, say — but no rule requires it.
+不构建持久条目的事件没有合并目标：它的元数据就是事件自己的，对中间件以及任何观察流的东西可见，协议不再另行指派去处。消费者 MAY 把它呈现出来——比如把一次运行的 `RUN_FINISHED` 元数据放进自己的记账——但没有规则要求这么做。
 
-## Stored metadata
+## 存储型元数据
 
-Messages, tool calls, tools, interrupts and resume entries carry `metadata` as
-a plain stored field of their own. Nothing merges into those except the events
-listed above; a tool's metadata in [run input](/spec/1.0/basic/run-input),
-or an interrupt's, is simply data travelling with its carrier.
+消息、工具调用、工具、中断与 resume 条目把 `metadata` 作为自己的普通存储字段携带。除上面列出的事件之外，没有东西会合并进它们；[运行输入](/spec/1.0/basic/run-input)中某个工具的元数据，或某个中断的元数据，只是随其载体一起旅行的数据。
 
-## Data Types
+## 数据类型
 
-[`Metadata`](/spec/1.0/schema#metadata) is defined by the
-[schema reference](/spec/1.0/schema), and every carrier's entry there lists
-its `metadata` field.
+[`Metadata`](/spec/1.0/schema#metadata) 由 [schema 参考](/spec/1.0/schema)定义，每个载体的条目都在其中列出了自己的 `metadata` 字段。

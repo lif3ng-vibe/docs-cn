@@ -1,60 +1,34 @@
 ---
-title: "HTTP + Server-Sent Events"
-description: "The default binding: a POST carrying the run input, a text/event-stream carrying the run — 1.0"
+title: "HTTP + 服务器推送事件（SSE）"
+description: "默认绑定：一个 POST 携带运行输入，一个 text/event-stream 携带运行——1.0"
 ---
 
-The default binding. The application POSTs the run input to the agent's
-endpoint; the response is a
-[Server-Sent Events](https://html.spec.whatwg.org/multipage/server-sent-events.html)
-stream carrying the run.
+这是默认绑定。应用把运行输入 POST 到智能体的端点；响应是一条承载本次运行的[服务器推送事件（SSE）](https://html.spec.whatwg.org/multipage/server-sent-events.html)流。
 
-## Request
+## 请求
 
-- The client sends `POST` to the agent endpoint. The body is the
-  [`RunAgentInput`](/spec/1.0/basic/run-input) as a single JSON object,
-  UTF-8 encoded, with `Content-Type: application/json`.
-- The client sends `Accept: text/event-stream` (adding the
-  [protobuf media type](/spec/1.0/basic/transports/http-protobuf) when it
-  can consume that binding too).
+- 客户端向智能体端点发送 `POST`。请求体是作为单个 JSON 对象的 [`RunAgentInput`](/spec/1.0/basic/run-input)，UTF-8 编码，带 `Content-Type: application/json`。
+- 客户端发送 `Accept: text/event-stream`（若也能消费 [protobuf 媒体类型](/spec/1.0/basic/transports/http-protobuf)则一并加上）。
 
-## Response
+## 响应
 
-- A run that starts answers `200` with `Content-Type: text/event-stream`.
-- Each SSE event's `data` payload is exactly one protocol event as a JSON
-  object — never more than one, never a fragment. Multi-line `data:` fields
-  join as SSE specifies.
-- A producer MUST frame the stream with LF (`\n`) line endings. The SSE
-  grammar also admits CR and CRLF, but this binding pins the one form every
-  consumer is known to parse; a consumer MAY additionally accept the full
-  grammar.
-- A consumer MUST ignore SSE fields other than `data` (`event:`, `id:`,
-  `retry:`) and MUST tolerate SSE comment lines (`: keep-alive`), which
-  producers MAY send at any cadence.
-- The producer closes the response body after the last run's terminal event.
-  One POST carries one request; a response MAY nevertheless carry
-  [several runs](/spec/1.0/events/lifecycle#several-runs-on-one-stream) when
-  the producer is replaying a thread's history ahead of the requested run — no
-  further input travels for those, per the
-  [binding contract](/spec/1.0/basic/transports#the-binding-contract).
+- 开启的运行以 `200` 应答，带 `Content-Type: text/event-stream`。
+- 每个 SSE 事件的 `data` 负载恰好是一个协议事件的 JSON 对象——绝不多于一个，也绝不是片段。多行 `data:` 字段按 SSE 规范拼接。
+- 生产者 MUST 以 LF（`\n`）行结束符为流分帧。SSE 语法也容许 CR 与 CRLF，但本绑定钉死这种所有已知消费者都能解析的形式；消费者 MAY 额外接受完整语法。
+- 消费者 MUST 忽略 `data` 之外的 SSE 字段（`event:`、`id:`、`retry:`），并 MUST 容忍 SSE 注释行（`: keep-alive`），生产者 MAY 以任意节奏发送注释行。
+- 生产者在最后一次运行的终止事件之后关闭响应体。一个 POST 携带一次请求；但当生产者在所请求的运行之前回放线程历史时，响应 MAY [携带多次运行](/spec/1.0/events/lifecycle#several-runs-on-one-stream)——按[绑定契约](/spec/1.0/basic/transports#the-binding-contract)，不为它们传输进一步的输入。
 
-## Errors
+## 错误
 
-- Input rejected before the run starts — malformed JSON, failed validation,
-  refused auth — is an HTTP error status with no event stream. The run never
-  started.
-- A failure after the stream opens travels in-stream, as `RUN_ERROR`. The HTTP
-  status is already sent and cannot change; a consumer MUST NOT infer success
-  from `200` alone.
-- A connection that drops without a terminal event is a
-  [truncated run](/spec/1.0/basic/transports#truncation).
+- 运行开始之前被拒绝的输入——JSON 格式错误、校验失败、认证被拒——是一个不带事件流的 HTTP 错误状态。运行从未开始。
+- 流开启之后的失败走流内传输，即 `RUN_ERROR`。HTTP 状态已经发出、无法更改；消费者 MUST NOT 仅凭 `200` 推断成功。
+- 没有终止事件就断开的连接是一次[被截断的运行](/spec/1.0/basic/transports#truncation)。
 
-## No resumption
+## 不可续传
 
-The binding has no stream resumption: SSE's `Last-Event-ID` mechanism is not
-used, and a broken stream cannot be re-entered. Re-running is a new run with a
-new `runId`, whose input carries whatever the consumer retained.
+该绑定没有流续传：SSE 的 `Last-Event-ID` 机制不被使用，断掉的流无法重新进入。重跑就是一次带着新 `runId` 的新运行，其输入携带消费者保留下来的一切。
 
-## Example
+## 示例
 
 ```
 POST /agent HTTP/1.1

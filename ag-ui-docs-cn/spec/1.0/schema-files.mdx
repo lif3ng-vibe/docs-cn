@@ -1,51 +1,34 @@
 ---
-title: "Schema files"
-description: "The machine-readable schema, its address, and how to use it — 1.0"
+title: "schema 文件"
+description: "机器可读的 schema、它的地址，以及如何使用它——1.0"
 ---
 
-The schema is authoritative for structure: which fields exist, which are
-required, what type each carries, and which values a discriminator may take.
-This page is where to fetch it.
+schema 是结构上的权威：哪些字段存在、哪些是必填、各字段是什么类型、判别字段（discriminator）可以取哪些值。本页说明从哪里获取它。
 
-## The file
+## 文件
 
 <Card title="schema.json" href="/spec/1.0/schema.json" icon="brackets-curly">
-  The complete 1.0 schema — every event, message, and the run input.
+  完整的 1.0 schema——每个事件、消息以及运行输入。
 </Card>
 
 ```
 https://ag-ui.com/spec/1.0/schema.json
 ```
 
-The file states that address in its own `$id`, so a validator that follows
-references resolves them against it without configuration. The address serves
-the file directly: no redirect stands between a tool and the schema, and the
-response carries a cross-origin header so a browser-based tool can read it.
+文件在自己的 `$id` 中声明了该地址，因此遵循引用的校验器无需任何配置即可据此解析引用。该地址直接提供文件本身：工具与 schema 之间没有任何重定向，响应还带有跨源响应头，基于浏览器的工具因此可以直接读取。
 
-It is [JSON Schema draft 2020-12](https://json-schema.org/draft/2020-12/release-notes).
-Every definition is reachable by anchor — `#TextMessageStartEvent`,
-`#RunAgentInput` — so a tool can address one shape without slicing the file.
+它采用 [JSON Schema draft 2020-12](https://json-schema.org/draft/2020-12/release-notes)。每个定义都可以通过锚点直达——`#TextMessageStartEvent`、`#RunAgentInput`——工具因此可以定位某一个形态，而无需切分整个文件。
 
-## Using it
+## 使用方式
 
 ```bash
 curl -sS https://ag-ui.com/spec/1.0/schema.json -o ag-ui-1.0.json
 ```
 
-Validate an event against the whole schema and let the discriminator select the
-member, or validate against a single anchor when you already know the shape.
+可以用整个 schema 校验一个事件，让判别字段选出对应的联合成员；如果已经知道形态，也可以直接对单个锚点校验。
 
-The schema is strict where the protocol is strict: it closes the objects whose
-shape it fixes, so a validator run against it rejects material the protocol does
-not describe. Objects that are open by design stay open — `metadata` and the
-JSON Patch operations among them — because the protocol carries whatever a
-consumer puts there. That strictness is for authoring and for tests. A *runtime* consumer
-does the opposite — it accepts unrecognised material and strips it, as
-[Processing model](/spec/1.0/basic/processing) requires. Do not
-wire the strict schema into a receive path and call the result conformance.
+协议严格之处，schema 也严格：它封闭了那些形态已被固定的对象，因此依据它运行的校验器会拒绝协议未描述的内容。设计上开放的对象保持开放——其中包括 `metadata` 与 JSON Patch 操作——因为协议会承载消费者放入的任何东西。这种严格性用于编写与测试。*运行时*的消费者恰恰相反——它接受无法识别的内容并将其剥离，正如[处理模型](/spec/1.0/basic/processing)所要求的那样。不要把严格的 schema 接进接收路径，然后就把结果称为符合规范。
 
-## What the schema does not say
+## schema 未说明的内容
 
-Ordering, lifecycle, attribution, error handling and compatibility are
-behavioural, and no JSON Schema can express them. They are specified in the
-other pages of this document, starting at the [overview](/spec/1.0).
+顺序、生命周期、归因（attribution）、错误处理与兼容性都属于行为范畴，任何 JSON Schema 都无法表达它们。它们由本文档的其他页面规定，从[总览](/spec/1.0)开始。

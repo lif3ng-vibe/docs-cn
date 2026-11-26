@@ -1,27 +1,15 @@
 ---
-title: "Event Patterns"
-description: "The ways a producer composes events into a stream — 1.0"
+title: "事件模式"
+description: "生产者把事件组合成流的种种方式——1.0"
 ---
 
-This page defines the event patterns of the core protocol: the ways a producer
-composes events into a stream. Every
-[transport](/spec/1.0/basic/transports) carries all of these patterns;
-transports differ only in how events are framed and delivered.
+本页定义核心协议的事件模式：生产者把事件组合成流的种种方式。每种[传输层](/spec/1.0/basic/transports)都承载所有这些模式；传输层之间的差别只在事件如何分帧与投递。
 
-The direction of the protocol is fixed. Events flow from producer to consumer;
-the consumer speaks exactly once per exchange, by sending the
-[run input](/spec/1.0/basic/run-input) that opens it. A producer MUST NOT
-require any mid-run message from the consumer — a run that needs outside input
-ends, and the answer arrives on the next run: through an interrupt and its
-resume entries, or through a
-[frontend tool call](/spec/1.0/events/tool-calls#frontend-tools) left
-unanswered and answered in the next input's messages.
+协议的方向是固定的。事件从生产者流向消费者；消费者在每次交换中只说一次话——发送开启这次交换的[运行输入](/spec/1.0/basic/run-input)。生产者 MUST NOT 要求消费者在运行中途发来任何消息——需要外部输入的运行会结束，答案在下一次运行时到达：或经由一个中断与它的 resume 条目，或经由一个未被应答、而在下一次输入的消息中得到应答的[前端工具调用](/spec/1.0/events/tool-calls#frontend-tools)。
 
-## Streaming
+## 流式
 
-Long values arrive a piece at a time: a `*_START` opens an item, content
-events extend it, a `*_END` closes it — or a chunked shorthand compresses the
-three. Text messages, tool calls and reasoning messages all stream this way.
+长的值分片到达：一个 `*_START` 开启条目，content 事件延展它，一个 `*_END` 关闭它——或者用一个 chunk 简写把三者压缩。文本消息、工具调用与推理消息都这样流式传输。
 
 ```mermaid
 sequenceDiagram
@@ -32,13 +20,11 @@ sequenceDiagram
     Producer->>Consumer: *_END (id)
 ```
 
-See [Streaming Messages](/spec/1.0/basic/patterns/streaming).
+参见[流式消息](/spec/1.0/basic/patterns/streaming)。
 
-## Snapshot and delta
+## 快照与增量
 
-Values that evolve — agent state, activities, the conversation itself — are
-carried as a snapshot that replaces and deltas that amend, with deltas
-expressed as RFC 6902 JSON Patch.
+会演化的值——智能体状态、活动、对话本身——以"替换用的快照 + 修订用的增量"承载，增量以 RFC 6902 JSON Patch 表达。
 
 ```mermaid
 sequenceDiagram
@@ -49,13 +35,11 @@ sequenceDiagram
     Producer->>Consumer: *_SNAPSHOT (resynchronise)
 ```
 
-See [Snapshots and Deltas](/spec/1.0/basic/patterns/snapshots).
+参见[快照与增量](/spec/1.0/basic/patterns/snapshots)。
 
-## Interrupt and resume
+## 中断与恢复
 
-A run that needs something from outside — an approval, a missing value — ends
-with an interrupt outcome, and the run that continues from it carries the
-answers in its input.
+需要外部给出某样东西——一项批准、一个缺失的值——的运行，以 interrupt outcome 结束；从中延续的那次运行把答案放进自己的输入。
 
 ```mermaid
 sequenceDiagram
@@ -69,11 +53,8 @@ sequenceDiagram
     Agent->>Application: RUN_STARTED …
 ```
 
-See [Interrupts and Resume](/spec/1.0/basic/patterns/interrupt-resume).
+参见[中断与恢复](/spec/1.0/basic/patterns/interrupt-resume)。
 
-## Adding patterns
+## 新增模式
 
-All protocol features are built from these patterns. A protocol revision that
-adds a pattern defines it on this page. Transports carry new patterns without
-changes, because patterns are expressed entirely in terms of events and the
-run input.
+所有协议特性都由这些模式构建。新增模式的协议修订版在本页定义它。传输层无需改动即可承载新模式，因为模式完全以事件与运行输入来表达。

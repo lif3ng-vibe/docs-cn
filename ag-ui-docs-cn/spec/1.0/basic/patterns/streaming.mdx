@@ -1,31 +1,19 @@
 ---
-title: "Streaming Messages"
-description: "The open–content–close discipline, the chunked form, and the rules that bind them — 1.0"
+title: "流式消息"
+description: "开启–内容–关闭的纪律、chunk 形式，以及约束两者的规则——1.0"
 ---
 
-Three event families stream long values a piece at a time: text messages, tool
-calls, and reasoning messages. All three follow one pattern with two spellings —
-an explicit **open–content–close** triad, and a compact **chunked** form for
-producers that would otherwise have to buffer. This page defines the pattern
-once; the family pages ([text messages](/spec/1.0/events/text-messages),
-[tool calls](/spec/1.0/events/tool-calls),
-[reasoning](/spec/1.0/events/reasoning)) add only what is specific to each
-family.
+三个事件族把长的值分片流式传输：文本消息、工具调用与推理消息。三者都遵循同一个模式、有两种写法——显式的**开启–内容–关闭**三连，以及为不得不缓冲的生产者准备的紧凑 **chunk** 形式。本页一次性定义该模式；各事件族页面（[文本消息](/spec/1.0/events/text-messages)、[工具调用](/spec/1.0/events/tool-calls)、[推理](/spec/1.0/events/reasoning)）只补充各自特有的内容。
 
-## Open, content, close
+## 开启、内容、关闭
 
-A streamed item is opened by its `*_START` event, extended by zero or more
-content events, and closed by its `*_END` event, all matched by the item's
-identifier (`messageId` for messages, `toolCallId` for tool calls).
+流式条目由它的 `*_START` 事件开启，由零个或多个 content 事件延展，由它的 `*_END` 事件关闭，全部以条目的标识符配对（消息用 `messageId`，工具调用用 `toolCallId`）。
 
-- A producer MUST NOT open an item whose identifier is already open.
-- A producer MUST NOT send a content or end event for an identifier that is
-  not open.
-- Every item a producer opens MUST be closed before the run finishes.
+- 生产者 MUST NOT 开启一个标识符已然开启的条目。
+- 生产者 MUST NOT 为未开启的标识符发送 content 或 end 事件。
+- 生产者开启的每个条目，MUST 在运行结束之前关闭。
 
-The opening event carries the fields that describe the item; content events
-carry only the identifier and a `delta`. Deltas concatenate in arrival order to
-form the item's value.
+开启事件携带描述该条目的字段；content 事件只携带标识符与一个 `delta`。delta 按到达顺序拼接，构成条目的值。
 
 ```mermaid
 sequenceDiagram
@@ -38,30 +26,15 @@ sequenceDiagram
     Producer->>Consumer: TEXT_MESSAGE_END (messageId: "msg-1")
 ```
 
-## Interleaving
+## 交错
 
-Messages, tool calls, reasoning messages and steps are independent. A producer
-MAY interleave them freely — a tool call MAY open while a message is still
-streaming — provided each item respects its own open/close discipline.
+消息、工具调用、推理消息与步骤彼此独立。生产者 MAY 自由交错它们——消息还在流式传输时，一个工具调用 MAY 开启——只要每个条目都遵守自己的开启/关闭纪律。
 
-Standalone events (`STATE_SNAPSHOT`, `STATE_DELTA`, `MESSAGES_SNAPSHOT`,
-`ACTIVITY_SNAPSHOT`, `ACTIVITY_DELTA`, `CUSTOM`, `RAW`,
-`REASONING_ENCRYPTED_VALUE`) open and close no items of their own, and MAY
-appear anywhere within an open run. In the chunked form, some of them do end
-an open chunk stream — arriving is what tells the consumer the shorthand can
-no longer continue — as [Closing a chunk stream](#closing-a-chunk-stream)
-lists.
+独立事件（`STATE_SNAPSHOT`、`STATE_DELTA`、`MESSAGES_SNAPSHOT`、`ACTIVITY_SNAPSHOT`、`ACTIVITY_DELTA`、`CUSTOM`、`RAW`、`REASONING_ENCRYPTED_VALUE`）不开启也不关闭自己的任何条目，MAY 出现在一次开启的运行内的任何位置。在 chunk 形式下，它们当中的一些确实会结束一条开启的 chunk 流——它们的到达正是在告诉消费者简写无法再继续——如[关闭 chunk 流](#关闭-chunk-流)所列。
 
-## The chunked form
+## chunk 形式
 
-`TEXT_MESSAGE_CHUNK`, `TOOL_CALL_CHUNK` and `REASONING_MESSAGE_CHUNK` are a
-compact spelling of the triad. A consumer MUST expand them into the
-start/content/end form before verification and before application code, so
-every rule of the triad applies to the expanded events. Where expansion sits
-relative to enforcement and middleware is specified in the
-[processing model](/spec/1.0/basic/processing); the invariant that holds on
-every path is that a chunk is judged as the event it is — whichever stage
-meets a malformed chunk first rejects it rather than repairs it.
+`TEXT_MESSAGE_CHUNK`、`TOOL_CALL_CHUNK` 与 `REASONING_MESSAGE_CHUNK` 是三连事件的紧凑写法。消费者 MUST 把它们展开成 start/content/end 形式，且要在校验之前、应用代码之前进行，这样三连事件的每条规则都适用于展开后的事件。展开相对强制执行与中间件的位置由[处理模型](/spec/1.0/basic/processing)规定；在所有路径上都成立的不变量是：chunk 按它作为事件的本来面目被裁决——无论哪个阶段先遇到格式错误的 chunk，都拒绝它而不是修复它。
 
 ```mermaid
 sequenceDiagram
@@ -79,81 +52,37 @@ sequenceDiagram
     Expansion->>Consumer: RUN_FINISHED
 ```
 
-The two spellings do not mix within one item. An item opened by a chunk is
-continued and closed in chunk form — its `*_END` is synthesized, never sent —
-and an item opened by a `*_START` is continued and closed explicitly. An
-explicit event carrying an identifier a chunk stream is assembling is not a
-continuation of it: it ends the shorthand, as
-[Closing a chunk stream](#closing-a-chunk-stream) describes, and what follows
-is judged by the triad rules — which makes mixing the forms within one item a
-malformed sequence a producer MUST NOT emit.
+两种写法在同一个条目内不混用。由 chunk 开启的条目以 chunk 形式延续和关闭——它的 `*_END` 是合成的、从不发送——由 `*_START` 开启的条目则以显式事件延续和关闭。携带一条 chunk 流正在组装的标识符的显式事件，不是它的延续：它终止这个简写，如[关闭 chunk 流](#关闭-chunk-流)所述，其后的事件按三连事件的规则裁决——这就使得在同一条目内混用两种形式成为一种生产者 MUST NOT 发出的格式错误序列。
 
-### The first chunk
+### 首个 chunk
 
-The first chunk of an item carries what opening it requires; later chunks MAY
-omit those fields and continue what is already open.
+条目的首个 chunk 携带开启它所需的信息；后续 chunk MAY 省略这些字段，延续已开启的条目。
 
-- The first `TEXT_MESSAGE_CHUNK` for a message MUST carry `messageId`. It MAY
-  carry `role`; an absent role means `assistant`, exactly as on
-  `TEXT_MESSAGE_START`.
-- The first `REASONING_MESSAGE_CHUNK` for a message MUST carry `messageId`.
-- The first `TOOL_CALL_CHUNK` for a call MUST carry both `toolCallId` and
-  `toolCallName`.
+- 一条消息的首个 `TEXT_MESSAGE_CHUNK` MUST 携带 `messageId`。它 MAY 携带 `role`；角色缺省表示 `assistant`，与 `TEXT_MESSAGE_START` 上完全一致。
+- 一条消息的首个 `REASONING_MESSAGE_CHUNK` MUST 携带 `messageId`。
+- 一次调用的首个 `TOOL_CALL_CHUNK` MUST 同时携带 `toolCallId` 与 `toolCallName`。
 
-A consumer MUST treat a first chunk missing a required field as a protocol
-violation rather than inventing an identifier.
+消费者 MUST 把缺失必填字段的首个 chunk 视为违反协议，而不是自己捏造一个标识符。
 
-### Continuation chunks
+### 延续 chunk
 
-- A later chunk that carries an identifier MUST carry the same identifier it is
-  continuing. A chunk that names a different identifier opens a new item, and
-  the previous one closes first.
-- A continuation chunk MAY repeat a field its opener established — `role` or
-  `name` on a text message, `toolCallName` or `parentMessageId` on a tool call —
-  but only with the same value. A consumer MUST treat a conflicting repeat as a
-  protocol violation. This includes a value conflicting with one the opener
-  established by omission: a message opened without a role is an `assistant`
-  message, and a later chunk claiming another role contradicts it.
+- 携带标识符的后续 chunk，MUST 携带与它正在延续的相同的标识符。指名不同标识符的 chunk 开启一个新条目，前一个先关闭。
+- 延续 chunk MAY 重复其开头 chunk 确立过的字段——文本消息上的 `role` 或 `name`，工具调用上的 `toolCallName` 或 `parentMessageId`——但只能以相同的值。消费者 MUST 把冲突的重复视为违反协议。这也包括与开头 chunk 因省略而确立的值相冲突的情形：开启时未给角色的消息是 `assistant` 消息，后续 chunk 若声称别的角色，即与之矛盾。
 
 <Note>
-  The conflicting-repeat rule is the same judgment the
-  [subagent attribution rules](/spec/1.0/events/subagents) pass on a
-  continuation that disagrees with its opener about `subagentRunId`: the
-  producer has said two incompatible things about one item, and there is no
-  correct way to choose between them.
+  冲突重复规则与[子智能体归因规则](/spec/1.0/events/subagents)对在 `subagentRunId` 上与开头 chunk 不一致的延续所下的判断是同一个：生产者就同一个条目说了两句互不兼容的话，没有哪种"选一个"的方式是正确的。
 </Note>
 
-### Closing a chunk stream
+### 关闭 chunk 流
 
-The chunked form has no explicit end event, so the consumer synthesizes the
-`*_END` when the stream can no longer continue:
+chunk 形式没有显式的结束事件，因此当流无法再继续时，消费者合成 `*_END`：
 
-- when a chunk opens a different item in the same lane;
-- when a message, tool-call, step, state, custom or reasoning event arrives in
-  the item's lane — with four exceptions that stand aside from assembly and
-  close nothing: `RAW`, `ACTIVITY_SNAPSHOT`, `ACTIVITY_DELTA`,
-  `REASONING_ENCRYPTED_VALUE` (and `SUBAGENT_STARTED`, which opens a new lane
-  rather than touching this one);
-- when a run-level event arrives — `RUN_STARTED`, `RUN_FINISHED`, `RUN_ERROR`
-  or `MESSAGES_SNAPSHOT` — which closes every lane, or when the subagent the
-  item is attributed to terminates, which closes that subagent's lane.
+- 当一个 chunk 在同一条泳道中开启了不同的条目；
+- 当消息、工具调用、步骤、状态、自定义或推理事件到达该条目所在泳道——有四个例外置身于组装之外、不关闭任何东西：`RAW`、`ACTIVITY_SNAPSHOT`、`ACTIVITY_DELTA`、`REASONING_ENCRYPTED_VALUE`（还有 `SUBAGENT_STARTED`，它开启新泳道而不碰这条）；
+- 当运行级事件到达——`RUN_STARTED`、`RUN_FINISHED`、`RUN_ERROR` 或 `MESSAGES_SNAPSHOT`——会关闭所有泳道；或当条目归因的子智能体终止时，关闭该子智能体的泳道。
 
-Which lane a shorthand continuation belongs to — the parent agent's or a
-subagent's — is decided by the [attribution rules](/spec/1.0/events/subagents),
-and for a continuation carrying neither an identifier nor a tag, by
-resolution: it continues the parent agent's open stream of its kind when one
-exists, and otherwise the sole open stream of its kind. When several lanes
-hold open streams of that kind and none of them is the parent's, the
-continuation has no unique referent and MUST be rejected as ambiguous — a
-producer running parallel subagents MUST attribute its continuations. A chunk
-stream MUST NOT outlive its owner: an item opened by a subagent closes no
-later than that subagent's terminal event.
+一条简写延续属于哪条泳道——父智能体的还是某个子智能体的——由[归因规则](/spec/1.0/events/subagents)决定；对既不带标识符也不带标记的延续，则靠解析：若父智能体存在同类开启流则延续之，否则延续该类型唯一开启的那条流。当多条泳道都持有该类型的开启流、而其中没有父智能体的那条时，延续没有唯一所指，MUST 作为歧义被拒绝——并行运行子智能体的生产者 MUST 为自己的延续标注归因。chunk 流 MUST NOT 比它的主人活得更久：由子智能体开启的条目，最迟在该子智能体的终止事件时关闭。
 
-### Chunk metadata
+### chunk 元数据
 
-A chunk's `metadata` applies to the events synthesized from that chunk, and
-merges into the item under the
-[metadata rules](/spec/1.0/basic/metadata). A continuation chunk that
-carries only metadata — a final chunk reporting usage and a finish reason — is
-legal: it adds no content, and its metadata still reaches the item it
-continues.
+chunk 的 `metadata` 作用于由该 chunk 合成的事件，并按[元数据规则](/spec/1.0/basic/metadata)合并进条目。只携带元数据的延续 chunk——比如最后一条报告用量与结束原因的 chunk——是合法的：它不添加内容，它的元数据仍然到达它所延续的条目。

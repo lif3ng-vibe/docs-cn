@@ -1,142 +1,64 @@
 ---
-title: "Capabilities"
-description: "What an agent declares about itself before a run, what a declaration obliges, and what it does not — 1.0"
+title: "能力"
+description: "智能体在运行前对自己作出的声明、声明带来的义务，以及它管不到的地方——1.0"
 ---
 
-A run shows a consumer what an agent *did*. Capabilities let a consumer learn
-what an agent *can do* before asking it to do anything: whether it streams
-reasoning, whether it will pause for approval, which modalities it accepts,
-which subagents it may delegate to. An application uses them to shape the
-interface it offers — a file picker only where files are accepted, an approval
-affordance only where interrupts are supported — rather than discovering support
-by trial.
+一次运行让消费者看到智能体*做了*什么。能力则让消费者在开口使唤之前先了解智能体*能做什么*：它是否流式输出推理、是否会为批准而暂停、接受哪些模态、可以把工作委派给哪些子智能体。应用据此塑造自己提供的界面——只在接受文件之处放文件选择器、只在支持中断之处放批准控件——而不是靠试错去发现支持情况。
 
-The [schema](/spec/1.0/schema#agentcapabilities) defines the shape:
-`AgentCapabilities`, a set of OPTIONAL groups, each an object of OPTIONAL
-fields. This page states what a declaration obliges. It deliberately does not
-specify how a consumer *obtains* a declaration — see [Retrieval](#retrieval).
+[schema](/spec/1.0/schema#agentcapabilities) 定义形态：`AgentCapabilities`，一组 OPTIONAL 的分组，每组都是一个由 OPTIONAL 字段构成的对象。本页说明一项声明带来的义务。它有意不规定消费者*如何获取*声明——见[获取声明](#获取声明)。
 
-## Declaring
+## 声明
 
-Every group, and every field within a group, is OPTIONAL. A producer declares
-what it has something to say about and omits the rest. Records a field
-references keep their own requirements: a `SubagentInfo` needs its `name`, and
-an entry in `tools.items` is a `Tool`.
+每个分组、以及分组内的每个字段，都是 OPTIONAL。生产者声明自己有话可说的部分，省略其余。字段所引用的记录仍遵守自己的要求：`SubagentInfo` 需要它的 `name`，`tools.items` 里的条目是一个 `Tool`。
 
-**An omitted field means undeclared, not unsupported.** An agent that says
-nothing about `reasoning` has not said it cannot reason; a consumer MUST NOT
-infer the absence of a capability from the absence of its declaration. Where an
-agent wants to state that something is *not* supported, the boolean fields exist
-to carry `false` explicitly.
+**字段缺省表示未声明，而不是不支持。** 对 `reasoning` 只字未提的智能体，并没有说自己不能推理；消费者 MUST NOT 从声明的缺席推断能力的缺席。智能体想表达某件事*不*受支持时，布尔字段就是用来显式携带 `false` 的。
 
-A producer SHOULD declare only what it does. A declaration is a statement to the
-application about how to prepare for a run; a declaration the agent does not
-honour misleads the interface built on it. There is no obligation to declare
-everything true — a minimal declaration is conforming — but what is declared
-SHOULD hold.
+生产者 SHOULD 只声明自己真正做到的。声明是给应用的一句交代，告诉它该如何为一次运行做准备；智能体不兑现的声明会误导建立在它之上的界面。没有义务把一切为真的东西都声明出来——最小声明也符合规范——但声明了的东西 SHOULD 属实。
 
-Declarations are informative, not binding. The event stream is authoritative: a
-consumer MUST NOT reject a stream, or treat a run as failed, because an event
-arrives that a declaration did not anticipate, or because a declared capability
-went unexercised. A run that emits reasoning events under
-`reasoning: { supported: false }` has a producer worth a complaint, not a stream
-worth rejecting.
+声明是参考性的，不是约束性的。事件流才是权威：消费者 MUST NOT 因为出现声明未预料到的事件、或声明了却未行使的能力，就拒绝一条流或把运行视为失败。在 `reasoning: { supported: false }` 之下仍发出推理事件的运行，值得投诉的是那个生产者，而不是值得拒绝的那条流。
 
-## The groups
+## 分组
 
-The groups partition the protocol's features. Where a group describes an event
-family, that family's page governs what the events themselves oblige; the
-declaration only anticipates them.
+这些分组划分协议的特性。某个分组描述事件族时，事件本身应尽什么义务由该事件族的页面管辖；声明只是预先告知。
 
-| Group            | Declares                                                                                         | Governed by                                                          |
-| ---------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `identity`       | Name, framework, version, provider, documentation, and an open `metadata` object                 | this page                                                            |
-| `transport`      | Which [transport bindings](/spec/1.0/basic/transports) the agent serves                        | [Transports](/spec/1.0/basic/transports)                           |
-| `tools`          | Whether the agent calls tools, the tools it *provides*, and whether it accepts the application's tools | [Tool calls](/spec/1.0/events/tool-calls)                          |
-| `output`         | Structured output and producible MIME types                                                      | —                                                                    |
-| `state`          | Snapshots, deltas, persistence across runs, long-term memory                                     | [State](/spec/1.0/events/state)                                    |
-| `multiAgent`     | Delegation, handoffs, and the `subagents` it may invoke                                          | [Subagents](/spec/1.0/events/subagents)                            |
-| `reasoning`      | Whether reasoning is emitted, streamed, or encrypted                                             | [Reasoning](/spec/1.0/events/reasoning)                            |
-| `multimodal`     | Modalities accepted as `input` and produced as `output`                                          | [Run input](/spec/1.0/basic/run-input#messages) for `input`; see note for `output` |
-| `execution`      | Code execution, sandboxing, iteration and time limits                                            | —                                                                    |
-| `humanInTheLoop` | Approvals, interventions, feedback, and participation in interrupt–resume                        | [Interrupts and Resume](/spec/1.0/basic/patterns/interrupt-resume) |
-| `custom`         | Anything the standard groups do not cover                                                        | —                                                                    |
+| 分组 | 声明内容 | 由谁管辖 |
+| --- | --- | --- |
+| `identity` | 名称、框架、版本、提供方、文档，以及一个开放的 `metadata` 对象 | 本页 |
+| `transport` | 智能体服务哪些[传输层绑定](/spec/1.0/basic/transports) | [传输层](/spec/1.0/basic/transports) |
+| `tools` | 智能体是否调用工具、它*提供*哪些工具，以及是否接受应用的工具 | [工具调用](/spec/1.0/events/tool-calls) |
+| `output` | 结构化输出与可产出的 MIME 类型 | — |
+| `state` | 快照、增量、跨运行持久化、长期记忆 | [状态](/spec/1.0/events/state) |
+| `multiAgent` | 委派、移交，以及它可调用的 `subagents` | [子智能体](/spec/1.0/events/subagents) |
+| `reasoning` | 推理是否发出、是否流式、是否加密 | [推理](/spec/1.0/events/reasoning) |
+| `multimodal` | 作为 `input` 接受、作为 `output` 产出的模态 | `input` 见[运行输入](/spec/1.0/basic/run-input#messages)；`output` 见下文说明 |
+| `execution` | 代码执行、沙箱、迭代与时间限制 | — |
+| `humanInTheLoop` | 批准、介入、反馈，以及参与中断–恢复 | [中断与恢复](/spec/1.0/basic/patterns/interrupt-resume) |
+| `custom` | 标准分组未覆盖的一切 | — |
 
-Some fields deserve a note beyond their description in the schema.
+有几个字段值得在 schema 描述之外多说一句。
 
-`output.structuredOutput` declares that an agent can shape its answer to a
-schema, but this version of the protocol has no field through which a consumer
-supplies one and no event that identifies output as structured. The declaration
-tells an application the agent is able; how a schema reaches the agent and how
-the shaped answer comes back are integration-specific, and a consumer MUST NOT
-expect a standard event to carry either.
+`output.structuredOutput` 声明智能体能把答案整形成符合某个 schema 的样子，但本版协议没有任何字段供消费者递交 schema，也没有事件把输出标记为结构化。这条声明告诉应用智能体有此能力；schema 如何到达智能体、整了形的答案如何回来，都是集成专属的，消费者 MUST NOT 指望某个标准事件承载其中任何一环。
 
-`multimodal.output` declares what an agent can *produce*, but this version of
-the protocol defines no image or audio output: assistant message content and
-`TEXT_MESSAGE_CONTENT` deltas are text. The declaration is for the application
-— which may receive such output through an integration-specific channel — and
-nothing in this specification says how it travels. A consumer MUST NOT expect a
-standard event to carry it.
+`multimodal.output` 声明智能体能*产出*什么，但本版协议没有定义任何图像或音频输出：助手消息内容与 `TEXT_MESSAGE_CONTENT` 增量都是文本。这条声明是给应用看的——应用可能经由集成专属的通道收到这类输出——本规范不说明它如何传输。消费者 MUST NOT 指望标准事件承载它。
 
-`tools.items` lists the tools the *agent* provides — its own functions, search,
-code execution — and is distinct from `RunAgentInput.tools`, which carries the
-tools the *application* offers for one run. The two never merge: an agent's own
-tools are not the application's to execute, and the application's are not
-declared here.
+`tools.items` 列出*智能体*提供的工具——它自己的函数、搜索、代码执行——与 `RunAgentInput.tools` 不同，后者承载*应用*为一次运行提供的工具。两者从不合并：智能体自己的工具轮不到应用来执行，应用的工具也不在此声明。
 
-`multiAgent.subagents` names the subagents an agent may invoke, for selection
-interfaces. It is a list of definitions, not of invocations: the identifiers a
-consumer meets on the wire are `subagentRunId` values, one per invocation,
-minted at run time — [Subagents](/spec/1.0/events/subagents) governs those,
-and nothing here predicts them.
+`multiAgent.subagents` 指名智能体可调用的子智能体，供选择界面使用。它是定义的列表，不是调用的列表：消费者在线上遇到的标识符是 `subagentRunId` 值，每次调用一个，运行时才生成——那些由[子智能体](/spec/1.0/events/subagents)管辖，本页不做预言。
 
-Two `transport` flags likewise describe mechanisms this version does not
-define. `transport.resumable` speaks of resuming an interrupted stream by
-sequence number, and `transport.pushNotifications` of delivery after a run has
-finished; neither [HTTP binding](/spec/1.0/basic/transports) carries sequence
-numbers, resumes a stream, or defines a post-run channel. An agent MAY declare
-them for a transport of its own; a consumer MUST NOT expect either of the
-standard bindings to honour them.
+`transport` 的两个标志同样描述本版协议未定义的机制。`transport.resumable` 说的是按序列号恢复被中断的流，`transport.pushNotifications` 说的是运行结束之后的投递；两种 [HTTP 绑定](/spec/1.0/basic/transports)都不携带序列号、不恢复流、也不定义运行后通道。智能体 MAY 为自己的传输层声明它们；消费者 MUST NOT 指望任何一个标准绑定兑现它们。
 
-## `identity.metadata` and `custom`
+## `identity.metadata` 与 `custom`
 
-Two open objects carry what the standard fields do not. `identity.metadata` is
-the protocol's [Metadata](/spec/1.0/basic/metadata) shape — open by key, any
-JSON value under a key — for integration-specific identity information. `custom`
-is the escape hatch for capabilities that fit no standard group. Both are open
-by key: a consumer MUST preserve what it does not recognise inside them rather
-than stripping it, exactly as for metadata elsewhere. The protocol attaches no
-meaning to either.
+两个开放对象承载标准字段装不下的东西。`identity.metadata` 采用协议的[元数据](/spec/1.0/basic/metadata)形态——按 key 开放，key 下可为任意 JSON 值——用于集成专属的身份信息。`custom` 是装不进任何标准分组的能力的逃生舱。两者都按 key 开放：消费者 MUST 保留其中自己无法识别的内容而不是剥离它，与其他地方的元数据完全一致。协议不为两者附加任何含义。
 
-## Retrieval
+## 获取声明
 
-This specification defines the shape of a declaration and what it obliges. It
-does not define how a consumer obtains one. No transport binding in this version
-carries a capabilities exchange, and this page does not create one: whether an
-agent's capabilities are read from a method on a client-side agent object,
-fetched from an application-defined endpoint, or configured statically is the
-implementation's business.
+本规范定义声明的形态与其义务，不定义消费者如何取得一份声明。本版的任何传输层绑定都不携带能力交换，本页也不创造一个：智能体的能力是从客户端侧智能体对象的方法上读取、从应用自定义的端点获取、还是静态配置，是实现的自由。
 
-This is deliberate. A discovery protocol is a larger commitment than a
-declaration shape, and the shape is useful without it. An implementation that
-exposes capabilities by any means MUST use this shape for them.
+这是有意为之。发现协议是比声明形态更大的承诺，而形态本身没有它也已经有用。以任何方式暴露能力的实现，MUST 对它们使用这个形态。
 
-## Error Handling
+## 错误处理
 
-A capabilities object is not carried by the event pipeline, so the
-[processing model](/spec/1.0/basic/processing)'s stripping obligation does not
-apply to it; the distinction that model draws between *unrecognised* and
-*malformed* does. Unrecognised members — a group
-or field this version does not define — are the strict layer's concern, not the
-consumer's: the schema closes every capability object, so such a document does
-not validate against it, but a consumer MUST NOT reject a declaration for
-carrying them, so a newer agent's declaration does not bounce off an older
-consumer. Capabilities do not pass through the event pipeline's enforcement
-stage, so whether a consumer keeps unrecognised members or drops them is the
-implementation's business, and conforming implementations differ. A known field carrying a value the schema rejects
-— a string where a boolean belongs — is malformed, and a consumer MUST NOT use a
-declaration it cannot validate.
+能力对象不经由事件管线传输，因此[处理模型](/spec/1.0/basic/processing)的剥离义务不适用于它；但该模型在*无法识别*与*格式错误*之间的区分是适用的。无法识别的成员——本版未定义的分组或字段——是严格层的关切，不是消费者的：schema 封闭了每个能力对象，这样的文档通不过 schema 校验，但消费者 MUST NOT 因为声明携带它们而拒绝该声明，这样新版智能体的声明才不会在旧版消费者那里被弹回。能力不经过事件管线的强制执行阶段，所以消费者对无法识别的成员是保留还是丢弃，是实现自由，符合规范的实现各不相同。已知字段携带 schema 拒绝的值——该是布尔的地方放了字符串——则是格式错误，消费者 MUST NOT 使用自己无法校验的声明。
 
-Because declarations are informative, a rejected or absent declaration MUST NOT
-prevent a run. A consumer that cannot obtain or validate an agent's capabilities
-proceeds as it would for an agent that declared nothing.
+由于声明只是参考，被拒绝或缺省的声明 MUST NOT 阻止运行。无法取得或校验智能体能力的消费者，照它面对一言未发的智能体那样继续行事。
