@@ -27,7 +27,7 @@
 | B4 | 规范 spec/draft×27（与 B3 同构；沿用 B3 译名） | ✅（页内锚点 10 处，映射 27 份；schema 98 定义标题保持英文） |
 | B5a | SDK dotnet×10 + python×5（磁盘实为 15 文件） | ✅（映射 15 份） |
 | B5b | SDK js×13 + development×3 + drafts×3 + tutorials×2 + support + integrations/google-adk-js | ✅（实译 22 文件；sdk/js/encoder.mdx、sdk/js/proto.mdx 为空页未动；页内锚点约 120 处，映射 22 份） |
-| B6 | snippets×3 + docs.json anchors 改站内 + 跨页锚点回修 + 终检（残留/锚点/字面**）+ README + 阶段 C 五处同步 | ⬜ |
+| B6 | snippets×3 + docs.json anchors 改站内 + 跨页锚点回修 + 终检（残留/锚点/字面**）+ README + 阶段 C 五处同步 | ✅ commit ac388295 |
 
 ## 已译文件清单
 
@@ -36,19 +36,11 @@
 
 ## 锚点回修状态
 
-- 未开始；每文件随翻译产出 `.anchor-maps/<批>/<file>.map.md`（原英文标题 | 中文标题 | 新锚点），导出后 `scripts/verify-anchors-cn.mjs` 全站核对
+- 已完成：三轮回修 427 处（工具 `scripts/repair-anchors-cn.mjs` 双端实测 id + 映射桥接，`scripts/verify-anchors-cn.mjs` 复验）；终态仅剩 2 处未命中且与英文基线相同（上游自身坏链，忠实保留）；映射 109 份在 `.anchor-maps-ag-ui/`
 
 ## 下一步
 
-全部翻译批次（B1–B5b、B4）完成 → **B6 收尾**（主线执行）：
-1. spec/1.0/schema.mdx 补译 2 句 "Discriminated by `role`/`op`."（B4 发现的 B3 漏网，与 draft 页统一为「以 `role`/`op` 判别。」）
-2. snippets×3 主线自译（snippets/draft-notice、since、snippet-intro——MDX 组件，import 它们的页面不用动）
-3. docs.json navigation.global 三条 anchors 改站内路径（/sdk/js/core/overview、/sdk/python/core/overview、/sdk/dotnet/abstractions/overview）
-4. 全站 export → `node scripts/repair-anchors-cn.mjs /tmp/dist-en dist --apply` → 重导出 → `node scripts/verify-anchors-cn.mjs` 复验至零缺失（外站锚点除外）；dry-scan 基数 228 处
-5. 残留检查（B1–B5b 已过，重跑全量）+ dist 剥标签扫字面 `**`（应为 0）
-6. `DOCS_BASE=/docs-cn/ag-ui node scripts/prefix-dist.mjs` + `node scripts/smoke-serve.mjs` 冒烟（curl http://localhost:4639/docs-cn/ag-ui/ → 200 且含 CJK）；确认 dist 无 .anchor-maps/.translation-state 泄漏
-7. 阶段 C 五处同步（hub sites.json + gen-index.cjs + deploy-pages.yml 构建段 + README 三处）；Mintlify=导出产物镜像（prefix 后纯拷贝），CI 构建段照 herdr/diagram-design 先例
-8. `git fetch origin master && git merge --no-edit origin/master`（冲突规则：sites.json 并存重跑 gen-index、README 段落并存）→ 最终 push → STATUS=done → 总结回帖
+A/B/C 全部完成、master 已合并上线（https://lif3ng-vibe.github.io/docs-cn/ag-ui/ 已验证 200 + 含中文）。唯一剩余项 = **docs-compare 对照登记（阶段 E/F）**：上一 run 的 compare 第二 claude 调用因额度 429 中断，用户已 /continue——本 run 以 STATUS=done 干净退出后，由 workflow「运行对照登记」步骤在 docs-compare 工作副本内自动重试，hub 侧无待办。再挂则按 workflow 边界回帖 + blocked，用户 /continue 重试。
 
 ## 结构勘误
 
