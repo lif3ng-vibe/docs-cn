@@ -29,8 +29,8 @@ for (const line of body.split(/\r?\n/)) {
   }
   if (cur) sections[cur].push(line);
 }
-// GitHub 表单对留空的可选字段填字面量 "_No response_"（或 "No response"），按空值处理
-const EMPTY_MARKERS = /^_?\s*no response\s*_?$/i;
+// GitHub 表单对留空的可选字段填字面量 "_No response_"（或 "No response"；下拉框是 "None"），按空值处理
+const EMPTY_MARKERS = /^_?\s*(?:no response|none)\s*_?$/i;
 const val = (label) => {
   const v = (sections[label] || []).join('\n').trim();
   return EMPTY_MARKERS.test(v) ? '' : v;
@@ -38,6 +38,28 @@ const val = (label) => {
 
 const out = {};
 for (const [label, key] of LABELS) out[key] = val(label);
+
+// 字段填反防御：上游仓库不是主流 git 托管域、而文档站 URL 却是 → 自动对调
+//（ag-ui issue #4 案例：仓库与文档站两栏互换，slug 从纯域名推不出来直接红）
+const REPO_HOSTS = new Set(['github.com', 'gitlab.com', 'gitee.com', 'bitbucket.org']);
+const hostOf = (u) => {
+  try {
+    return new URL(u).hostname.toLowerCase();
+  } catch {
+    return '';
+  }
+};
+let swapped = false;
+if (
+  out.UPSTREAM_REPO &&
+  out.DOCS_URL &&
+  !REPO_HOSTS.has(hostOf(out.UPSTREAM_REPO)) &&
+  REPO_HOSTS.has(hostOf(out.DOCS_URL))
+) {
+  [out.UPSTREAM_REPO, out.DOCS_URL] = [out.DOCS_URL, out.UPSTREAM_REPO];
+  swapped = true;
+  console.error('「上游 git 仓库」与「文档站 URL」疑似填反（前者非 git 托管域、后者是），已自动对调');
+}
 
 // slug 缺省推导：仓库名 basename 优先，其次文档站域名（去 www./docs. 前缀取主体段）
 let slugDerived = false;
@@ -85,5 +107,6 @@ for (const [, key] of LABELS) {
 }
 console.error(
   `表单解析成功：slug=${out.SLUG}${slugDerived ? '（自动推导）' : ''} ` +
-    `mode=${out.UPSTREAM_REPO ? 'git 源翻译' : '闭源站镜像汉化'} scope=${out.SCOPE || '全站'} deploy=${out.DEPLOY_MODE}`,
+    `mode=${out.UPSTREAM_REPO ? 'git 源翻译' : '闭源站镜像汉化'} scope=${out.SCOPE || '全站'} deploy=${out.DEPLOY_MODE}` +
+    (swapped ? '【已自动对调填反的两个 URL 字段】' : ''),
 );

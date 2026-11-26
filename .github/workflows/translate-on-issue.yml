@@ -103,6 +103,7 @@ jobs:
           fetch-depth: 1
 
       - name: 拉取 issue 并解析表单
+        id: parse
         if: env.DOCS_RUN != 'false'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -110,7 +111,26 @@ jobs:
           set -euo pipefail
           gh issue view "$ISSUE_NUMBER" --json title --jq .title
           gh issue view "$ISSUE_NUMBER" --json body --jq .body > issue-body.md
-          node scripts/ci-parse-translate-issue.mjs issue-body.md >> "$GITHUB_ENV"
+          node scripts/ci-parse-translate-issue.mjs issue-body.md >> "$GITHUB_ENV" 2>parse-err.log
+
+      - name: 表单解析失败回帖（告诉用户哪里没填对，不进翻译）
+        if: failure() && steps.parse.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          {
+            echo "表单解析失败 ⛔ 未进入翻译（零 token 消耗）。解析器说："
+            echo
+            echo '```'
+            cat parse-err.log
+            echo '```'
+            echo
+            echo "修正方式：编辑本 issue 正文把对应字段改对，然后重新触发（\`gh workflow run translate-on-issue.yml -f issue=${ISSUE_NUMBER}\`，或移除 translate label 再重新打上）。常见问题：仓库与文档站两个 URL 填反（github/gitlab/gitee/bitbucket 已支持自动对调）、slug 含非法字符。"
+          } > parse-err-post.md
+          gh issue comment "$ISSUE_NUMBER" -R "$REPO" --body-file parse-err-post.md
+          gh issue edit "$ISSUE_NUMBER" -R "$REPO" --add-label blocked || true
 
       - name: 配置 git 身份 + 续跑检测
         if: env.DOCS_RUN != 'false'
