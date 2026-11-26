@@ -300,7 +300,8 @@ jobs:
           if git merge --no-edit origin/master; then
             # 推送走 checkout 预配的 PAT 凭据——GITHUB_TOKEN 推 master 不会触发 deploy-pages
             git push origin "HEAD:master"
-            gh issue comment "$ISSUE_NUMBER" --body "已自动合并进 master ✅ deploy-pages 部署已触发，几分钟后上线 https://lif3ng-vibe.github.io/docs-cn/${SLUG}/（新站首轮冷同步可能要 20 分钟）。对照登记（docs-compare）留待本地进行。"
+            echo "MERGE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+            gh issue comment "$ISSUE_NUMBER" --body "已自动合并进 master ✅ deploy-pages 部署已触发，几分钟后上线 https://lif3ng-vibe.github.io/docs-cn/${SLUG}/（新站首轮冷同步可能要 20 分钟）。部署就绪后自动进行 docs-compare 对照登记（若 PAT 无 docs-compare 权限则回帖指引后跳过、留本地做）。"
             gh issue edit "$ISSUE_NUMBER" --remove-label translate || true
             gh issue edit "$ISSUE_NUMBER" --remove-label needs-input || true
             gh issue edit "$ISSUE_NUMBER" --add-label deployed || true
@@ -348,6 +349,127 @@ jobs:
           gh issue edit "$ISSUE_NUMBER" --remove-label quota-blocked || true
           gh issue edit "$ISSUE_NUMBER" --remove-label needs-input || true
           gh issue edit "$ISSUE_NUMBER" --add-label awaiting-review || true
+
+      - name: compare 登记预检（PAT 是否有 docs-compare 权限）
+        id: compare-gate
+        if: success() && startsWith(env.CLAUDE_CODE, '0') && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE == 'auto'
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_CN_PAT }}
+        run: |
+          set -euo pipefail
+          if gh api repos/lif3ng-vibe/docs-compare --jq .full_name >/dev/null 2>&1; then
+            echo "COMPARE_ACCESS=ok" >> "$GITHUB_ENV"
+            echo "PAT 可访问 docs-compare，进入对照登记"
+          else
+            echo "COMPARE_ACCESS=no" >> "$GITHUB_ENV"
+            echo "PAT 无 docs-compare 权限，对照登记将跳过（回帖指引后留本地）"
+          fi
+
+      - name: compare 跳过回帖（无权限时指引，不影响管线成功）
+        if: success() && startsWith(env.CLAUDE_CODE, '0') && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE == 'auto' && env.COMPARE_ACCESS == 'no'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh issue comment "$ISSUE_NUMBER" --body "对照登记（docs-compare）已跳过：checkout 凭据还没有 docs-compare 仓库权限。要下次起全自动，请编辑那枚 fine-grained PAT，把 **lif3ng-vibe/docs-compare** 加进 Repository access（权限沿用 Contents/Actions/Workflows 统一设置即可）。本站的对照登记请按惯例本地进行。"
+          gh issue edit "$ISSUE_NUMBER" --add-label awaiting-review || true
+
+      - name: 等部署上线（锚点表生成依赖镜像站可访问）
+        if: success() && startsWith(env.CLAUDE_CODE, '0') && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE == 'auto' && env.COMPARE_ACCESS == 'ok'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          URL="https://lif3ng-vibe.github.io/docs-cn/${SLUG}/"
+          echo "等待 deploy-pages 完成（合并提交 ${MERGE_SHA:-unknown}），新站冷同步最长约 20 分钟…"
+          for i in $(seq 1 60); do
+            ROW="$(gh run list -R lif3ng-vibe/docs-cn -w "Deploy to GitHub Pages" -L 6 --json headSha,status,conclusion --jq "[.[] | select(.headSha==\"${MERGE_SHA:-}\")][0]" 2>/dev/null || true)"
+            ST="$(printf '%s' "$ROW" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{console.log(JSON.parse(d).status||"")}catch{console.log("")}})')"
+            CC="$(printf '%s' "$ROW" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{console.log(JSON.parse(d).conclusion||"")}catch{console.log("")}})')"
+            [ -n "$ST" ] || { sleep 30; continue; }
+            if [ "$ST" = "completed" ]; then
+              if [ "$CC" = "success" ]; then break; fi
+              gh issue comment "$ISSUE_NUMBER" --body "对照登记中止 ⛔ hub deploy 未成功（conclusion=${CC}）。锚点表生成依赖镜像站上线——修复部署后评论 \`/continue\` 重试登记。"
+              gh issue edit "$ISSUE_NUMBER" --add-label blocked || true
+              exit 1
+            fi
+            sleep 30
+          done
+          # 上线验证：200 + 中文内容
+          for i in $(seq 1 10); do
+            CODE_HTTP="$(curl -s -o /dev/null -w '%{http_code}' -L --max-time 30 "$URL" || true)"
+            [ "$CODE_HTTP" = "200" ] && { echo "✅ 镜像站已上线 $URL"; exit 0; }
+            sleep 30
+          done
+          gh issue comment "$ISSUE_NUMBER" --body "对照登记中止 ⛔ 镜像站 ${URL} 未能验证上线（HTTP ${CODE_HTTP:-无响应}）。请检查部署后评论 \`/continue\` 重试登记。"
+          gh issue edit "$ISSUE_NUMBER" --add-label blocked || true
+          exit 1
+
+      - name: checkout docs-compare（对照登记工作副本）
+        if: success() && startsWith(env.CLAUDE_CODE, '0') && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE == 'auto' && env.COMPARE_ACCESS == 'ok'
+        uses: actions/checkout@v4
+        with:
+          repository: lif3ng-vibe/docs-compare
+          ref: main
+          token: ${{ secrets.DOCS_CN_PAT }}
+          path: docs-compare-work
+          fetch-depth: 1
+
+      - name: 运行对照登记（compare 五处同步 + 锚点表 + 推送 + Release 验证）
+        if: success() && startsWith(env.CLAUDE_CODE, '0') && env.CLAUDE_STATUS == 'done' && env.DEPLOY_MODE == 'auto' && env.COMPARE_ACCESS == 'ok'
+        env:
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          ANTHROPIC_MODEL: ${{ secrets.ANTHROPIC_MODEL }}
+          GH_TOKEN: ${{ github.token }}
+          DOCS_CN_PAT: ${{ secrets.DOCS_CN_PAT }}
+          SLUG: ${{ env.SLUG }}
+          ISSUE_NUMBER: ${{ env.ISSUE_NUMBER }}
+        run: |
+          set -o pipefail
+          PROMPT="$(cat <<EOF
+          你是 docs-compare 对照工具仓库的登记执行器。hub 侧汉化已合并上线（${SLUG}，https://lif3ng-vibe.github.io/docs-cn/${SLUG}/）。当前目录是 docs-compare 工作副本；hub 仓库在上级目录（站点工程在 ../${SLUG}-docs-cn/）；skill 在 ../.claude/skills/publishing-docs-cn/SKILL.md——先读它的「阶段 E：docs-compare 登记 + 锚点表」，严格按该节执行：
+
+          1. 五处同步：packages/core/src/defaults.ts RAW 数组、apps/cdp/config/sites.json、apps/tauri/config/sites.json、README 快照+计数、scripts/anchor-map.config.json。站点元信息（name/desc/orig/repo/pages/stack/snap）从 ../${SLUG}-docs-cn/ 的 README 与 hub 的 sites.json 对应条目读取
+          2. anchor-map.config 站点条目按 skill 两模式选页面枚举（origin/sitemap 口径见 skill）；复制成单站临时 config 过滤生成，跑 node scripts/gen-anchor-map.mjs（自动 copyTo 扩展静态目录）
+          3. npm install → npm test → npm run build 全绿
+          4. git add 相关文件（临时 config 用完删除）→ commit → git push origin main（git 身份已配置好，直接用）
+          5. 等 compare CI 绿（约 3-4 分钟）：GH_TOKEN="$DOCS_CN_PAT" gh run watch <run-id> -R lif3ng-vibe/docs-compare --exit-status
+          6. 验证 Release 滚动更新：GH_TOKEN="$DOCS_CN_PAT" gh release view latest -R lif3ng-vibe/docs-compare --json assets --jq '.assets[].name' 应含 anchor-maps-${SLUG}.json
+          7. 收官回帖（用默认 GH_TOKEN，它有 issue 评论权限）：gh issue comment ${ISSUE_NUMBER} -R lif3ng-vibe/docs-cn，一行总结（五处同步+锚点表资产确认+对照工具就绪）
+
+          凭据分工：git push 与 gh run watch/release 用 DOCS_CN_PAT（每条命令前缀 GH_TOKEN="$DOCS_CN_PAT"）；issue 评论用默认 GH_TOKEN。**不要把 PAT 写进任何文件或回帖。**
+
+          边界：只动当前 docs-compare 工作副本并推 main（已授权）；不碰上级 hub 工作区；临时 config 与产物不提交。红灯处理：npm test/构建挂、锚点表 0 页、compare CI 红、Release 缺资产——先重试一次，仍挂则 gh issue comment 说明卡点（用默认 GH_TOKEN）+ gh issue edit --add-label blocked -R lif3ng-vibe/docs-cn + 正常退出。
+          EOF
+          )"
+          ARGS=(--dangerously-skip-permissions)
+          if [ -n "${ANTHROPIC_MODEL:-}" ]; then ARGS+=(--model "$ANTHROPIC_MODEL"); fi
+          set +e
+          claude -p "$PROMPT" "${ARGS[@]}" 2>&1 | tee compare-run.log
+          CODE="${PIPESTATUS[0]}"
+          set -e
+          echo "COMPARE_CODE=$CODE" >> "$GITHUB_ENV"
+          exit 0
+
+      - name: 对照登记失败回帖
+        if: always() && env.COMPARE_ACCESS == 'ok' && env.COMPARE_CODE != '' && env.COMPARE_CODE != '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          {
+            echo "对照登记异常 ⛔（claude 退出码 ${COMPARE_CODE}）。翻译与上线不受影响，对照登记可本地补做或评论 \`/continue\` 重试。"
+            echo
+            echo "<details><summary>日志末尾</summary>"
+            echo
+            echo '```'
+            if [ -f compare-run.log ]; then tail -c 3000 compare-run.log; fi
+            echo '```'
+            echo "</details>"
+          } > compare-fail.md
+          gh issue comment "$ISSUE_NUMBER" --body-file compare-fail.md
+          gh issue edit "$ISSUE_NUMBER" --add-label blocked || true
 
       - name: 失败回帖（429/静默退出 → quota-blocked；其他 → blocked + /continue 指引）
         if: always() && env.DOCS_RUN != 'false' && (!startsWith(env.CLAUDE_CODE, '0') || failure() || env.CLAUDE_STATUS == 'unknown')
