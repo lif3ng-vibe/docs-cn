@@ -1,0 +1,17 @@
+{
+  "name": "ag-ui-docs-cn",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AG UI Protocol 文档中文镜像（非官方），源：https://docs.ag-ui.com 上游快照 ag-ui-protocol/ag-ui@ed94ca4a3240527d3ef20fd0f0cc63501f44e469",
+  "scripts": {
+    "dev": "mintlify dev --port=4000",
+    "export": "mintlify export --disable-openapi",
+    "validate": "mintlify validate"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "mintlify": "^4.2.992"
+  }
+}
