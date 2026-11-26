@@ -49,6 +49,7 @@ jobs:
             agent-skills-docs-cn/package-lock.json
             tester-army-e2e-docs-cn/package-lock.json
             claude-mem-docs-cn/package-lock.json
+            ag-ui-docs-cn/package-lock.json
             pi-docs-cn/package-lock.json
             openshell-docs-cn/package-lock.json
             ollama-docs-cn/package-lock.json
@@ -184,6 +185,33 @@ jobs:
         run: |
           mkdir -p _site
           cp -r app-store-compliance-docs-cn/site _site/app-store-compliance
+
+      # ag-ui 是 Mintlify 站（docs.ag-ui.com，源 ag-ui-protocol/ag-ui 仓库 docs/ 目录整拷）。
+      # 匿名 npx mintlify export 出静态站（同 claude-mem/pi 先例，mintlify@4.2.992 同版），
+      # prefix-dist.mjs 加 /docs-cn/ag-ui 前缀（含水合 assetPrefix 修补 + 删 air-gap 启动器）。
+      # 已知限制：匿名导出无搜索索引，站内搜索钮为死钮（Mintlify 导出通病，见 pi 注）；
+      # ollama 曾遇 CI 机房导出 flight 损坏坏轮（无文件级判据），若部署后页面水合异常，
+      # 改走 ollama「本地构建+产物入库、CI 纯拷贝」形态。
+      - name: Restore ag-ui-docs-cn dist
+        id: dist-ag-ui
+        uses: actions/cache@v4
+        with:
+          path: _site/ag-ui
+          key: dist-ag-ui-${{ hashFiles('ag-ui-docs-cn/**') }}
+
+      - name: Build ag-ui-docs-cn
+        if: steps.dist-ag-ui.outputs.cache-hit != 'true'
+        working-directory: ag-ui-docs-cn
+        env:
+          DOCS_BASE: /docs-cn/ag-ui
+        run: |
+          npm ci
+          rm -rf dist
+          npx mintlify export --disable-openapi
+          mkdir dist && (cd dist && unzip -q ../export.zip -x "export.zip" "Start Docs.bat" "Start Docs.command" "serve.js")
+          rm -f export.zip
+          node scripts/prefix-dist.mjs
+          mv dist ../_site/ag-ui
 
       - name: Restore codegraph-docs-cn dist
         id: dist-codegraph

@@ -43,6 +43,7 @@
 | Diagram Design | `diagram-design-docs-cn/` | https://diagramdesign.dev | https://github.com/cathrynlavery/diagram-design（站点工程闭源、纯手写静态站，公开仓库为技能本体；HTML 产物镜像汉化，480 页：官网 9 页全译 + 官方画廊 /gallery/ 471 页并入——导航层 89 类型按钮英中双语，样张双版本（235 张英文原版零改动 + 235 张 -zh 中文变体 SVG 按词典译、技术名词保留英文），顶部 EN/中文 切换默认中文且保持所选图表与风格；资源全相对路径子路径零改写；非官方中文镜像） | 2026-11-20 |
 | CLI-Anything Hub | `cli-anything-docs-cn/` | https://clianything.cc/ | https://github.com/HKUDS/CLI-Anything（快照 `main@34f5195`，站点源为仓库内 `docs/hub/` 手写静态站，Apache-2.0；静态镜像汉化，8 个内容文件：index/docs/demos/index-modern 4 个 HTML 全译（含 84KB 注册表浏览应用的 JS UI 文案：分类/调色板全量中文映射、卡片模板、复制反馈）+ index/pricing.md + llms.txt/llms-full.txt；数据 JSON 与 Agent 发现清单按红线不译，4 个注册表 JSON 本地拷入自包含；资源全相对路径子路径零改写；Agent/harness 不译遵官方 README_CN 口径；非官方中文镜像） | 2026-11-25 |
 | App Store Compliance Playbook | `app-store-compliance-docs-cn/` | https://mjmirza.github.io/app-store-compliance/ | https://github.com/mjmirza/app-store-compliance（快照 `5ee6c45c`，2026-11-25，GitHub Pages 内建 Jekyll（docs/ 源目录 + jekyll-theme-primer），MIT；32 篇 md + llms.txt 全译 125,565 词，上游原班 Jekyll 本地构建静态镜像 site/，CI 纯拷贝零构建；法条编号/数据 JSON/代码一律不译；非官方中文镜像） | 2026-11-25 |
+| AG-UI | `ag-ui-docs-cn/` | https://docs.ag-ui.com | https://github.com/ag-ui-protocol/ag-ui（快照 `ed94ca4a`，docs/ 源目录整拷，Mintlify 原班工具链；导航 116 页全量 + omnara/snippets 共 120 文件全译，规范 1.0 与草案双树、TS/.NET/Python SDK；上游未发布的 dart/go/java/kotlin/ruby/rust SDK 树无导航无内链不译；锚点全站回修后仅存上游自身 2 处坏链；匿名导出无搜索索引（原生搜索死钮，同 Mintlify 导出通病）；非官方中文镜像） | 2026-11-26 |
 
 > Nimbus 子站与其他不同：上游是 pnpm monorepo（Astro 7 + 自研框架包），构建走 `pnpm install → 框架包 build → apps/www build`（见 `nimbus-docs-cn/README.md` 与 CI 的 nimbus 构建段）。
 > e2e 子站与其他不同：上游是 Mintlify 站（无本地静态构建可用）——CI 用 MINT_CONFIG 凭据跑 `npx mint export`（云端生成）出纯静态产物，`postprocess-export.mjs` 再对其 HTML 内的根绝对引用加 `/docs-cn/tester-army-e2e/` 前缀（见该子站 README 与 CI 构建段）。
@@ -150,6 +151,7 @@ docs-cn/
 ├── diagram-design-docs-cn/             # Diagram Design 官网中文镜像（闭源手写静态站 HTML 产物镜像汉化，9 页：首页 + 8 示例页全译；资源相对路径零改写）
 ├── cli-anything-docs-cn/               # CLI-Anything Hub 中文镜像（HKUDS/CLI-Anything 仓库内 docs/hub/ 手写静态站静态镜像汉化，8 个内容文件；资源相对路径零改写，注册表 JSON 本地自包含）
 ├── app-store-compliance-docs-cn/       # App Store Compliance Playbook 中文镜像（GitHub Pages 内建 Jekyll 站：翻译 docs/ markdown 源 + 上游原班 Jekyll 本地构建，32 篇 md + llms.txt）
+├── ag-ui-docs-cn/                      # AG-UI 协议中文文档（Mintlify 原班构建，117 页 + export+prefix 部署链；锚点映射与回修工具在 .anchor-maps-ag-ui/）
 └── docs/                  # 翻译流程的设计文档与实施计划
 ```
 
@@ -236,6 +238,7 @@ npm run build        # dist/ 可直接用 npm run preview 预览
 - Diagram Design：https://lif3ng-vibe.github.io/docs-cn/diagram-design/
 - CLI-Anything Hub：https://lif3ng-vibe.github.io/docs-cn/cli-anything/
 - App Store Compliance Playbook：https://lif3ng-vibe.github.io/docs-cn/app-store-compliance/
+- AG-UI：https://lif3ng-vibe.github.io/docs-cn/ag-ui/
 
 > 仓库 Settings → Pages 的 Source 需设为 **GitHub Actions**。
 

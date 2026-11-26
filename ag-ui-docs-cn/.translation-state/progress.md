@@ -1,7 +1,10 @@
 # progress — ag-ui-docs-cn（CI 模式续跑）
 
 - 上游快照：ag-ui-protocol/ag-ui@ed94ca4a（B0 已拷入并 commit 3c65caf2）
-- 阶段：A 翻译中（B0 脚手架完成）
+- 阶段：**C 完成（STATUS=done）**——A/B/C 全链收官
+- 交付：导航 116 页 + omnara + snippets 共 120 文件全译；锚点三轮回修 427 处；validate 全绿；dist CJK-邻接 ** 扫描归零；prefix+冒烟 200/含 CJK；五处同步（sites.json/gen-index/deploy-pages.yml/README×3）完成
+- 已知上游自身缺陷（忠实保留）：subscriber 页 2 处坏锚点（EN 基线同坏）；匿名导出无搜索索引（搜索钮死）
+- 未收录上游未发布内容：sdk/{dart,go,java,kotlin,ruby,rust} 树、sdk/js/overview、superpowers/、snippets/snippet-intro（均无导航无内链）
 - 站点形态：Mintlify（docs.json 导航 + .mdx），构建 = `mintlify validate` / `mintlify export`（dist），部署前缀由 `scripts/prefix-dist.mjs` 处理
 - 基线英文导出（锚点底稿）：续跑时重新生成 → `/tmp/dist-en`（不进 git）
 
