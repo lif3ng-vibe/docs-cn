@@ -1,17 +1,17 @@
 ---
-title: "Types"
-description: "Documentation for the protocol types in AGUI.Abstractions"
+title: "类型"
+description: "AGUI.Abstractions 中协议类型的文档"
 ---
 
-# AGUI.Abstractions Types
+# AGUI.Abstractions 类型
 
-`AGUI.Abstractions` contains the protocol model shared by AG-UI .NET clients
-and servers. The JSON wire names are camel-case and match the AG-UI protocol.
+`AGUI.Abstractions` 包含 AG-UI .NET 客户端与服务端共用的协议模型。JSON 线上名称
+（wire names）采用 camel-case，与 AG-UI 协议保持一致。
 
 ## RunAgentInput
 
-`RunAgentInput` is the request payload for running an agent. In the HTTP API, it
-is the body of the `POST` request.
+`RunAgentInput` 是运行智能体的请求负载（payload）。在 HTTP API 中，它是
+`POST` 请求的请求体。
 
 ```csharp
 using System.Text.Json;
@@ -49,59 +49,52 @@ var input = new RunAgentInput
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `ThreadId` | `threadId` | `string` | ID of the conversation thread |
-| `RunId` | `runId` | `string` | ID of the current run |
-| `ParentRunId` | `parentRunId` | `string?` | Optional lineage pointer for branching or time travel |
-| `Messages` | `messages` | `IList<AGUIMessage>` | Conversation messages |
-| `Tools` | `tools` | `IList<AGUITool>?` | Tools available to the agent |
-| `State` | `state` | `JsonElement?` | Current frontend or agent state |
-| `Resume` | `resume` | `IList<AGUIResume>?` | Resume payloads for interrupted runs |
-| `Context` | `context` | `IList<AGUIContext>?` | Context objects provided to the agent |
-| `ForwardedProperties` | `forwardedProps` | `JsonElement` | Additional properties forwarded by the client |
+| `ThreadId` | `threadId` | `string` | 会话线程的 ID |
+| `RunId` | `runId` | `string` | 当前运行的 ID |
+| `ParentRunId` | `parentRunId` | `string?` | 可选的血统指针，用于分支或时间旅行 |
+| `Messages` | `messages` | `IList<AGUIMessage>` | 对话消息 |
+| `Tools` | `tools` | `IList<AGUITool>?` | 智能体可用的工具 |
+| `State` | `state` | `JsonElement?` | 当前的前端或智能体状态 |
+| `Resume` | `resume` | `IList<AGUIResume>?` | 被中断运行的 resume 负载 |
+| `Context` | `context` | `IList<AGUIContext>?` | 提供给智能体的上下文对象 |
+| `ForwardedProperties` | `forwardedProps` | `JsonElement` | 客户端转发的附加属性 |
 
 ## AGUIResume
 
-One per-interrupt response inside `RunAgentInput.Resume`, addressing an
-interrupt from the previous run. See
-[Interrupts](/concepts/interrupts#resuming-a-run) for the full resume contract.
+`RunAgentInput.Resume` 中每个中断对应一条响应，针对上一次运行中的某个中断。
+完整的 resume 契约见[中断](/concepts/interrupts#resuming-a-run)。
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `InterruptId` | `interruptId` | `string` | ID of the interrupt this entry addresses |
-| `Status` | `status` | `string` | `ResumeStatus.Resolved` if the user responded, `ResumeStatus.Cancelled` if they abandoned |
-| `Payload` | `payload` | `JsonElement?` | The response itself, validated against the interrupt's `responseSchema` |
-| `Metadata` | `metadata` | `JsonElement?` | Envelope data about the response — signatures, routing keys — never the answer itself |
+| `InterruptId` | `interruptId` | `string` | 本条目所针对的中断的 ID |
+| `Status` | `status` | `string` | 用户已响应时为 `ResumeStatus.Resolved`，用户放弃时为 `ResumeStatus.Cancelled` |
+| `Payload` | `payload` | `JsonElement?` | 响应本身，依据该中断的 `responseSchema` 校验 |
+| `Metadata` | `metadata` | `JsonElement?` | 关于该响应的信封数据——签名、路由 key 等——绝不是答案本身 |
 
-`Metadata` follows the same conventions as metadata everywhere else in the
-protocol: open by key, any JSON value allowed under a key including `null`, the
-object itself absent or an object but never `null` on the wire, and the
-`ag-ui` key (`AGUIMetadata.ReservedKey`) reserved. A resume entry is a request
-field, so nothing merges into it; see
-[Metadata](/concepts/metadata#resume-entries). For non-tool interrupts, the
-hosting layer carries it onto `InterruptResponseContent.Metadata`, and
-`AGUIChatClient` copies it from `InterruptResponseContent` onto the entry it
-sends. Tool-approval entries are translated through MEAI's own approval
-content types, which have no metadata surface — read it from the raw entry via
-`RunAgentInput.Resume` if you need it there.
+`Metadata` 遵循协议中其他所有元数据相同的约定：按键开放（open by key），key 下允许
+任意 JSON 值（包括 `null`）；对象本身要么缺省、要么是对象，在线上绝不会是 `null`；
+并且 `ag-ui` 这个 key（`AGUIMetadata.ReservedKey`）保留为 AG-UI 自用。resume 条目是
+一个请求字段，因此不会有任何内容合并进它；见[元数据](/concepts/metadata#resume-entries)。
+对于非工具类中断，托管层（hosting layer）会把它带到 `InterruptResponseContent.Metadata`
+上，`AGUIChatClient` 再把它从 `InterruptResponseContent` 复制到它发送的条目上。
+工具批准条目会经由 MEAI 自己的批准内容类型转换，而那些类型没有元数据入口——如果在那里
+需要元数据，请通过 `RunAgentInput.Resume` 读取原始条目。
 
-## Message Types
+## 消息类型
 
-Messages form a closed hierarchy rooted at `AGUIMessage`. The base type carries
-only the fields shared by every role: `Id`, `Role` and `Metadata`. Role-specific
-properties such as `content`, `name`, `encryptedValue`, `toolCalls`, and
-`toolCallId` are declared on the sealed role classes.
+消息构成一棵以 `AGUIMessage` 为根的封闭层级。基类型只携带所有角色共享的字段：
+`Id`、`Role` 和 `Metadata`。角色特有的属性，例如 `content`、`name`、
+`encryptedValue`、`toolCalls` 和 `toolCallId`，则声明在各个 sealed 角色类上。
 
 <Note>
-  `Metadata` (`JsonElement?`, JSON field `metadata`) is carried by every message
-  role and by `AGUIToolCall`, and is omitted from the tables below for brevity.
-  It is open by key — any JSON value is allowed under a key, including `null` —
-  and the object itself may be absent but is never `null`.
-  `AGUIMetadata.ReservedKey` (`"ag-ui"`) is reserved for AG-UI's own use.
-  Metadata accumulates as a message is built from its events, and tool call
-  events accumulate onto the tool call itself; see
-  [Metadata](/concepts/metadata) for the merge rules.
+  每个消息角色以及 `AGUIToolCall` 都携带 `Metadata`（`JsonElement?`，JSON 字段
+  `metadata`），为省篇幅下表将其省略。它按键开放——key 下允许任意 JSON 值，
+  包括 `null`——对象本身可以缺省但绝不会是 `null`。
+  `AGUIMetadata.ReservedKey`（`"ag-ui"`）保留为 AG-UI 自用。
+  元数据会随消息由其事件构建而逐步累积，工具调用事件则累积到工具调用本身；
+  合并规则见[元数据](/concepts/metadata)。
 </Note>
 
 ```csharp
@@ -113,11 +106,11 @@ public abstract class AGUIMessage
 }
 ```
 
-### Roles
+### 角色
 
-The `Role` property returns one of the lowercase constants in `AGUIRoles`:
+`Role` 属性返回 `AGUIRoles` 中的一个小写常量：
 
-| Constant | JSON value |
+| 常量 | JSON 值 |
 | -------- | ---------- |
 | `AGUIRoles.Developer` | `developer` |
 | `AGUIRoles.System` | `system` |
@@ -138,13 +131,13 @@ var message = new AGUIDeveloperMessage
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Id` | `id` | `string?` | Message ID |
-| `Role` | `role` | `"developer"` | Fixed role discriminator |
-| `Content` | `content` | `string` | Developer instruction content |
-| `Name` | `name` | `string?` | Optional sender name |
-| `EncryptedValue` | `encryptedValue` | `string?` | Optional opaque encrypted value |
+| `Id` | `id` | `string?` | 消息 ID |
+| `Role` | `role` | `"developer"` | 固定角色判别值（discriminator） |
+| `Content` | `content` | `string` | 开发者指令内容 |
+| `Name` | `name` | `string?` | 可选的发送者名称 |
+| `EncryptedValue` | `encryptedValue` | `string?` | 可选的不透明加密值 |
 
 ### AGUISystemMessage
 
@@ -157,13 +150,13 @@ var message = new AGUISystemMessage
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Id` | `id` | `string?` | Message ID |
-| `Role` | `role` | `"system"` | Fixed role discriminator |
-| `Content` | `content` | `string` | System instruction content |
-| `Name` | `name` | `string?` | Optional sender name |
-| `EncryptedValue` | `encryptedValue` | `string?` | Optional opaque encrypted value |
+| `Id` | `id` | `string?` | 消息 ID |
+| `Role` | `role` | `"system"` | 固定角色判别值 |
+| `Content` | `content` | `string` | 系统指令内容 |
+| `Name` | `name` | `string?` | 可选的发送者名称 |
+| `EncryptedValue` | `encryptedValue` | `string?` | 可选的不透明加密值 |
 
 ### AGUIAssistantMessage
 
@@ -187,19 +180,19 @@ var message = new AGUIAssistantMessage
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Id` | `id` | `string?` | Message ID |
-| `Role` | `role` | `"assistant"` | Fixed role discriminator |
-| `Content` | `content` | `string?` | Optional assistant text |
-| `Name` | `name` | `string?` | Optional assistant name |
-| `EncryptedValue` | `encryptedValue` | `string?` | Optional opaque encrypted value |
-| `ToolCalls` | `toolCalls` | `IList<AGUIToolCall>?` | Tool calls made in the message |
+| `Id` | `id` | `string?` | 消息 ID |
+| `Role` | `role` | `"assistant"` | 固定角色判别值 |
+| `Content` | `content` | `string?` | 可选的助手文本 |
+| `Name` | `name` | `string?` | 可选的助手名称 |
+| `EncryptedValue` | `encryptedValue` | `string?` | 可选的不透明加密值 |
+| `ToolCalls` | `toolCalls` | `IList<AGUIToolCall>?` | 该消息中发起的工具调用 |
 
 ### AGUIUserMessage
 
-`AGUIUserMessage.Content` is an `AGUIContent` value. It models the AG-UI
-wire union `string | InputContent[]`.
+`AGUIUserMessage.Content` 是一个 `AGUIContent` 值，用于建模 AG-UI 的线上联合类型
+（wire union）`string | InputContent[]`。
 
 ```csharp
 var textOnly = new AGUIUserMessage
@@ -229,22 +222,20 @@ var multimodal = new AGUIUserMessage
 };
 ```
 
-`AGUIContent` supports implicit conversions from `string`,
-`List<AGUIInputContent>`, and `AGUIInputContent[]`. It also has a collection
-builder, so C# collection expressions work. For reading, it implements
-`IReadOnlyList<AGUIInputContent>`; a plain string is exposed as one
-`AGUITextInputContent` part.
+`AGUIContent` 支持从 `string`、`List<AGUIInputContent>` 和
+`AGUIInputContent[]` 隐式转换，也提供了 collection builder，因此 C# 集合表达式可以
+直接使用。读取时它实现 `IReadOnlyList<AGUIInputContent>`；纯字符串会以单个
+`AGUITextInputContent` 部分的形式暴露。
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Id` | `id` | `string?` | Message ID |
-| `Role` | `role` | `"user"` | Fixed role discriminator |
-| `Content` | `content` | `AGUIContent` | Plain text or ordered multimodal parts |
-| `Name` | `name` | `string?` | Optional user name |
-| `EncryptedValue` | `encryptedValue` | `string?` | Optional opaque encrypted value |
+| `Id` | `id` | `string?` | 消息 ID |
+| `Role` | `role` | `"user"` | 固定角色判别值 |
+| `Content` | `content` | `AGUIContent` | 纯文本或有序的多模态部分 |
+| `Name` | `name` | `string?` | 可选的用户名称 |
+| `EncryptedValue` | `encryptedValue` | `string?` | 可选的不透明加密值 |
 
-See [Multimodal Inputs](/sdk/dotnet/abstractions/multimodal-inputs) for the
-`AGUIInputContent` hierarchy.
+`AGUIInputContent` 层级详见[多模态输入](/sdk/dotnet/abstractions/multimodal-inputs)。
 
 ### AGUIToolMessage
 
@@ -272,14 +263,14 @@ var attachment = new AGUIToolMessage
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Id` | `id` | `string?` | Message ID |
-| `Role` | `role` | `"tool"` | Fixed role discriminator |
-| `Content` | `content` | `AGUIContent` | Tool result: plain text or ordered content parts, as on the user message |
-| `ToolCallId` | `toolCallId` | `string` | ID of the tool call this message answers |
-| `Error` | `error` | `string?` | Optional error message |
-| `EncryptedValue` | `encryptedValue` | `string?` | Optional opaque encrypted value |
+| `Id` | `id` | `string?` | 消息 ID |
+| `Role` | `role` | `"tool"` | 固定角色判别值 |
+| `Content` | `content` | `AGUIContent` | 工具结果：纯文本或有序的内容部分，与用户消息一致 |
+| `ToolCallId` | `toolCallId` | `string` | 本消息所回应的工具调用的 ID |
+| `Error` | `error` | `string?` | 可选的错误消息 |
+| `EncryptedValue` | `encryptedValue` | `string?` | 可选的不透明加密值 |
 
 ### AGUIActivityMessage
 
@@ -292,12 +283,12 @@ var message = new AGUIActivityMessage
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Id` | `id` | `string?` | Message ID |
-| `Role` | `role` | `"activity"` | Fixed role discriminator |
-| `ActivityType` | `activityType` | `string` | Activity discriminator for renderer selection |
-| `Content` | `content` | `JsonElement` | Structured activity payload |
+| `Id` | `id` | `string?` | 消息 ID |
+| `Role` | `role` | `"activity"` | 固定角色判别值 |
+| `ActivityType` | `activityType` | `string` | 用于选择渲染器的活动判别值 |
+| `Content` | `content` | `JsonElement` | 结构化的活动负载 |
 
 ### AGUIReasoningMessage
 
@@ -309,12 +300,12 @@ var message = new AGUIReasoningMessage
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Id` | `id` | `string?` | Message ID |
-| `Role` | `role` | `"reasoning"` | Fixed role discriminator |
-| `Content` | `content` | `string` | Reasoning text |
-| `EncryptedValue` | `encryptedValue` | `string?` | Optional opaque encrypted value |
+| `Id` | `id` | `string?` | 消息 ID |
+| `Role` | `role` | `"reasoning"` | 固定角色判别值 |
+| `Content` | `content` | `string` | 推理文本 |
+| `EncryptedValue` | `encryptedValue` | `string?` | 可选的不透明加密值 |
 
 ### AGUIToolCall
 
@@ -331,18 +322,18 @@ var call = new AGUIToolCall
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Id` | `id` | `string` | Tool call ID |
-| `Type` | `type` | `string` | Tool call type; defaults to `"function"` |
-| `Function` | `function` | `AGUIToolCallFunction` | Function name and JSON-encoded arguments |
-| `EncryptedValue` | `encryptedValue` | `string?` | Optional opaque encrypted value |
+| `Id` | `id` | `string` | 工具调用 ID |
+| `Type` | `type` | `string` | 工具调用类型；默认为 `"function"` |
+| `Function` | `function` | `AGUIToolCallFunction` | 函数名与 JSON 编码的参数 |
+| `EncryptedValue` | `encryptedValue` | `string?` | 可选的不透明加密值 |
 
-`AGUIToolCallFunction` has `Name` (`name`) and `Arguments` (`arguments`).
+`AGUIToolCallFunction` 包含 `Name`（`name`）和 `Arguments`（`arguments`）。
 
-## Context
+## 上下文
 
-`AGUIContext` represents a piece of contextual information provided to an agent.
+`AGUIContext` 表示提供给智能体的一段上下文信息。
 
 ```csharp
 var context = new AGUIContext
@@ -352,14 +343,14 @@ var context = new AGUIContext
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Description` | `description` | `string` | Description of what the context represents |
-| `Value` | `value` | `string` | Context value |
+| `Description` | `description` | `string` | 描述该上下文所代表的内容 |
+| `Value` | `value` | `string` | 上下文值 |
 
-## Tool
+## 工具
 
-`AGUITool` defines a tool that an agent can call.
+`AGUITool` 定义智能体可以调用的工具。
 
 ```csharp
 var tool = new AGUITool
@@ -379,28 +370,28 @@ var tool = new AGUITool
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Name` | `name` | `string` | Tool name |
-| `Description` | `description` | `string?` | Optional tool description |
-| `Parameters` | `parameters` | `JsonElement` | JSON Schema for the tool parameters |
-| `Metadata` | `metadata` | `JsonElement?` | Optional arbitrary tool metadata |
+| `Name` | `name` | `string` | 工具名称 |
+| `Description` | `description` | `string?` | 可选的工具描述 |
+| `Parameters` | `parameters` | `JsonElement` | 工具参数的 JSON Schema |
+| `Metadata` | `metadata` | `JsonElement?` | 可选的任意工具元数据 |
 
-## State
+## 状态
 
-State is represented as `JsonElement?` on `RunAgentInput.State` and as
-`JsonElement` payloads in `StateSnapshotEvent` and `StateDeltaEvent`.
+状态在 `RunAgentInput.State` 上表示为 `JsonElement?`，在 `StateSnapshotEvent` 和
+`StateDeltaEvent` 中表示为 `JsonElement` 负载。
 
 ```csharp
 input.State = JsonDocument.Parse("""{"draft":"hello"}""").RootElement.Clone();
 ```
 
-The schema of the state is defined by the agent. The protocol only carries it.
+状态的 schema 由智能体定义，协议只负责携带它。
 
 ## AgentCapabilities
 
-`AgentCapabilities` is a structured declaration that an agent can expose so
-clients can discover what it supports. All fields are optional.
+`AgentCapabilities` 是智能体可以暴露的结构化声明，客户端借此发现它支持哪些能力。
+所有字段均为可选。
 
 ```csharp
 var capabilities = new AgentCapabilities
@@ -432,28 +423,26 @@ var capabilities = new AgentCapabilities
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Identity` | `identity` | `IdentityCapabilities?` | Agent identity and metadata |
-| `Transport` | `transport` | `TransportCapabilities?` | Streaming, websocket, binary, push, and resumability support |
-| `Tools` | `tools` | `ToolsCapabilities?` | Tool support and tool-calling configuration |
-| `Output` | `output` | `OutputCapabilities?` | Structured output and supported MIME types |
-| `State` | `state` | `StateCapabilities?` | Snapshot, delta, memory, and persistence support |
-| `MultiAgent` | `multiAgent` | `MultiAgentCapabilities?` | Delegation, handoffs, and sub-agent information |
-| `Reasoning` | `reasoning` | `ReasoningCapabilities?` | Reasoning, streaming, and encrypted reasoning support |
-| `Multimodal` | `multimodal` | `MultimodalCapabilities?` | Multimodal input and output support |
-| `Execution` | `execution` | `ExecutionCapabilities?` | Code execution and iteration/time limits |
-| `HumanInTheLoop` | `humanInTheLoop` | `HumanInTheLoopCapabilities?` | Approvals, interventions, feedback, interrupts, and approve-with-edits |
-| `Custom` | `custom` | `JsonElement?` | Integration-specific capabilities, open by key; build it with `JsonSerializer.SerializeToElement(...)` |
+| `Identity` | `identity` | `IdentityCapabilities?` | 智能体身份与元数据 |
+| `Transport` | `transport` | `TransportCapabilities?` | 流式、websocket、二进制、推送与可恢复性支持 |
+| `Tools` | `tools` | `ToolsCapabilities?` | 工具支持与工具调用配置 |
+| `Output` | `output` | `OutputCapabilities?` | 结构化输出与支持的 MIME 类型 |
+| `State` | `state` | `StateCapabilities?` | 快照、增量、记忆与持久化支持 |
+| `MultiAgent` | `multiAgent` | `MultiAgentCapabilities?` | 委托、交接与子智能体信息 |
+| `Reasoning` | `reasoning` | `ReasoningCapabilities?` | 推理、流式与加密推理支持 |
+| `Multimodal` | `multimodal` | `MultimodalCapabilities?` | 多模态输入与输出支持 |
+| `Execution` | `execution` | `ExecutionCapabilities?` | 代码执行与迭代/时间限制 |
+| `HumanInTheLoop` | `humanInTheLoop` | `HumanInTheLoopCapabilities?` | 批准、干预、反馈、中断与带编辑批准 |
+| `Custom` | `custom` | `JsonElement?` | 集成特有的能力，按键开放；用 `JsonSerializer.SerializeToElement(...)` 构建 |
 
-See [Capabilities](/concepts/capabilities) for protocol-level concepts and
-usage patterns.
+协议层面的概念与使用模式见[能力](/concepts/capabilities)。
 
-## Serialization
+## 序列化
 
-All protocol types are registered in `AGUIJsonSerializerContext`, a
-source-generated `JsonSerializerContext`. Use it when serializing protocol
-types in AOT-sensitive code.
+所有协议类型都注册在 `AGUIJsonSerializerContext`（一个源生成的
+`JsonSerializerContext`）中。在对 AOT 敏感的代码里序列化协议类型时请使用它。
 
 ```csharp
 var json = JsonSerializer.Serialize(

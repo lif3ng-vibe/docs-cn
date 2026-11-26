@@ -1,26 +1,22 @@
 ---
-title: "Types"
+title: "类型"
 description:
-  "Documentation for the core types used in the Agent User Interaction Protocol
-  Python SDK"
+  "智能体–用户交互协议 Python SDK 所用核心类型的文档"
 ---
 
-# Core Types
+# 核心类型
 
-The Agent User Interaction Protocol Python SDK is built on a set of core types
-that represent the fundamental structures used throughout the system. This page
-documents these types and their properties.
+智能体–用户交互协议（AG-UI）Python SDK 构建在一组核心类型之上，它们表示整个系统中
+使用的基础结构。本页记录这些类型及其属性。
 
 ## RunAgentInput
 
 `from ag_ui.core import RunAgentInput`
 
-Input parameters for running an agent. In the HTTP API, this is the body of the
-`POST` request.
+运行智能体的输入参数。在 HTTP API 中，它是 `POST` 请求的请求体。
 
-`tools` contains tools provided by the client for this run. Backend-defined
-tools should remain in the backend agent or framework configuration, and may be
-advertised separately through agent capabilities.
+`tools` 包含客户端为本次运行提供的工具。后端定义的工具应保留在后端智能体或框架配置
+中，并可通过智能体能力单独对外宣告。
 
 ```python
 class RunAgentInput(ConfiguredBaseModel):
@@ -35,25 +31,24 @@ class RunAgentInput(ConfiguredBaseModel):
     resume: Optional[List[ResumeEntry]] = None
 ```
 
-| Property          | Type                          | Description                                                                                         |
+| 属性              | 类型                          | 说明                                                                                         |
 | ----------------- | ----------------------------- | --------------------------------------------------------------------------------------------------- |
-| `thread_id`       | `str`                         | ID of the conversation thread                                                                       |
-| `run_id`          | `str`                         | ID of the current run                                                                               |
-| `parent_run_id`   | `Optional[str]`               | (Optional) ID of the run that spawned this run                                                      |
-| `state`           | `Any`                         | (Optional) Current state of the agent; absent means "no state", and a bare `null` is read as absent |
-| `messages`        | `List[Message]`               | List of messages in the conversation                                                                |
-| `tools`           | `List[Tool]`                  | Client-provided tools available for this run                                                        |
-| `context`         | `List[Context]`               | List of context objects provided to the agent                                                       |
-| `forwarded_props` | `Any`                         | Additional properties forwarded to the agent                                                        |
-| `resume`          | `Optional[List[ResumeEntry]]` | Per-interrupt responses resuming a run that finished with an interrupt outcome                      |
+| `thread_id`       | `str`                         | 会话线程的 ID                                                                       |
+| `run_id`          | `str`                         | 当前运行的 ID                                                                               |
+| `parent_run_id`   | `Optional[str]`               | （可选）派生出本次运行的父运行的 ID                                                      |
+| `state`           | `Any`                         | （可选）智能体当前状态；缺省表示“无状态”，裸 `null` 读作缺省 |
+| `messages`        | `List[Message]`               | 会话中的消息列表                                                                |
+| `tools`           | `List[Tool]`                  | 本次运行可用的客户端提供工具                                                        |
+| `context`         | `List[Context]`               | 提供给智能体的上下文对象列表                                                       |
+| `forwarded_props` | `Any`                         | 转发给智能体的附加属性                                                        |
+| `resume`          | `Optional[List[ResumeEntry]]` | 以中断结果结束的运行在恢复时的逐中断响应                      |
 
 ## ResumeEntry
 
 `from ag_ui.core import ResumeEntry`
 
-One per-interrupt response inside `RunAgentInput.resume`, addressing an
-interrupt from the previous run. See
-[Interrupts](/concepts/interrupts#resuming-a-run) for the full resume contract.
+`RunAgentInput.resume` 中每个中断对应一条响应，针对上一次运行中的某个中断。
+完整的 resume 契约见[中断](/concepts/interrupts#resuming-a-run)。
 
 ```python
 class ResumeEntry(GeneratedBaseModel):
@@ -63,39 +58,35 @@ class ResumeEntry(GeneratedBaseModel):
     metadata: Optional[Metadata] = None
 ```
 
-| Property       | Type                       | Description                                                                           |
+| 属性           | 类型                       | 说明                                                                           |
 | -------------- | -------------------------- | ------------------------------------------------------------------------------------- |
-| `interrupt_id` | `str`                      | ID of the interrupt this entry addresses                                              |
-| `status`       | `ResumeStatus`             | `"resolved"` if the user responded, `"cancelled"` if they abandoned                   |
-| `payload`      | `Optional[Any]`            | The response itself, validated against the interrupt's `response_schema`              |
-| `metadata`     | `Optional[Dict[str, Any]]` | Envelope data about the response — signatures, routing keys — never the answer itself |
+| `interrupt_id` | `str`                      | 本条目所针对的中断的 ID                                              |
+| `status`       | `ResumeStatus`             | 用户已响应时为 `"resolved"`，用户放弃时为 `"cancelled"`                   |
+| `payload`      | `Optional[Any]`            | 响应本身，依据该中断的 `response_schema` 校验              |
+| `metadata`     | `Optional[Dict[str, Any]]` | 关于该响应的信封数据——签名、路由 key 等——绝不是答案本身 |
 
-`metadata` follows the same conventions as metadata everywhere else in the
-protocol: open by key, any JSON value allowed under a key including `None`, the
-object itself absent or a mapping but never `null` on the wire, and the `ag-ui`
-key reserved. A resume entry is a request field, so nothing merges into it; see
-[Metadata](/concepts/metadata#resume-entries).
+`metadata` 遵循协议中其他所有元数据相同的约定：按键开放，key 下允许任意 JSON 值
+（包括 `None`）；对象本身要么缺省、要么是映射（mapping），在线上绝不会是 `null`；
+并且 `ag-ui` 这个 key 保留为 AG-UI 自用。resume 条目是一个请求字段，因此不会有任何
+内容合并进它；见[元数据](/concepts/metadata#resume-entries)。
 
-## Message Types
+## 消息类型
 
-The SDK includes several message types that represent different kinds of
-messages in the system.
+SDK 包含若干消息类型，表示系统中不同种类的消息。
 
 <Note>
-  Every message type carries an optional `metadata` object (`Optional[Dict[str,
-  Any]]`), and so does `ToolCall`. Both are omitted from the per-type tables
-  below for brevity. It is open by key — any JSON value is allowed under a key,
-  including `None` — and the object itself may be absent but is never `None`.
-  The `ag-ui` key is reserved for AG-UI's own use. Metadata accumulates as a
-  message is built from its events, and tool call events accumulate onto the
-  tool call itself; see [Metadata](/concepts/metadata) for the merge rules.
+  每种消息类型都携带可选的 `metadata` 对象（`Optional[Dict[str, Any]]`），`ToolCall`
+  也是。为省篇幅，两者都从下面的分类型表格中省略。它按键开放——key 下允许任意
+  JSON 值，包括 `None`——对象本身可以缺省但绝不会是 `None`。
+  `ag-ui` key 保留为 AG-UI 自用。元数据会随消息由其事件构建而逐步累积，工具调用事件
+  则累积到工具调用本身；合并规则见[元数据](/concepts/metadata)。
 </Note>
 
 ### Role
 
 `from ag_ui.core import Role`
 
-Represents the possible roles a message sender can have.
+表示消息发送者可能具有的角色。
 
 ```python
 Role = Literal["developer", "system", "assistant", "user", "tool", "activity", "reasoning"]
@@ -105,7 +96,7 @@ Role = Literal["developer", "system", "assistant", "user", "tool", "activity", "
 
 `from ag_ui.core import DeveloperMessage`
 
-Represents a message from a developer.
+表示来自开发者的消息。
 
 ```python
 class DeveloperMessage(BaseMessage):
@@ -113,18 +104,18 @@ class DeveloperMessage(BaseMessage):
     content: str
 ```
 
-| Property  | Type                   | Description                                      |
+| 属性      | 类型                   | 说明                                      |
 | --------- | ---------------------- | ------------------------------------------------ |
-| `id`      | `str`                  | Unique identifier for the message                |
-| `role`    | `Literal["developer"]` | Role of the message sender, fixed as "developer" |
-| `content` | `str`                  | Text content of the message (required)           |
-| `name`    | `Optional[str]`        | Optional name of the sender                      |
+| `id`      | `str`                  | 消息的唯一标识符                |
+| `role`    | `Literal["developer"]` | 消息发送者的角色，固定为 “developer” |
+| `content` | `str`                  | 消息的文本内容（必填）           |
+| `name`    | `Optional[str]`        | 可选的发送者名称                      |
 
 ### SystemMessage
 
 `from ag_ui.core import SystemMessage`
 
-Represents a system message.
+表示一条系统消息。
 
 ```python
 class SystemMessage(BaseMessage):
@@ -132,18 +123,18 @@ class SystemMessage(BaseMessage):
     content: str
 ```
 
-| Property  | Type                | Description                                   |
+| 属性      | 类型                | 说明                                   |
 | --------- | ------------------- | --------------------------------------------- |
-| `id`      | `str`               | Unique identifier for the message             |
-| `role`    | `Literal["system"]` | Role of the message sender, fixed as "system" |
-| `content` | `str`               | Text content of the message (required)        |
-| `name`    | `Optional[str]`     | Optional name of the sender                   |
+| `id`      | `str`               | 消息的唯一标识符             |
+| `role`    | `Literal["system"]` | 消息发送者的角色，固定为 “system” |
+| `content` | `str`               | 消息的文本内容（必填）        |
+| `name`    | `Optional[str]`     | 可选的发送者名称                   |
 
 ### AssistantMessage
 
 `from ag_ui.core import AssistantMessage`
 
-Represents a message from an assistant.
+表示来自助手的消息。
 
 ```python
 class AssistantMessage(BaseMessage):
@@ -152,19 +143,19 @@ class AssistantMessage(BaseMessage):
     tool_calls: Optional[List[ToolCall]] = None
 ```
 
-| Property     | Type                       | Description                                      |
+| 属性         | 类型                       | 说明                                      |
 | ------------ | -------------------------- | ------------------------------------------------ |
-| `id`         | `str`                      | Unique identifier for the message                |
-| `role`       | `Literal["assistant"]`     | Role of the message sender, fixed as "assistant" |
-| `content`    | `Optional[str]`            | Text content of the message                      |
-| `name`       | `Optional[str]`            | Name of the sender                               |
-| `tool_calls` | `Optional[List[ToolCall]]` | Tool calls made in this message                  |
+| `id`         | `str`                      | 消息的唯一标识符                |
+| `role`       | `Literal["assistant"]`     | 消息发送者的角色，固定为 “assistant” |
+| `content`    | `Optional[str]`            | 消息的文本内容                      |
+| `name`       | `Optional[str]`            | 发送者名称                               |
+| `tool_calls` | `Optional[List[ToolCall]]` | 该消息中发起的工具调用                  |
 
 ### UserMessage
 
 `from ag_ui.core import UserMessage`
 
-Represents a message from a user.
+表示来自用户的消息。
 
 ```python
 class UserMessage(BaseMessage):
@@ -172,16 +163,16 @@ class UserMessage(BaseMessage):
     content: Union[str, List["ContentPart"]]
 ```
 
-| Property  | Type                              | Description                                                           |
+| 属性      | 类型                              | 说明                                                           |
 | --------- | --------------------------------- | --------------------------------------------------------------------- |
-| `id`      | `str`                             | Unique identifier for the message                                     |
-| `role`    | `Literal["user"]`                 | Role of the message sender, fixed as "user"                           |
-| `content` | `Union[str, List["ContentPart"]]` | Either a plain text string or an ordered list of multimodal fragments |
-| `name`    | `Optional[str]`                   | Optional name of the sender                                           |
+| `id`      | `str`                             | 消息的唯一标识符                                     |
+| `role`    | `Literal["user"]`                 | 消息发送者的角色，固定为 “user”                           |
+| `content` | `Union[str, List["ContentPart"]]` | 纯文本字符串或多模态片段的有序列表 |
+| `name`    | `Optional[str]`                   | 可选的发送者名称                                           |
 
 ### PartSource
 
-Represents how a non-text part is supplied.
+表示非文本部分的提供方式。
 
 ```python
 PartSource = Annotated[
@@ -206,14 +197,13 @@ class FileSource(ConfiguredBaseModel):
     mime_type: Optional[str] = None
 ```
 
-A `FileSource` names bytes that already live at the model provider — an
-OpenAI or Anthropic file id, a Gemini file URI. Nothing is fetched and `value`
-is opaque: an agent hands it to its provider or drops the part, and never
-treats it as a URL.
+`FileSource` 指代已经存放在模型提供商处的字节——例如 OpenAI 或 Anthropic 的文件 ID、
+Gemini 的文件 URI。不会发生任何抓取，`value` 是不透明的：智能体把它交回自己的提供商
+或丢弃该部分，绝不会把它当作 URL。
 
 ### TextPart
 
-Represents a text part inside a user message or a tool result.
+表示用户消息或工具结果内的文本部分。
 
 ```python
 class TextPart(ConfiguredBaseModel):
@@ -223,16 +213,16 @@ class TextPart(ConfiguredBaseModel):
     metadata: Optional[Any] = None
 ```
 
-| Property   | Type              | Description                                                               |
+| 属性       | 类型              | 说明                                                               |
 | ---------- | ----------------- | ------------------------------------------------------------------------- |
-| `type`     | `Literal["text"]` | Identifies the part type                                                  |
-| `id`       | `Optional[str]`   | Identifies the part within its message                                    |
-| `text`     | `str`             | Text content                                                              |
-| `metadata` | `Optional[Any]`   | Extra information about the part, such as a search hit's source and title |
+| `type`     | `Literal["text"]` | 标识该部分的类型                                                  |
+| `id`       | `Optional[str]`   | 在所属消息内标识该部分                                    |
+| `text`     | `str`             | 文本内容                                                              |
+| `metadata` | `Optional[Any]`   | 关于该部分的附加信息，例如搜索命中的来源与标题 |
 
 ### BinaryInputContent
 
-Represents binary data such as images, audio, or files.
+表示图像、音频或文件等二进制数据。
 
 ```python
 class BinaryInputContent(ConfiguredBaseModel):
@@ -244,19 +234,19 @@ class BinaryInputContent(ConfiguredBaseModel):
     filename: Optional[str] = None
 ```
 
-| Property    | Type                | Description                                   |
+| 属性        | 类型                | 说明                                   |
 | ----------- | ------------------- | --------------------------------------------- |
-| `type`      | `Literal["binary"]` | Identifies the fragment type                  |
-| `mime_type` | `str`               | MIME type, for example `"image/png"`          |
-| `id`        | `Optional[str]`     | Reference to previously uploaded content      |
-| `url`       | `Optional[str]`     | Remote URL where the content can be retrieved |
-| `data`      | `Optional[str]`     | Base64 encoded content                        |
-| `filename`  | `Optional[str]`     | Optional filename hint                        |
+| `type`      | `Literal["binary"]` | 标识该片段的类型                  |
+| `mime_type` | `str`               | MIME 类型，例如 `"image/png"`          |
+| `id`        | `Optional[str]`     | 对先前已上传内容的引用      |
+| `url`       | `Optional[str]`     | 可获取该内容的远程 URL |
+| `data`      | `Optional[str]`     | base64 编码的内容                        |
+| `filename`  | `Optional[str]`     | 可选的文件名提示                        |
 
-> **Validation:** At least one of `id`, `url`, or `data` must be provided.
+> **校验**：`id`、`url`、`data` 至少要提供一个。
 >
-> **Deprecated:** `BinaryInputContent` remains available as a temporary
-> compatibility model. Prefer modality-specific parts below.
+> **已废弃**：`BinaryInputContent` 仍作为临时兼容模型保留。请优先使用下文的模态特有
+> 部分。
 
 ### ImagePart / AudioPart / VideoPart / DocumentPart
 
@@ -290,7 +280,7 @@ class DocumentPart(ConfiguredBaseModel):
 
 `from ag_ui.core import ToolMessage`
 
-Represents a message from a tool.
+表示来自工具的消息。
 
 ```python
 class ToolMessage(ConfiguredBaseModel):
@@ -302,20 +292,20 @@ class ToolMessage(ConfiguredBaseModel):
     encrypted_value: Optional[str] = None
 ```
 
-| Property          | Type              | Description                                     |
+| 属性              | 类型              | 说明                                     |
 | ----------------- | ----------------- | ----------------------------------------------- |
-| `id`              | `str`             | Unique identifier for the message               |
-| `content`         | `str`             | Text content of the message                     |
-| `role`            | `Literal["tool"]` | Role of the message sender, fixed as "tool"     |
-| `tool_call_id`    | `str`             | ID of the tool call this message responds to    |
-| `error`           | `Optional[str]`   | Error message if the tool call failed           |
-| `encrypted_value` | `Optional[str]`   | Optional encrypted value attached via signature |
+| `id`              | `str`             | 消息的唯一标识符               |
+| `content`         | `str`             | 消息的文本内容                     |
+| `role`            | `Literal["tool"]` | 消息发送者的角色，固定为 “tool”     |
+| `tool_call_id`    | `str`             | 本消息所回应的工具调用的 ID    |
+| `error`           | `Optional[str]`   | 工具调用失败时的错误消息           |
+| `encrypted_value` | `Optional[str]`   | 可选的经签名附加的加密值 |
 
 ### ActivityMessage
 
 `from ag_ui.core import ActivityMessage`
 
-Represents structured activity progress emitted between chat messages.
+表示在对话消息之间发出的结构化活动进度。
 
 ```python
 class ActivityMessage(ConfiguredBaseModel):
@@ -325,19 +315,18 @@ class ActivityMessage(ConfiguredBaseModel):
     content: Dict[str, Any]
 ```
 
-| Property        | Type                  | Description                                             |
+| 属性            | 类型                  | 说明                                             |
 | --------------- | --------------------- | ------------------------------------------------------- |
-| `id`            | `str`                 | Unique identifier for the activity message              |
-| `role`          | `Literal["activity"]` | Fixed discriminator identifying the message as activity |
-| `activity_type` | `str`                 | Activity discriminator used for renderer selection      |
-| `content`       | `Dict[str, Any]`      | Structured payload representing the activity state      |
+| `id`            | `str`                 | 活动消息的唯一标识符              |
+| `role`          | `Literal["activity"]` | 固定判别值，标识该消息为活动 |
+| `activity_type` | `str`                 | 用于选择渲染器的活动判别值      |
+| `content`       | `Dict[str, Any]`      | 表示活动状态的结构化负载      |
 
 ### ReasoningMessage
 
 `from ag_ui.core import ReasoningMessage`
 
-Represents a reasoning/thinking message from an agent's internal thought
-process.
+表示来自智能体内部思考过程的推理/思考消息。
 
 ```python
 class ReasoningMessage(ConfiguredBaseModel):
@@ -347,18 +336,18 @@ class ReasoningMessage(ConfiguredBaseModel):
     encrypted_value: Optional[str] = None
 ```
 
-| Property          | Type                   | Description                                        |
+| 属性              | 类型                   | 说明                                        |
 | ----------------- | ---------------------- | -------------------------------------------------- |
-| `id`              | `str`                  | Unique identifier for the reasoning message        |
-| `role`            | `Literal["reasoning"]` | Fixed discriminator identifying the reasoning role |
-| `content`         | `str`                  | The reasoning/thinking content                     |
-| `encrypted_value` | `Optional[str]`        | Optional encrypted value attached via signature    |
+| `id`              | `str`                  | 推理消息的唯一标识符        |
+| `role`            | `Literal["reasoning"]` | 固定判别值，标识推理角色 |
+| `content`         | `str`                  | 推理/思考内容                     |
+| `encrypted_value` | `Optional[str]`        | 可选的经签名附加的加密值    |
 
 ### Message
 
 `from ag_ui.core import Message`
 
-A union type representing any type of message in the system.
+表示系统中任意消息类型的联合类型。
 
 ```python
 Message = Annotated[
@@ -379,7 +368,7 @@ Message = Annotated[
 
 `from ag_ui.core import ToolCall`
 
-Represents a tool call made by an agent.
+表示智能体发起的工具调用。
 
 ```python
 class ToolCall(ConfiguredBaseModel):
@@ -389,18 +378,18 @@ class ToolCall(ConfiguredBaseModel):
     encrypted_value: Optional[str] = None
 ```
 
-| Property          | Type                  | Description                                     |
+| 属性              | 类型                  | 说明                                     |
 | ----------------- | --------------------- | ----------------------------------------------- |
-| `id`              | `str`                 | Unique identifier for the tool call             |
-| `type`            | `Literal["function"]` | Type of the tool call, always "function"        |
-| `function`        | `FunctionCall`        | Details about the function being called         |
-| `encrypted_value` | `Optional[str]`       | Optional encrypted value attached via signature |
+| `id`              | `str`                 | 工具调用的唯一标识符             |
+| `type`            | `Literal["function"]` | 工具调用的类型，始终为 “function”        |
+| `function`        | `FunctionCall`        | 被调用函数的详细信息         |
+| `encrypted_value` | `Optional[str]`       | 可选的经签名附加的加密值 |
 
 #### FunctionCall
 
 `from ag_ui.core import FunctionCall`
 
-Represents function name and arguments in a tool call.
+表示工具调用中的函数名与参数。
 
 ```python
 class FunctionCall(ConfiguredBaseModel):
@@ -408,16 +397,16 @@ class FunctionCall(ConfiguredBaseModel):
     arguments: str
 ```
 
-| Property    | Type  | Description                                      |
+| 属性        | 类型  | 说明                                      |
 | ----------- | ----- | ------------------------------------------------ |
-| `name`      | `str` | Name of the function to call                     |
-| `arguments` | `str` | JSON-encoded string of arguments to the function |
+| `name`      | `str` | 要调用的函数名                     |
+| `arguments` | `str` | 传给函数的参数的 JSON 编码字符串 |
 
-## Context
+## 上下文
 
 `from ag_ui.core import Context`
 
-Represents a piece of contextual information provided to an agent.
+表示提供给智能体的一段上下文信息。
 
 ```python
 class Context(ConfiguredBaseModel):
@@ -425,16 +414,16 @@ class Context(ConfiguredBaseModel):
     value: str
 ```
 
-| Property      | Type  | Description                                 |
+| 属性          | 类型  | 说明                                 |
 | ------------- | ----- | ------------------------------------------- |
-| `description` | `str` | Description of what this context represents |
-| `value`       | `str` | The actual context value                    |
+| `description` | `str` | 描述该上下文所代表的内容 |
+| `value`       | `str` | 实际的上下文值                    |
 
-## Tool
+## 工具
 
 `from ag_ui.core import Tool`
 
-Defines a tool that can be called by an agent.
+定义智能体可以调用的工具。
 
 ```python
 class Tool(ConfiguredBaseModel):
@@ -443,21 +432,20 @@ class Tool(ConfiguredBaseModel):
     parameters: Any  # JSON Schema
 ```
 
-| Property      | Type  | Description                                      |
+| 属性          | 类型  | 说明                                      |
 | ------------- | ----- | ------------------------------------------------ |
-| `name`        | `str` | Name of the tool                                 |
-| `description` | `str` | Description of what the tool does                |
-| `parameters`  | `Any` | JSON Schema defining the parameters for the tool |
+| `name`        | `str` | 工具名称                                 |
+| `description` | `str` | 描述工具的用途                |
+| `parameters`  | `Any` | 定义工具参数的 JSON Schema |
 
-## State
+## 状态
 
 `from ag_ui.core import State`
 
-Represents the state of an agent during execution.
+表示智能体执行期间的状态。
 
 ```python
 State = Any
 ```
 
-The state type is flexible and can hold any data structure needed by the agent
-implementation.
+状态类型是灵活的，可以容纳智能体实现所需的任何数据结构。

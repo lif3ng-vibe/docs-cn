@@ -1,24 +1,22 @@
 ---
-title: "Overview"
-description: "Documentation for encoding Agent User Interaction Protocol events"
+title: "概述"
+description: "智能体–用户交互协议事件编码的文档"
 ---
 
 ```bash
 pip install ag-ui-protocol
 ```
 
-# Event Encoder
+# 事件编码器
 
-The Agent User Interaction Protocol uses a streaming approach to send events
-from agents to clients. The `EventEncoder` class provides the functionality to
-encode events into a format that can be sent over HTTP.
+智能体–用户交互协议（AG-UI）采用流式方式把事件从智能体发送到客户端。
+`EventEncoder` 类提供把事件编码为可经 HTTP 发送的格式的功能。
 
 ## EventEncoder
 
 `from ag_ui.encoder import EventEncoder`
 
-The `EventEncoder` class is responsible for encoding `BaseEvent` objects into
-string representations that can be transmitted to clients.
+`EventEncoder` 类负责把 `BaseEvent` 对象编码为可以传输给客户端的字符串表示。
 
 ```python
 from ag_ui.core import BaseEvent
@@ -31,33 +29,32 @@ encoder = EventEncoder()
 encoded_event = encoder.encode(event)
 ```
 
-### Usage
+### 用法
 
-The `EventEncoder` is typically used in HTTP handlers to convert event objects
-into a stream of data. The current implementation encodes events as Server-Sent
-Events (SSE), which can be consumed by clients using the EventSource API.
+`EventEncoder` 通常在 HTTP 处理器中用于把事件对象转换为数据流。当前实现把事件编码为
+SSE（服务器推送事件），客户端可以用 EventSource API 消费。
 
-### Methods
+### 方法
 
 #### `__init__(accept: str = None)`
 
-Creates a new encoder instance.
+创建一个新的编码器实例。
 
-| Parameter | Type             | Description                         |
+| 参数      | 类型             | 说明                         |
 | --------- | ---------------- | ----------------------------------- |
-| `accept`  | `str` (optional) | Content type accepted by the client |
+| `accept`  | `str`（可选） | 客户端接受的内容类型 |
 
 #### `encode(event: BaseEvent) -> str`
 
-Encodes an event into a string representation.
+把事件编码为字符串表示。
 
-| Parameter | Type        | Description         |
+| 参数      | 类型        | 说明         |
 | --------- | ----------- | ------------------- |
-| `event`   | `BaseEvent` | The event to encode |
+| `event`   | `BaseEvent` | 要编码的事件 |
 
-**Returns**: A string representation of the event in SSE format.
+**返回**：SSE 格式的事件字符串表示。
 
-### Example
+### 示例
 
 ```python
 from ag_ui.core import TextMessageContentEvent, EventType
@@ -79,14 +76,12 @@ print(encoded_event)
 # Output: data: {"type":"TEXT_MESSAGE_CONTENT","messageId":"msg_123","delta":"Hello, world!"}\n\n
 ```
 
-### Implementation Details
+### 实现细节
 
-Internally, the encoder converts events to JSON and formats them as Server-Sent
-Events with the following structure:
+在内部，编码器把事件转换为 JSON，并按以下结构格式化为服务器推送事件：
 
 ```
 data: {json-serialized event}\n\n
 ```
 
-This format allows clients to receive a continuous stream of events and process
-them as they arrive.
+这种格式让客户端可以接收连续的事件流，并在事件到达时逐一处理。

@@ -1,19 +1,17 @@
 ---
-title: "Endpoints"
-description: "Host an IChatClient as an AG-UI endpoint"
+title: "端点"
+description: "把 IChatClient 托管为 AG-UI 端点"
 ---
 
-# Endpoints
+# 端点
 
-An AG-UI endpoint is a normal ASP.NET Core POST endpoint. It receives a
-`RunAgentInput`, calls an `IChatClient`, converts the streamed response to AG-UI
-events, and returns Server-Sent Events.
+AG-UI 端点就是一个普通的 ASP.NET Core POST 端点。它接收 `RunAgentInput`，调用一个
+`IChatClient`，把流式响应转换为 AG-UI 事件，然后返回 SSE（服务器推送事件）。
 
-## Register AG-UI services
+## 注册 AG-UI 服务
 
-Call `AddAGUI()` during startup. It configures ASP.NET Core JSON options with
-the AG-UI source-generated serializer context and registers interrupt content
-types used by the `IChatClient` pipeline.
+在启动时调用 `AddAGUI()`。它用 AG-UI 源生成的序列化器上下文配置 ASP.NET Core 的
+JSON 选项，并注册 `IChatClient` 管线所使用的中断内容类型。
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -28,38 +26,38 @@ app.MapAGUI("/");
 app.Run();
 ```
 
-## Endpoint pattern
+## 端点模式
 
-Every AG-UI endpoint follows the same five steps.
+每个 AG-UI 端点都遵循同样的五个步骤。
 
 <Steps>
-  <Step title="Receive RunAgentInput">
-    Map a POST endpoint that receives `[FromBody] RunAgentInput`.
+  <Step title="接收 RunAgentInput">
+    映射一个接收 `[FromBody] RunAgentInput` 的 POST 端点。
   </Step>
 
-  <Step title="Create ChatRequestContext">
-    Call `input.ToChatRequestContext(jsonSerializerOptions, streamOptions?)`.
-    The returned context exposes `ctx.Messages` and `ctx.ChatOptions`.
+  <Step title="创建 ChatRequestContext">
+    调用 `input.ToChatRequestContext(jsonSerializerOptions, streamOptions?)`。
+    返回的上下文暴露 `ctx.Messages` 与 `ctx.ChatOptions`。
   </Step>
 
-  <Step title="Call the IChatClient">
-    Pass `ctx.Messages` and `ctx.ChatOptions` to
-    `chatClient.GetStreamingResponseAsync(...)`.
+  <Step title="调用 IChatClient">
+    把 `ctx.Messages` 与 `ctx.ChatOptions` 传给
+    `chatClient.GetStreamingResponseAsync(...)`。
   </Step>
 
-  <Step title="Convert to AG-UI events">
-    Pipe the `ChatResponseUpdate` stream through
-    `.AsAGUIEventStreamAsync(ctx, cancellationToken)`.
+  <Step title="转换为 AG-UI 事件">
+    把 `ChatResponseUpdate` 流通过
+    `.AsAGUIEventStreamAsync(ctx, cancellationToken)` 进行管道处理。
   </Step>
 
-  <Step title="Return Server-Sent Events">
-    Return `TypedResults.ServerSentEvents(WrapAsSseItems(events, ct))`.
+  <Step title="返回服务器推送事件">
+    返回 `TypedResults.ServerSentEvents(WrapAsSseItems(events, ct))`。
   </Step>
 </Steps>
 
-## Minimal endpoint
+## 最小端点
 
-This is the canonical endpoint shape used by the .NET samples.
+这是 .NET 示例所使用的规范端点形态。
 
 ```csharp
 using System.Net.ServerSentEvents;
@@ -118,59 +116,59 @@ internal static class AGUIEndpoint
 }
 ```
 
-## Key APIs
+## 关键 API
 
 ### ToChatRequestContext
 
-`ToChatRequestContext` adapts the AG-UI request to the
-`Microsoft.Extensions.AI` request shape.
+`ToChatRequestContext` 把 AG-UI 请求适配为
+`Microsoft.Extensions.AI` 的请求形态。
 
 ```csharp
 var ctx = input.ToChatRequestContext(jsonSerializerOptions);
 ```
 
-`ChatRequestContext` contains:
+`ChatRequestContext` 包含：
 
-- `ctx.Input` - the original `RunAgentInput`
-- `ctx.Messages` - converted `List<ChatMessage>`
-- `ctx.ChatOptions` - configured `ChatOptions`
+- `ctx.Input` - 原始的 `RunAgentInput`
+- `ctx.Messages` - 转换后的 `List<ChatMessage>`
+- `ctx.ChatOptions` - 配置好的 `ChatOptions`
 
-The original input is also available to downstream chat clients and tools at
-`ctx.ChatOptions.AdditionalProperties[AGUIConstants.RunAgentInputKey]`.
+下游的对话客户端与工具也可以在
+`ctx.ChatOptions.AdditionalProperties[AGUIConstants.RunAgentInputKey]` 处拿到
+原始输入。
 
 <Tip>
-  Client-tool and approval-flow routing happens automatically. Client-declared
-  tools from `RunAgentInput.Tools` are installed on `ctx.ChatOptions.Tools` and
-  routed through the approval pipeline.
+  客户端工具与批准流的路由是自动完成的。来自 `RunAgentInput.Tools` 的客户端声明工具
+  会被安装到 `ctx.ChatOptions.Tools` 上，并经由批准管线路由。
 </Tip>
 
 ### AsAGUIEventStreamAsync
 
-`AsAGUIEventStreamAsync` converts streamed `ChatResponseUpdate` values into
-AG-UI `BaseEvent` values.
+`AsAGUIEventStreamAsync` 把流式的 `ChatResponseUpdate` 值转换为 AG-UI
+`BaseEvent` 值。
 
 ```csharp
 var events = updates.AsAGUIEventStreamAsync(ctx, cancellationToken);
 ```
 
-It emits run lifecycle events, maps text content to `TEXT_MESSAGE_*` events,
-maps `FunctionCallContent` and `FunctionResultContent` to tool events, maps
-`TextReasoningContent` to reasoning events, and passes through any `BaseEvent`
-stored in `ChatResponseUpdate.RawRepresentation`.
+它会发出运行生命周期事件，把文本内容映射为 `TEXT_MESSAGE_*` 事件，把
+`FunctionCallContent` 与 `FunctionResultContent` 映射为工具事件，把
+`TextReasoningContent` 映射为推理事件，并把存储在
+`ChatResponseUpdate.RawRepresentation` 中的任何 `BaseEvent` 透传。
 
 ### WrapAsSseItems
 
-ASP.NET Core's `TypedResults.ServerSentEvents` writes `SseItem<T>` values. The
-small helper wraps each AG-UI event in `SseItem<BaseEvent>`.
+ASP.NET Core 的 `TypedResults.ServerSentEvents` 写出 `SseItem<T>` 值。这个小辅助
+方法把每个 AG-UI 事件包装进 `SseItem<BaseEvent>`。
 
 ```csharp
 return TypedResults.ServerSentEvents(
     WrapAsSseItems(events, cancellationToken));
 ```
 
-## Adding stream options
+## 添加流选项
 
-Pass `AGUIStreamOptions` when the endpoint needs custom stream conversion.
+当端点需要自定义流转换时，传入 `AGUIStreamOptions`。
 
 ```csharp
 var streamOptions = new AGUIStreamOptions()
@@ -179,5 +177,4 @@ var streamOptions = new AGUIStreamOptions()
 var ctx = input.ToChatRequestContext(jsonSerializerOptions, streamOptions);
 ```
 
-See [Extensibility](/sdk/dotnet/hosting/extensibility) for the available
-mapping hooks.
+可用的映射钩子见[可扩展性](/sdk/dotnet/hosting/extensibility)。

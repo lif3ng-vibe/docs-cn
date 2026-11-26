@@ -1,13 +1,13 @@
 ---
-title: "Transport"
-description: "AG-UI client transport abstraction and HTTP event stream"
+title: "传输层"
+description: "AG-UI 客户端传输层抽象与 HTTP 事件流"
 ---
 
-# Transport
+# 传输层
 
-`AGUI.Client` separates the chat client from the wire protocol with
-`IAGUITransport`. `AGUIChatClient` builds a `RunAgentInput`, passes it to the
-transport, and consumes the resulting AG-UI `BaseEvent` stream.
+`AGUI.Client` 通过 `IAGUITransport` 把对话客户端与线上协议解耦。
+`AGUIChatClient` 构建 `RunAgentInput`，把它交给传输层，并消费由此产生的 AG-UI
+`BaseEvent` 流。
 
 ```csharp
 using AGUI.Abstractions;
@@ -16,7 +16,7 @@ using AGUI.Client;
 
 ## IAGUITransport
 
-`IAGUITransport` has a single method:
+`IAGUITransport` 只有一个方法：
 
 ```csharp
 public interface IAGUITransport
@@ -27,15 +27,14 @@ public interface IAGUITransport
 }
 ```
 
-The input contains the AG-UI thread id, run id, message history, tools, state,
-context, forwarded properties, and any resume entries for interrupted runs. The
-output is the ordered AG-UI event stream described in the
-[event reference](/sdk/dotnet/abstractions/events).
+输入包含 AG-UI 线程 ID、运行 ID、消息历史、工具、状态、上下文、转发属性，以及被中断
+运行的所有 resume 条目。输出是[事件参考](/sdk/dotnet/abstractions/events)中描述的
+有序 AG-UI 事件流。
 
-## HTTP transport
+## HTTP 传输层
 
-The `AGUIChatClientOptions(HttpClient, endpoint)` constructor creates the
-built-in HTTP transport internally:
+`AGUIChatClientOptions(HttpClient, endpoint)` 构造函数会在内部创建内置的
+HTTP 传输层：
 
 ```csharp
 using AGUI.Client;
@@ -45,20 +44,18 @@ using HttpClient httpClient = new();
 IChatClient client = new AGUIChatClient(new(httpClient, "https://api.example.com/agent"));
 ```
 
-The built-in transport sends the request as an HTTP `POST` whose body is the
-serialized `RunAgentInput`. The response is read as Server-Sent Events, and each
-SSE item is deserialized as a `BaseEvent`.
+内置传输层以 HTTP `POST` 发送请求，请求体是序列化后的 `RunAgentInput`。响应按
+SSE（服务器推送事件）读取，每个 SSE 条目都被反序列化为一个 `BaseEvent`。
 
 <Note>
-  `AGUIHttpTransport` is the built-in HTTP+SSE implementation used by the
-  `AGUIChatClientOptions(HttpClient, endpoint)` constructor. Most applications do
-  not need to instantiate a transport directly.
+  `AGUIHttpTransport` 是 `AGUIChatClientOptions(HttpClient, endpoint)` 构造函数
+  使用的内置 HTTP+SSE 实现。大多数应用不需要直接实例化传输层。
 </Note>
 
-## Custom transports
+## 自定义传输层
 
-Implement `IAGUITransport` when you want to test without a server or use a
-different transport. Then pass the implementation to `AGUIChatClient`.
+想在没有服务端的情况下测试，或想使用另一种传输层时，实现 `IAGUITransport`，
+然后把实现传给 `AGUIChatClient`。
 
 ```csharp
 using System.Runtime.CompilerServices;
@@ -92,30 +89,28 @@ IAGUITransport transport = new InMemoryAGUITransport();
 IChatClient client = new AGUIChatClient(new() { Transport = transport });
 ```
 
-## Event conversion
+## 事件转换
 
-The transport returns AG-UI protocol events. `AGUIChatClient` then converts them
-to `ChatResponseUpdate` values:
+传输层返回 AG-UI 协议事件。`AGUIChatClient` 随后把它们转换为
+`ChatResponseUpdate` 值：
 
-- `RUN_STARTED` establishes the AG-UI thread id and run id.
-- Text message events become streamed text updates.
-- Tool call events become MEAI function call content.
-- Interrupt outcomes become `ToolApprovalRequestContent` or
-  `InterruptRequestContent`.
-- `RUN_ERROR` becomes an `ErrorContent` update. Its `message` maps to
-  `ErrorContent.Message`, and its optional `code` maps to
-  `ErrorContent.ErrorCode`. When the event carries partial `usage`, the client
-  also emits `UsageContent` updates so `ChatResponse.Usage` includes the tokens
-  consumed before the failure.
+- `RUN_STARTED` 确定 AG-UI 线程 ID 与运行 ID。
+- 文本消息事件变成流式文本更新。
+- 工具调用事件变成 MEAI 函数调用内容。
+- 中断结果变成 `ToolApprovalRequestContent` 或
+  `InterruptRequestContent`。
+- `RUN_ERROR` 变成 `ErrorContent` 更新。它的 `message` 映射到
+  `ErrorContent.Message`，可选的 `code` 映射到
+  `ErrorContent.ErrorCode`。当事件携带部分 `usage` 时，客户端还会发出
+  `UsageContent` 更新，让 `ChatResponse.Usage` 包含失败前已消耗的 token。
 
-`ResponseId` on each update corresponds to the AG-UI run id. The client clears
-`ConversationId` before yielding updates so callers continue sending full
-message history to stateless AG-UI servers.
+每个更新上的 `ResponseId` 对应 AG-UI 的运行 ID。客户端在产出更新前会清空
+`ConversationId`，让调用方继续向无状态的 AG-UI 服务端发送完整的消息历史。
 
-## Cancellation
+## 取消
 
-`SendAsync` receives the caller's `CancellationToken`. Custom transports should
-observe it while sending the request and while producing events:
+`SendAsync` 会收到调用方的 `CancellationToken`。自定义传输层在发送请求和产出事件的
+过程中都应响应它：
 
 ```csharp
 public async IAsyncEnumerable<BaseEvent> SendAsync(
@@ -137,8 +132,8 @@ public async IAsyncEnumerable<BaseEvent> SendAsync(
 }
 ```
 
-## Related references
+## 相关参考
 
 - [AGUIChatClient](/sdk/dotnet/client/chat-client)
-- [Events](/sdk/dotnet/abstractions/events)
-- [Core protocol types](/sdk/dotnet/abstractions/types)
+- [事件](/sdk/dotnet/abstractions/events)
+- [核心协议类型](/sdk/dotnet/abstractions/types)

@@ -1,6 +1,6 @@
 ---
-title: "Overview"
-description: "Core concepts in the Agent User Interaction Protocol SDK"
+title: "概述"
+description: "智能体–用户交互协议 SDK 中的核心概念"
 ---
 
 ```bash
@@ -9,58 +9,50 @@ pip install ag-ui-protocol
 
 # ag_ui.core
 
-The Agent User Interaction Protocol SDK uses a streaming event-based
-architecture with strongly typed data structures. This package provides the
-foundation for connecting to agent systems.
+智能体–用户交互协议（AG-UI）SDK 采用基于事件的流式架构和强类型数据结构。本包为
+连接智能体系统提供基础。
 
 ```python
 from ag_ui.core import ...
 ```
 
-## Types
+## 类型
 
-Core data structures that represent the building blocks of the system:
+构成系统基础模块的核心数据结构：
 
-- [RunAgentInput](/sdk/python/core/types#runagentinput) - Input parameters for
-  running agents
-- [Message](/sdk/python/core/types#message-types) - User assistant communication
-  and tool usage
-- [Context](/sdk/python/core/types#context) - Contextual information provided to
-  agents
-- [Tool](/sdk/python/core/types#tool) - Defines functions that agents can call
-- [State](/sdk/python/core/types#state) - Agent state management
+- [RunAgentInput](/sdk/python/core/types#runagentinput) - 运行智能体的输入参数
+- [消息类型](/sdk/python/core/types#message-types) - 用户与助手的通信以及工具使用
+- [上下文](/sdk/python/core/types#context) - 提供给智能体的上下文信息
+- [工具](/sdk/python/core/types#tool) - 定义智能体可以调用的函数
+- [状态](/sdk/python/core/types#state) - 智能体状态管理
 
 <Card
-  title="Types Reference"
+  title="类型参考"
   icon="cube"
   href="/sdk/python/core/types"
   color="#3B82F6"
   iconType="solid"
 >
-  Complete documentation of all types in the ag_ui.core package
+  ag_ui.core 包中所有类型的完整文档
 </Card>
 
-## Events
+## 事件
 
-Events that power communication between agents and frontends:
+驱动智能体与前端之间通信的事件：
 
-- [Lifecycle Events](/sdk/python/core/events#lifecycle-events) - Run and step
-  tracking
-- [Text Message Events](/sdk/python/core/events#text-message-events) - Assistant
-  message streaming
-- [Tool Call Events](/sdk/python/core/events#tool-call-events) - Function call
-  lifecycle
-- [State Management Events](/sdk/python/core/events#state-management-events) -
-  Agent state updates
-- [Special Events](/sdk/python/core/events#special-events) - Raw and custom
-  events
+- [生命周期事件](/sdk/python/core/events#lifecycle-events) - 运行与步骤追踪
+- [文本消息事件](/sdk/python/core/events#text-message-events) - 助手消息流式传输
+- [工具调用事件](/sdk/python/core/events#tool-call-events) - 函数调用的生命周期
+- [状态管理事件](/sdk/python/core/events#state-management-events) -
+  智能体状态更新
+- [特殊事件](/sdk/python/core/events#special-events) - Raw 事件与自定义事件
 
 <Card
-  title="Events Reference"
+  title="事件参考"
   icon="cube"
   href="/sdk/python/core/events"
   color="#3B82F6"
   iconType="solid"
 >
-  Complete documentation of all events in the ag_ui.core package
+  ag_ui.core 包中所有事件的完整文档
 </Card>

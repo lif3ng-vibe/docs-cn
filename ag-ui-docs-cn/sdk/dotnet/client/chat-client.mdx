@@ -1,14 +1,13 @@
 ---
 title: "AGUIChatClient"
-description: "IChatClient implementation for consuming AG-UI endpoints"
+description: "用于消费 AG-UI 端点的 IChatClient 实现"
 ---
 
 # AGUIChatClient
 
-`AGUIChatClient` is an `IChatClient` implementation for AG-UI. It converts
-`ChatMessage` values and `ChatOptions` into a `RunAgentInput`, sends that input
-to an AG-UI endpoint, and converts the returned event stream into
-`ChatResponseUpdate` values.
+`AGUIChatClient` 是面向 AG-UI 的 `IChatClient` 实现。它把 `ChatMessage` 值与
+`ChatOptions` 转换为 `RunAgentInput`，把该输入发送到 AG-UI 端点，再把返回的事件流
+转换为 `ChatResponseUpdate` 值。
 
 ```csharp
 using AGUI.Client;
@@ -16,14 +15,14 @@ using Microsoft.Extensions.AI;
 ```
 
 <Note>
-  The .NET client does not define an `AbstractAgent` equivalent. The integration
-  point is `Microsoft.Extensions.AI.IChatClient`.
+  .NET 客户端没有定义等价于 `AbstractAgent` 的类型。集成点是
+  `Microsoft.Extensions.AI.IChatClient`。
 </Note>
 
-## Construction
+## 构建
 
-Create a client from an `AGUIChatClientOptions`. The simplest form builds the
-built-in HTTP transport from an `HttpClient` and the AG-UI endpoint URL:
+从 `AGUIChatClientOptions` 创建客户端。最简单的形式是用一个 `HttpClient` 与 AG-UI
+端点 URL 构建内置的 HTTP 传输层：
 
 ```csharp
 using AGUI.Client;
@@ -33,13 +32,13 @@ HttpClient httpClient = new();
 IChatClient client = new AGUIChatClient(new(httpClient, "https://api.example.com/agent"));
 ```
 
-`AGUIChatClient` has a single constructor that takes `AGUIChatClientOptions`:
+`AGUIChatClient` 只有一个接受 `AGUIChatClientOptions` 的构造函数：
 
 ```csharp
 new AGUIChatClient(AGUIChatClientOptions options);
 ```
 
-`AGUIChatClientOptions` carries the transport and optional serializer settings:
+`AGUIChatClientOptions` 携带传输层与可选的序列化器设置：
 
 ```csharp
 public sealed class AGUIChatClientOptions
@@ -51,15 +50,14 @@ public sealed class AGUIChatClientOptions
 }
 ```
 
-Set `Transport` directly when you need a custom transport for tests or an
-alternative wire protocol. See [Transport](/sdk/dotnet/client/transport).
-Configured `JsonSerializerOptions` are also used when converting MEAI message
-content, including custom CLR values in `AIContent.AdditionalProperties`.
+当测试需要自定义传输层，或需要另一种线上协议时，直接设置 `Transport`。
+见[传输层](/sdk/dotnet/client/transport)。配置好的 `JsonSerializerOptions` 也会在
+转换 MEAI 消息内容时使用，包括 `AIContent.AdditionalProperties` 中的自定义 CLR 值。
 
-## Streaming responses
+## 流式响应
 
-`GetStreamingResponseAsync` streams AG-UI output as MEAI
-`ChatResponseUpdate` objects:
+`GetStreamingResponseAsync` 把 AG-UI 输出以 MEAI
+`ChatResponseUpdate` 对象的形式流式返回：
 
 ```csharp
 using AGUI.Client;
@@ -85,15 +83,13 @@ await foreach (ChatResponseUpdate update in client.GetStreamingResponseAsync(
 }
 ```
 
-Internally, the client converts the AG-UI event stream back into
-`ChatResponseUpdate` objects. Text events become text deltas, tool call events
-become MEAI tool call content, and lifecycle events remain available through
-`RawRepresentation`.
+在内部，客户端把 AG-UI 事件流转换回 `ChatResponseUpdate` 对象。文本事件变成文本
+增量，工具调用事件变成 MEAI 工具调用内容，生命周期事件则通过
+`RawRepresentation` 继续可用。
 
-## Non-streaming responses
+## 非流式响应
 
-`GetResponseAsync` is also implemented. It consumes the streaming response and
-returns a final `ChatResponse`:
+`GetResponseAsync` 也有实现。它消费流式响应并返回最终的 `ChatResponse`：
 
 ```csharp
 ChatResponse response = await client.GetResponseAsync(
@@ -103,23 +99,22 @@ ChatResponse response = await client.GetResponseAsync(
 Console.WriteLine(response.Text);
 ```
 
-## Statelessness and ConversationId
+## 无状态与 ConversationId
 
-`AGUIChatClient` is stateless. It sends the full message history on every turn
-and never surfaces a `ConversationId` on returned updates.
+`AGUIChatClient` 是无状态的。它在每一轮都发送完整的消息历史，并且从不在返回的更新上
+暴露 `ConversationId`。
 
-This is intentional. In `Microsoft.Extensions.AI`, a non-null `ConversationId`
-signals a service-managed conversation. Agent wrappers may then send only the
-new message deltas on the next turn. That would truncate history when talking to
-a stateless AG-UI server.
+这是有意为之。在 `Microsoft.Extensions.AI` 中，非 null 的 `ConversationId`
+表示由服务管理的会话，智能体包装层随后可能在下一轮只发送新的消息增量。面对无状态的
+AG-UI 服务端，这会截断历史。
 
-Use these identifiers instead:
+请改用这些标识符：
 
-- `ChatResponseUpdate.ResponseId` is the AG-UI run id.
-- `update.RawRepresentation as RunStartedEvent` exposes the AG-UI `ThreadId`
-  and `RunId` from the `RUN_STARTED` event.
-- `update.AdditionalProperties["agui_thread_id"]` also contains the resolved
-  AG-UI thread id on the `RUN_STARTED` update.
+- `ChatResponseUpdate.ResponseId` 是 AG-UI 的运行 ID。
+- `update.RawRepresentation as RunStartedEvent` 暴露 `RUN_STARTED` 事件中的 AG-UI
+  `ThreadId` 与 `RunId`。
+- `update.AdditionalProperties["agui_thread_id"]` 在 `RUN_STARTED` 更新上也携带
+  解析出的 AG-UI 线程 ID。
 
 ```csharp
 using AGUI.Abstractions;
@@ -138,19 +133,18 @@ static (string? ThreadId, string? RunId) GetAGUIIds(
 ```
 
 <Warning>
-  Do not use `ConversationId` as AG-UI conversation state. Pass full message
-  history each turn and use AG-UI thread/run ids for wire-level correlation.
+  不要把 `ConversationId` 当作 AG-UI 的会话状态。每轮传递完整的消息历史，并使用
+  AG-UI 的线程/运行 ID 做线级关联。
 </Warning>
 
-## Thread continuity
+## 线程延续性
 
-To keep a stable AG-UI thread, reuse the same `ChatOptions` instance across
-turns. The client pins the resolved thread id onto that options instance without
-setting `ConversationId`.
+要维持一个稳定的 AG-UI 线程，请在多轮之间复用同一个 `ChatOptions` 实例。客户端会把
+解析出的线程 ID 固定（pin）到该 options 实例上，而不会设置 `ConversationId`。
 
-For explicit continuation or branching, set `RunAgentInput.ThreadId` and
-`RunAgentInput.ParentRunId` through `ChatOptions.RawRepresentationFactory`.
-This is the AG-UI-native way to control wire-level fields:
+要显式延续或分支，通过 `ChatOptions.RawRepresentationFactory` 设置
+`RunAgentInput.ThreadId` 和 `RunAgentInput.ParentRunId`。
+这是 AG-UI 原生的线级字段控制方式：
 
 ```csharp
 using AGUI.Abstractions;
@@ -189,21 +183,21 @@ await foreach (ChatResponseUpdate update in client.GetStreamingResponseAsync(
 ```
 
 <Tip>
-  Use `ParentRunId` when you want the next request to branch from a previous
-  run. Omit it when you only need to continue on the same thread.
+  当希望下一个请求从上一次运行分支时使用 `ParentRunId`；只需在同一线程上继续时则
+  省略它。
 </Tip>
 
-## Interrupts and approvals
+## 中断与批准
 
-When an AG-UI server finishes a run with an interrupt outcome, the client
-surfaces the pause as MEAI content:
+当 AG-UI 服务端以中断结果结束一次运行时，客户端会把这次暂停以 MEAI 内容的形式呈现
+出来：
 
-- Tool-call approvals become `ToolApprovalRequestContent`.
-- Other interrupts become `InterruptRequestContent`.
+- 工具调用批准变成 `ToolApprovalRequestContent`。
+- 其他中断变成 `InterruptRequestContent`。
 
-The caller appends a response message and sends the next request. The client
-extracts `ToolApprovalResponseContent` and `InterruptResponseContent` from the
-latest message and sends them as `RunAgentInput.Resume`.
+调用方追加一条响应消息并发送下一个请求。客户端从最新的消息中提取
+`ToolApprovalResponseContent` 与 `InterruptResponseContent`，并作为
+`RunAgentInput.Resume` 发送。
 
 ```csharp
 using AGUI.Abstractions;
@@ -239,7 +233,7 @@ if (approval?.ToolCall is FunctionCallContent toolCall)
 }
 ```
 
-For non-tool interrupts, respond with `InterruptResponseContent`:
+对于非工具类中断，用 `InterruptResponseContent` 响应：
 
 ```csharp
 using System.Text.Json;
@@ -260,12 +254,10 @@ static ChatMessage CreateInterruptResponse(InterruptRequestContent request)
 }
 ```
 
-`InterruptResponseContent.Metadata` optionally carries envelope data about the
-response — a signature proving the decision was not tampered with, routing keys
-— as opposed to `Payload`, which is the answer the agent asked for. The client
-copies it onto the resume entry's `metadata`, and the hosting layer hands it
-back to the server pipeline on `InterruptResponseContent`; see
-[Metadata](/concepts/metadata#resume-entries).
+`InterruptResponseContent.Metadata` 可选地携带关于该响应的信封数据——证明决定未被
+篡改的签名、路由 key 等——与之相对，`Payload` 是智能体索求的答案。客户端会把它复制到
+resume 条目的 `metadata` 上，托管层再通过 `InterruptResponseContent` 把它交回服务端
+管线；见[元数据](/concepts/metadata#resume-entries)。
 
 ```csharp
 new InterruptResponseContent(request.RequestId)
@@ -277,8 +269,8 @@ new InterruptResponseContent(request.RequestId)
 }
 ```
 
-## Related references
+## 相关参考
 
-- [Transport](/sdk/dotnet/client/transport)
-- [Events](/sdk/dotnet/abstractions/events)
-- [Core protocol types](/sdk/dotnet/abstractions/types)
+- [传输层](/sdk/dotnet/client/transport)
+- [事件](/sdk/dotnet/abstractions/events)
+- [核心协议类型](/sdk/dotnet/abstractions/types)

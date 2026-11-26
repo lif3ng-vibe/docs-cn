@@ -1,17 +1,16 @@
 ---
-title: "Events"
-description: "Documentation for the streaming event types in AGUI.Abstractions"
+title: "事件"
+description: "AGUI.Abstractions 中流式事件类型的文档"
 ---
 
-# Events
+# 事件
 
-AG-UI uses a streaming event-based architecture. Events are the units of
-communication from an agent backend to a frontend UI. In .NET, every protocol
-event derives from `BaseEvent` and has a `type` discriminator.
+AG-UI 采用基于事件的流式架构。事件是智能体后端向前端 UI 传递信息的基本单位。
+在 .NET 中，每个协议事件都派生自 `BaseEvent`，并带有 `type` 判别值（discriminator）。
 
-## Event Type Constants
+## 事件类型常量
 
-`AGUIEventTypes` defines the SCREAMING_SNAKE_CASE wire discriminators:
+`AGUIEventTypes` 定义了 SCREAMING_SNAKE_CASE 形式的线上判别值：
 
 ```csharp
 AGUIEventTypes.RunStarted; // "RUN_STARTED"
@@ -44,7 +43,7 @@ AGUIEventTypes.Custom; // "CUSTOM"
 
 ## BaseEvent
 
-All events inherit from `BaseEvent`.
+所有事件都继承自 `BaseEvent`。
 
 ```csharp
 public abstract class BaseEvent
@@ -56,26 +55,24 @@ public abstract class BaseEvent
 }
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `string` | Event discriminator |
-| `Timestamp` | `timestamp` | `long?` | Optional event timestamp |
-| `RawEvent` | `rawEvent` | `JsonElement?` | Optional original event data |
-| `Metadata`  | `metadata`  | `JsonElement?` | Optional extra information, open by key |
+| `Type` | `type` | `string` | 事件判别值 |
+| `Timestamp` | `timestamp` | `long?` | 可选的事件时间戳 |
+| `RawEvent` | `rawEvent` | `JsonElement?` | 可选的原始事件数据 |
+| `Metadata`  | `metadata`  | `JsonElement?` | 可选的附加信息，按键开放 |
 
-`Metadata` is open by key: any JSON value is allowed under a key, including
-`null`. The object may be absent, but a present one is never `null` — an
-explicit `null` is read back as absent, and an absent object is omitted from the
-wire rather than serialized as `null`. `AGUIMetadata.ReservedKey` (`"ag-ui"`) is
-reserved for AG-UI's own use.
+`Metadata` 按键开放：key 下允许任意 JSON 值，包括 `null`。对象可以缺省，但一旦出现
+就绝不会是 `null`——显式的 `null` 读回时视为缺省，缺省的对象在线上直接省略，而不会
+序列化为 `null`。`AGUIMetadata.ReservedKey`（`"ag-ui"`）保留为 AG-UI 自用。
 
-## Lifecycle Events
+## 生命周期事件
 
-Lifecycle events represent the run and step lifecycle.
+生命周期事件表示运行与步骤的生命周期。
 
 ### RunStartedEvent
 
-Signals the start of an agent run.
+表示一次智能体运行的开始。
 
 ```csharp
 var evt = new RunStartedEvent
@@ -88,18 +85,18 @@ var evt = new RunStartedEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"RUN_STARTED"` | Event discriminator |
-| `ThreadId` | `threadId` | `string` | Conversation thread ID |
-| `RunId` | `runId` | `string` | Agent run ID |
-| `ParentRunId` | `parentRunId` | `string?` | Optional parent run ID |
-| `Input` | `input` | `RunAgentInput?` | Optional input payload for the run |
-| `ProtocolVersion` | `protocolVersion` | `string?` | AG-UI protocol version the producer speaks. Set it to `AGUIProtocol.Version` (`"1.0"`) on every hand-built event; a stream without it reads as pre-1.0 |
+| `Type` | `type` | `"RUN_STARTED"` | 事件判别值 |
+| `ThreadId` | `threadId` | `string` | 会话线程 ID |
+| `RunId` | `runId` | `string` | 智能体运行 ID |
+| `ParentRunId` | `parentRunId` | `string?` | 可选的父运行 ID |
+| `Input` | `input` | `RunAgentInput?` | 可选的运行输入负载 |
+| `ProtocolVersion` | `protocolVersion` | `string?` | 生产者（producer）所使用的 AG-UI 协议版本。每个手工构建的事件都应将其设为 `AGUIProtocol.Version`（`"1.0"`）；没有该字段的事件流会被当作 1.0 之前的版本读取 |
 
 ### RunFinishedEvent
 
-Signals the completion of an agent run.
+表示一次智能体运行的完成。
 
 ```csharp
 var evt = new RunFinishedEvent
@@ -110,24 +107,24 @@ var evt = new RunFinishedEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"RUN_FINISHED"` | Event discriminator |
-| `ThreadId` | `threadId` | `string` | Conversation thread ID |
-| `RunId` | `runId` | `string` | Agent run ID |
-| `Result` | `result` | `JsonElement?` | Optional run result |
-| `Outcome` | `outcome` | `RunFinishedOutcome?` | Optional typed outcome |
-| `Usage` | `usage` | `IList<TokenUsage>?` | Optional token usage for the run |
+| `Type` | `type` | `"RUN_FINISHED"` | 事件判别值 |
+| `ThreadId` | `threadId` | `string` | 会话线程 ID |
+| `RunId` | `runId` | `string` | 智能体运行 ID |
+| `Result` | `result` | `JsonElement?` | 可选的运行结果 |
+| `Outcome` | `outcome` | `RunFinishedOutcome?` | 可选的带类型结果（outcome） |
+| `Usage` | `usage` | `IList<TokenUsage>?` | 可选的本次运行 token 用量 |
 
-`RunFinishedOutcome` is a polymorphic value with `type: "success"` or
-`type: "interrupt"`. `RunFinishedInterruptOutcome` carries `interrupts`, an
-`IList<AGUIInterrupt>`.
+`RunFinishedOutcome` 是一个多态值，`type` 为 `"success"` 或
+`"interrupt"`。`RunFinishedInterruptOutcome` 携带 `interrupts`，即一个
+`IList<AGUIInterrupt>`。
 
-`Usage` is described under [TokenUsage](#tokenusage).
+`Usage` 在 [TokenUsage](#tokenusage) 一节说明。
 
 ### RunErrorEvent
 
-Signals an error during an agent run.
+表示智能体运行期间发生错误。
 
 ```csharp
 var evt = new RunErrorEvent
@@ -137,18 +134,18 @@ var evt = new RunErrorEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"RUN_ERROR"` | Event discriminator |
-| `Message` | `message` | `string` | Error message |
-| `Code` | `code` | `string?` | Optional error code |
-| `Usage` | `usage` | `IList<TokenUsage>?` | Optional partial usage accrued before the failure |
+| `Type` | `type` | `"RUN_ERROR"` | 事件判别值 |
+| `Message` | `message` | `string` | 错误消息 |
+| `Code` | `code` | `string?` | 可选的错误码 |
+| `Usage` | `usage` | `IList<TokenUsage>?` | 可选的失败前已累积的部分用量 |
 
 ### TokenUsage
 
-Provider-reported token usage, carried by both terminal run events. One entry per
-`(provider, model)` pair, so a run that invokes several models keeps them separate;
-consumers that only need totals can sum across the entries.
+由提供商上报的 token 用量，两个终止性运行事件都会携带。每个 `(provider, model)`
+组合各占一条记录，因此调用多个模型的运行会把它们分开记录；只需要总数的消费方可以对
+各条记录求和。
 
 ```csharp
 var evt = new RunFinishedEvent
@@ -170,56 +167,54 @@ var evt = new RunFinishedEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Provider` | `provider` | `string?` | Provider that served the request |
-| `Model` | `model` | `string?` | Model that served the request |
-| `InputTokens` | `inputTokens` | `long?` | All input tokens, cache reads and writes included |
-| `OutputTokens` | `outputTokens` | `long?` | All output tokens, reasoning included |
-| `TotalTokens` | `totalTokens` | `long?` | `inputTokens` plus `outputTokens` |
-| `ReasoningTokens` | `reasoningTokens` | `long?` | Output tokens spent on reasoning; part of `outputTokens` |
-| `CachedInputTokens` | `cachedInputTokens` | `long?` | Input tokens read from a prompt cache; part of `inputTokens` |
-| `CacheWriteInputTokens` | `cacheWriteInputTokens` | `long?` | Input tokens written to a prompt cache; part of `inputTokens`. `Microsoft.Extensions.AI` has no first-class property for it, so `AGUI.Server` reads it from `UsageDetails.AdditionalCounts["CacheWriteInputTokens"]` and `AGUI.Client` writes it there |
+| `Provider` | `provider` | `string?` | 服务该请求的提供商 |
+| `Model` | `model` | `string?` | 服务该请求的模型 |
+| `InputTokens` | `inputTokens` | `long?` | 全部输入 token，含缓存读取与写入 |
+| `OutputTokens` | `outputTokens` | `long?` | 全部输出 token，含推理 |
+| `TotalTokens` | `totalTokens` | `long?` | `inputTokens` 加 `outputTokens` |
+| `ReasoningTokens` | `reasoningTokens` | `long?` | 用于推理的输出 token；是 `outputTokens` 的一部分 |
+| `CachedInputTokens` | `cachedInputTokens` | `long?` | 从提示词缓存读取的输入 token；是 `inputTokens` 的一部分 |
+| `CacheWriteInputTokens` | `cacheWriteInputTokens` | `long?` | 写入提示词缓存的输入 token；是 `inputTokens` 的一部分。`Microsoft.Extensions.AI` 没有为它提供一等属性，因此 `AGUI.Server` 从 `UsageDetails.AdditionalCounts["CacheWriteInputTokens"]` 读取，`AGUI.Client` 写入该处 |
 
-Every field is optional. A null count means the provider did not report it, which is
-distinct from a reported zero — so `usage` never fabricates a count the provider
-withheld. The type is numeric-only by design: it carries no prompts, completions,
-messages, tool arguments, or thread/run/user identifiers.
+每个字段都是可选的。为 null 的计数表示提供商没有上报该值，这与上报为零不同——因此
+`usage` 绝不编造提供商未提供的计数。该类型设计上只含数字：不携带任何提示词、补全、
+消息、工具参数或线程/运行/用户标识符。
 
-When hosting with `AGUI.Server`, usage reported by Microsoft.Extensions.AI as
-`UsageContent` is accumulated automatically and attached to the terminal event.
-`ModelId` supplies the model label; set the provider label with
-`AGUIStreamOptions.WithUsageProvider("openai")`.
+使用 `AGUI.Server` 托管时，Microsoft.Extensions.AI 以 `UsageContent` 上报的用量会
+自动累积并附加到终止事件上。`ModelId` 提供模型标签；提供商标签用
+`AGUIStreamOptions.WithUsageProvider("openai")` 设置。
 
 ### StepStartedEvent
 
-Signals the start of a named step.
+表示一个具名步骤的开始。
 
 ```csharp
 var evt = new StepStartedEvent { StepName = "plan" };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"STEP_STARTED"` | Event discriminator |
-| `StepName` | `stepName` | `string` | Step name |
+| `Type` | `type` | `"STEP_STARTED"` | 事件判别值 |
+| `StepName` | `stepName` | `string` | 步骤名称 |
 
 ### StepFinishedEvent
 
-Signals the completion of a named step.
+表示一个具名步骤的完成。
 
 ```csharp
 var evt = new StepFinishedEvent { StepName = "plan" };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"STEP_FINISHED"` | Event discriminator |
-| `StepName` | `stepName` | `string` | Step name |
+| `Type` | `type` | `"STEP_FINISHED"` | 事件判别值 |
+| `StepName` | `stepName` | `string` | 步骤名称 |
 
-## Text Message Events
+## 文本消息事件
 
-Text message events stream assistant text as a start/content/end sequence.
+文本消息事件以 start/content/end 序列流式传输助手文本。
 
 ### TextMessageStartEvent
 
@@ -232,12 +227,12 @@ var evt = new TextMessageStartEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"TEXT_MESSAGE_START"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Message ID |
-| `Role` | `role` | `string` | Message role, typically `"assistant"` |
-| `Name` | `name` | `string?` | Optional sender name |
+| `Type` | `type` | `"TEXT_MESSAGE_START"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 消息 ID |
+| `Role` | `role` | `string` | 消息角色，通常为 `"assistant"` |
+| `Name` | `name` | `string?` | 可选的发送者名称 |
 
 ### TextMessageContentEvent
 
@@ -249,11 +244,11 @@ var evt = new TextMessageContentEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"TEXT_MESSAGE_CONTENT"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Message ID from the start event |
-| `Delta` | `delta` | `string` | Text delta |
+| `Type` | `type` | `"TEXT_MESSAGE_CONTENT"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 来自 start 事件的消息 ID |
+| `Delta` | `delta` | `string` | 文本增量 |
 
 ### TextMessageEndEvent
 
@@ -261,15 +256,14 @@ var evt = new TextMessageContentEvent
 var evt = new TextMessageEndEvent { MessageId = "msg-1" };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"TEXT_MESSAGE_END"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Message ID from the start event |
+| `Type` | `type` | `"TEXT_MESSAGE_END"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 来自 start 事件的消息 ID |
 
-## Tool Call Events
+## 工具调用事件
 
-Tool call events stream tool invocation arguments and optional server-side
-results.
+工具调用事件流式传输工具调用的参数以及可选的服务端结果。
 
 ### ToolCallStartEvent
 
@@ -282,12 +276,12 @@ var evt = new ToolCallStartEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"TOOL_CALL_START"` | Event discriminator |
-| `ParentMessageId` | `parentMessageId` | `string?` | Optional parent assistant message ID |
-| `ToolCallId` | `toolCallId` | `string` | Tool call ID |
-| `ToolCallName` | `toolCallName` | `string` | Tool name |
+| `Type` | `type` | `"TOOL_CALL_START"` | 事件判别值 |
+| `ParentMessageId` | `parentMessageId` | `string?` | 可选的父助手消息 ID |
+| `ToolCallId` | `toolCallId` | `string` | 工具调用 ID |
+| `ToolCallName` | `toolCallName` | `string` | 工具名称 |
 
 ### ToolCallArgsEvent
 
@@ -299,11 +293,11 @@ var evt = new ToolCallArgsEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"TOOL_CALL_ARGS"` | Event discriminator |
-| `ToolCallId` | `toolCallId` | `string` | Tool call ID |
-| `Delta` | `delta` | `string` | Argument JSON chunk |
+| `Type` | `type` | `"TOOL_CALL_ARGS"` | 事件判别值 |
+| `ToolCallId` | `toolCallId` | `string` | 工具调用 ID |
+| `Delta` | `delta` | `string` | 参数 JSON chunk |
 
 ### ToolCallEndEvent
 
@@ -311,10 +305,10 @@ var evt = new ToolCallArgsEvent
 var evt = new ToolCallEndEvent { ToolCallId = "call-1" };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"TOOL_CALL_END"` | Event discriminator |
-| `ToolCallId` | `toolCallId` | `string` | Tool call ID |
+| `Type` | `type` | `"TOOL_CALL_END"` | 事件判别值 |
+| `ToolCallId` | `toolCallId` | `string` | 工具调用 ID |
 
 ### ToolCallResultEvent
 
@@ -328,21 +322,21 @@ var evt = new ToolCallResultEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"TOOL_CALL_RESULT"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Tool result message ID |
-| `ToolCallId` | `toolCallId` | `string` | Tool call ID |
-| `Content` | `content` | `string` | Tool result content |
-| `Role` | `role` | `string?` | Optional role, typically `"tool"` |
+| `Type` | `type` | `"TOOL_CALL_RESULT"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 工具结果消息 ID |
+| `ToolCallId` | `toolCallId` | `string` | 工具调用 ID |
+| `Content` | `content` | `string` | 工具结果内容 |
+| `Role` | `role` | `string?` | 可选的角色，通常为 `"tool"` |
 
-## State Management Events
+## 状态管理事件
 
-State events synchronize frontend state and message history.
+状态事件用于同步前端状态与消息历史。
 
 ### StateSnapshotEvent
 
-Provides a complete state snapshot.
+提供完整的状态快照。
 
 ```csharp
 var evt = new StateSnapshotEvent
@@ -351,14 +345,14 @@ var evt = new StateSnapshotEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"STATE_SNAPSHOT"` | Event discriminator |
-| `Snapshot` | `snapshot` | `JsonElement` | Complete state value |
+| `Type` | `type` | `"STATE_SNAPSHOT"` | 事件判别值 |
+| `Snapshot` | `snapshot` | `JsonElement` | 完整的状态值 |
 
 ### StateDeltaEvent
 
-Provides incremental state changes, commonly as JSON Patch operations.
+提供增量状态变更，通常为 JSON Patch 操作。
 
 ```csharp
 var evt = new StateDeltaEvent
@@ -369,14 +363,14 @@ var evt = new StateDeltaEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"STATE_DELTA"` | Event discriminator |
-| `Delta` | `delta` | `JsonElement` | State delta payload |
+| `Type` | `type` | `"STATE_DELTA"` | 事件判别值 |
+| `Delta` | `delta` | `JsonElement` | 状态增量负载 |
 
 ### MessagesSnapshotEvent
 
-Replaces the frontend conversation history with the server's view.
+用服务端的视角替换前端的会话历史。
 
 ```csharp
 var evt = new MessagesSnapshotEvent
@@ -388,15 +382,15 @@ var evt = new MessagesSnapshotEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"MESSAGES_SNAPSHOT"` | Event discriminator |
-| `Messages` | `messages` | `IList<AGUIMessage>` | Complete message list |
+| `Type` | `type` | `"MESSAGES_SNAPSHOT"` | 事件判别值 |
+| `Messages` | `messages` | `IList<AGUIMessage>` | 完整的消息列表 |
 
-## Reasoning Events
+## 推理事件
 
-Reasoning events expose a model or agent reasoning stream. They can create and
-update `AGUIReasoningMessage` entries in message history.
+推理事件暴露模型或智能体的推理流。它们可以在消息历史中创建并更新
+`AGUIReasoningMessage` 条目。
 
 ### ReasoningStartEvent
 
@@ -404,10 +398,10 @@ update `AGUIReasoningMessage` entries in message history.
 var evt = new ReasoningStartEvent { MessageId = "reasoning-1" };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"REASONING_START"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Reasoning phase ID |
+| `Type` | `type` | `"REASONING_START"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 推理阶段 ID |
 
 ### ReasoningMessageStartEvent
 
@@ -419,11 +413,11 @@ var evt = new ReasoningMessageStartEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"REASONING_MESSAGE_START"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Reasoning message ID |
-| `Role` | `role` | `string` | Defaults to `"reasoning"` |
+| `Type` | `type` | `"REASONING_MESSAGE_START"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 推理消息 ID |
+| `Role` | `role` | `string` | 默认为 `"reasoning"` |
 
 ### ReasoningMessageContentEvent
 
@@ -435,11 +429,11 @@ var evt = new ReasoningMessageContentEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"REASONING_MESSAGE_CONTENT"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Reasoning message ID |
-| `Delta` | `delta` | `string` | Reasoning content delta |
+| `Type` | `type` | `"REASONING_MESSAGE_CONTENT"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 推理消息 ID |
+| `Delta` | `delta` | `string` | 推理内容增量 |
 
 ### ReasoningMessageEndEvent
 
@@ -447,14 +441,14 @@ var evt = new ReasoningMessageContentEvent
 var evt = new ReasoningMessageEndEvent { MessageId = "reasoning-1" };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"REASONING_MESSAGE_END"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Reasoning message ID |
+| `Type` | `type` | `"REASONING_MESSAGE_END"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 推理消息 ID |
 
 ### ReasoningMessageChunkEvent
 
-Compact reasoning message chunk event with optional fields.
+字段可选的紧凑型推理消息 chunk 事件。
 
 ```csharp
 var evt = new ReasoningMessageChunkEvent
@@ -464,11 +458,11 @@ var evt = new ReasoningMessageChunkEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"REASONING_MESSAGE_CHUNK"` | Event discriminator |
-| `MessageId` | `messageId` | `string?` | Optional reasoning message ID |
-| `Delta` | `delta` | `string?` | Optional reasoning content delta |
+| `Type` | `type` | `"REASONING_MESSAGE_CHUNK"` | 事件判别值 |
+| `MessageId` | `messageId` | `string?` | 可选的推理消息 ID |
+| `Delta` | `delta` | `string?` | 可选的推理内容增量 |
 
 ### ReasoningEndEvent
 
@@ -476,14 +470,14 @@ var evt = new ReasoningMessageChunkEvent
 var evt = new ReasoningEndEvent { MessageId = "reasoning-1" };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"REASONING_END"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Reasoning phase ID |
+| `Type` | `type` | `"REASONING_END"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 推理阶段 ID |
 
 ### ReasoningEncryptedValueEvent
 
-Attaches an encrypted value to a message or tool call.
+将加密值附加到消息或工具调用上。
 
 ```csharp
 var evt = new ReasoningEncryptedValueEvent
@@ -494,16 +488,16 @@ var evt = new ReasoningEncryptedValueEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"REASONING_ENCRYPTED_VALUE"` | Event discriminator |
-| `Subtype` | `subtype` | `string` | Entity subtype, such as `"message"` or `"tool-call"` |
-| `EntityId` | `entityId` | `string` | Message or tool call ID |
-| `EncryptedValue` | `encryptedValue` | `string` | Opaque encrypted value |
+| `Type` | `type` | `"REASONING_ENCRYPTED_VALUE"` | 事件判别值 |
+| `Subtype` | `subtype` | `string` | 实体子类型，如 `"message"` 或 `"tool-call"` |
+| `EntityId` | `entityId` | `string` | 消息或工具调用的 ID |
+| `EncryptedValue` | `encryptedValue` | `string` | 不透明加密值 |
 
-## Activity Events
+## 活动事件
 
-Activity events carry structured progress state for UI renderers.
+活动事件为 UI 渲染器携带结构化的进度状态。
 
 ### ActivitySnapshotEvent
 
@@ -517,13 +511,13 @@ var evt = new ActivitySnapshotEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"ACTIVITY_SNAPSHOT"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Activity message ID |
-| `ActivityType` | `activityType` | `string` | Activity discriminator |
-| `Content` | `content` | `JsonElement` | Structured activity content |
-| `Replace` | `replace` | `bool?` | Optional replace/merge hint |
+| `Type` | `type` | `"ACTIVITY_SNAPSHOT"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 活动消息 ID |
+| `ActivityType` | `activityType` | `string` | 活动判别值 |
+| `Content` | `content` | `JsonElement` | 结构化的活动内容 |
+| `Replace` | `replace` | `bool?` | 可选的替换/合并提示 |
 
 ### ActivityDeltaEvent
 
@@ -538,26 +532,24 @@ var evt = new ActivityDeltaEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"ACTIVITY_DELTA"` | Event discriminator |
-| `MessageId` | `messageId` | `string` | Activity message ID |
-| `ActivityType` | `activityType` | `string` | Activity discriminator |
-| `Patch` | `patch` | `JsonElement` | Activity JSON Patch payload |
+| `Type` | `type` | `"ACTIVITY_DELTA"` | 事件判别值 |
+| `MessageId` | `messageId` | `string` | 活动消息 ID |
+| `ActivityType` | `activityType` | `string` | 活动判别值 |
+| `Patch` | `patch` | `JsonElement` | 活动 JSON Patch 负载 |
 
-## Subagent Events
+## 子智能体事件
 
-These events report that the agent delegated work to a child agent, so a frontend
-can attribute output to the subagent that produced it. Attribution itself travels
-as an optional `SubagentRunId` on most other event types.
+这些事件报告智能体已把工作委托给子智能体，前端借此可以把输出归因到产生它的子智能体。
+归因本身以可选的 `SubagentRunId` 字段随大多数其他事件类型一起传输。
 
-`SubagentRunId` identifies **one invocation**, not a reusable subagent
-definition — the same subagent run twice yields two different values. See
-[Subagents](/concepts/subagents) for the full model.
+`SubagentRunId` 标识的是**一次调用**，而不是可复用的子智能体定义——同一个子智能体运行
+两次会得到两个不同的值。完整模型见[子智能体](/concepts/subagents)。
 
 ### SubagentStartedEvent
 
-Announces a new subagent invocation and names it for display.
+宣告一次新的子智能体调用，并给出用于展示的名称。
 
 ```csharp
 var evt = new SubagentStartedEvent
@@ -568,34 +560,34 @@ var evt = new SubagentStartedEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"SUBAGENT_STARTED"` | Event discriminator |
-| `SubagentRunId` | `subagentRunId` | `string` | Opaque id for this invocation |
-| `Name` | `name` | `string` | Declared subagent name, for display |
-| `Description` | `description` | `string?` | Optional description |
-| `ParentSubagentRunId` | `parentSubagentRunId` | `string?` | Enclosing subagent, when nesting |
-| `ParentToolCallId` | `parentToolCallId` | `string?` | Tool call that spawned this subagent |
-| `ParentMessageId` | `parentMessageId` | `string?` | Message holding that tool call |
+| `Type` | `type` | `"SUBAGENT_STARTED"` | 事件判别值 |
+| `SubagentRunId` | `subagentRunId` | `string` | 本次调用的不透明 ID |
+| `Name` | `name` | `string` | 声明的子智能体名称，用于展示 |
+| `Description` | `description` | `string?` | 可选的描述 |
+| `ParentSubagentRunId` | `parentSubagentRunId` | `string?` | 嵌套时的外层子智能体 |
+| `ParentToolCallId` | `parentToolCallId` | `string?` | 派生出该子智能体的工具调用 |
+| `ParentMessageId` | `parentMessageId` | `string?` | 持有该工具调用的消息 |
 
 ### SubagentFinishedEvent
 
-Marks a subagent invocation as complete.
+将一次子智能体调用标记为完成。
 
 ```csharp
 var evt = new SubagentFinishedEvent { SubagentRunId = "sub-1" };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"SUBAGENT_FINISHED"` | Event discriminator |
-| `SubagentRunId` | `subagentRunId` | `string` | Matches the id from `SubagentStartedEvent` |
-| `Result` | `result` | `object?` | Optional payload, mirroring `RunFinishedEvent.Result` |
-| `Outcome` | `outcome` | `SubagentFinishedOutcome?` | `SubagentFinishedSuccessOutcome` or `SubagentFinishedSuspendedOutcome` (with optional `InterruptIds`); `null` means success (the legacy reading). Suspended says the subagent is checkpointed awaiting outside input; `InterruptIds` names the run-level interrupts whose answers resume it. |
+| `Type` | `type` | `"SUBAGENT_FINISHED"` | 事件判别值 |
+| `SubagentRunId` | `subagentRunId` | `string` | 与 `SubagentStartedEvent` 中的 ID 一致 |
+| `Result` | `result` | `object?` | 可选负载，对应 `RunFinishedEvent.Result` |
+| `Outcome` | `outcome` | `SubagentFinishedOutcome?` | `SubagentFinishedSuccessOutcome` 或 `SubagentFinishedSuspendedOutcome`（带可选的 `InterruptIds`）；`null` 表示成功（沿用旧的读法）。Suspended 表示子智能体已设置检查点、等待外部输入；`InterruptIds` 指出哪些运行级中断的答案可以恢复它 |
 
 ### SubagentErrorEvent
 
-Marks a subagent invocation as failed.
+将一次子智能体调用标记为失败。
 
 ```csharp
 var evt = new SubagentErrorEvent
@@ -605,37 +597,34 @@ var evt = new SubagentErrorEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"SUBAGENT_ERROR"` | Event discriminator |
-| `SubagentRunId` | `subagentRunId` | `string` | Matches the id from `SubagentStartedEvent` |
-| `Message` | `message` | `string` | Human-readable error message |
-| `Code` | `code` | `string?` | Optional error code |
+| `Type` | `type` | `"SUBAGENT_ERROR"` | 事件判别值 |
+| `SubagentRunId` | `subagentRunId` | `string` | 与 `SubagentStartedEvent` 中的 ID 一致 |
+| `Message` | `message` | `string` | 人类可读的错误消息 |
+| `Code` | `code` | `string?` | 可选的错误码 |
 
-### Attribution on other events
+### 其他事件上的归因
 
-Most event types expose an optional `SubagentRunId`. An event without it belongs
-to the parent agent, so a stream that never sets it behaves exactly as it did
-before subagents existed.
+大多数事件类型都暴露可选的 `SubagentRunId`。不带该字段的事件属于父智能体，因此从不
+设置该字段的事件流，其行为与子智能体出现之前完全一致。
 
-`RunStartedEvent`, `RunFinishedEvent` and `RunErrorEvent` are not attributable —
-they describe the run as a whole. `MessagesSnapshotEvent` carries attribution
-per-message instead.
+`RunStartedEvent`、`RunFinishedEvent` 和 `RunErrorEvent` 不可归因——它们描述的是
+运行整体。`MessagesSnapshotEvent` 则按消息携带归因。
 
-`StateSnapshotEvent` and `StateDeltaEvent` are attributable, but attribution on
-them is provenance rather than ownership — it records which subagent produced the
-update. State stays run-scoped, so an attributed snapshot or delta is applied to
-the run's one state document just as an unattributed one is.
+`StateSnapshotEvent` 和 `StateDeltaEvent` 可以归因，但其归因表示的是
+来源（provenance）而非所有权——它记录是哪个子智能体产生了这次更新。状态始终以运行
+为作用域，因此带归因的快照或增量与不带归因的一样，都应用到该运行的唯一一份状态文档上。
 
-When events are converted to `Microsoft.Extensions.AI` types, attribution is
-preserved on `ChatMessage.AdditionalProperties` under the key
-`agui.subagentRunId`, since those types have no dedicated field for it.
+当事件转换为 `Microsoft.Extensions.AI` 类型时，归因会保留在
+`ChatMessage.AdditionalProperties` 中、键为 `agui.subagentRunId`，因为那些类型没有
+专门的字段。
 
-## Special Events
+## 特殊事件
 
 ### RawEvent
 
-Passes through unprocessed external data.
+透传未处理的外部数据。
 
 ```csharp
 var evt = new RawEvent
@@ -645,15 +634,15 @@ var evt = new RawEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"RAW"` | Event discriminator |
-| `Event` | `event` | `JsonElement` | Raw payload |
-| `Source` | `source` | `string?` | Optional source identifier |
+| `Type` | `type` | `"RAW"` | 事件判别值 |
+| `Event` | `event` | `JsonElement` | 原始负载 |
+| `Source` | `source` | `string?` | 可选的来源标识 |
 
 ### CustomEvent
 
-Carries application-specific data.
+携带应用特有的数据。
 
 ```csharp
 var evt = new CustomEvent
@@ -663,16 +652,16 @@ var evt = new CustomEvent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"CUSTOM"` | Event discriminator |
-| `Name` | `name` | `string` | Custom event name |
-| `Value` | `value` | `JsonElement?` | Optional custom payload |
+| `Type` | `type` | `"CUSTOM"` | 事件判别值 |
+| `Name` | `name` | `string` | 自定义事件名称 |
+| `Value` | `value` | `JsonElement?` | 可选的自定义负载 |
 
-## Serialization
+## 序列化
 
-`BaseEvent` uses a discriminator-based JSON converter keyed on the `type` field.
-All concrete event types are registered in `AGUIJsonSerializerContext`.
+`BaseEvent` 使用基于判别值的 JSON 转换器，以 `type` 字段为键。
+所有具体事件类型都注册在 `AGUIJsonSerializerContext` 中。
 
 ```csharp
 BaseEvent evt = new TextMessageContentEvent

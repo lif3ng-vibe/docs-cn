@@ -146,3 +146,22 @@ AG-UI、CopilotKit、LangGraph、LangChain、CrewAI、Mastra、AG2、Pydantic AI
 | vendor-neutral | 供应商中立 |
 | chunk（TextMessageChunk 等） | 不译，作「chunk」 |
 | Execution（capabilities 页标题语境） | 执行控制 |
+
+### B5a 批次补充（SDK .NET / Python）
+
+| 英文 | 中文 |
+|---|---|
+| hosting layer | 托管层（hosting layer） |
+| wire union | 线上联合类型 |
+| role discriminator | 角色判别值 |
+| fragment | 片段 |
+| outcome | 结果（outcome）；枚举值原样保留 |
+| attributable / not attributable | 可归因 / 不可归因 |
+| pass-through event | 透传事件 |
+| pin | 固定（pin） |
+| canonical | 规范的 |
+| minimal endpoint | 最小端点 |
+| terminal run event | 终止性运行事件 |
+| informational（工具调用标记） | 仅提示性质 |
+| Stateless by design | 设计上无状态 |
+| Chaining | 链式注册 |

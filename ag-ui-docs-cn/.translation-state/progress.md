@@ -22,7 +22,7 @@
 | B2 | 核心概念 concepts×14 | ✅（页内锚点改写 7 处，映射 14 份） |
 | B3 | 规范 spec/1.0×27（含 schema.mdx——不在导航但被 12+ 处 `#anchor` 深链，必须译） | ⬜ |
 | B4 | 规范 spec/draft×27（与 B3 同构；开工先读 .anchor-maps/B3/ 沿用同标题译文） | ⬜ |
-| B5a | SDK dotnet×10 + python×6 | ⬜ |
+| B5a | SDK dotnet×10 + python×5（磁盘实为 15 文件） | ✅（映射 15 份） |
 | B5b | SDK js×13 + development×3 + drafts×3 + tutorials×2 + **support.mdx + integrations/google-adk-js.mdx（B1 清单漏项，此处补）** | ⬜ |
 | B6 | snippets×3 + docs.json anchors 改站内 + 跨页锚点回修 + 终检（残留/锚点/字面**）+ README + 阶段 C 五处同步 | ⬜ |
 
@@ -50,6 +50,7 @@
   - concepts/metadata.mdx → /concepts/interrupts#resuming-a-run
   - concepts/reasoning.mdx → /concepts/events#reasoning-events（2 处）、/concepts/messages#reasoning-messages
   - concepts/middleware.mdx → /spec/1.0/basic/versioning#version-negotiation
+- B5a 站内待回修（要点，完整清单见 .anchor-maps/B5a/ 各映射文件的旧→新登记）：dotnet/python 的 types/events 页标题锚点已变（#context→#上下文、#tool→#工具、#state→#状态、#message-types、#runagentinput、#agentcapabilities、events#lifecycle-events、#text-message-events、#tool-call-events、#state-management-events、#special-events、chat-client#construction/#streaming-responses/#statelessness-and-conversationid/#thread-continuity/#interrupts-and-approvals、transport#iaguitransport/#http-transport/#custom-transports 等）——引用这些页的内链在 B6 用映射回修；B5a 页自身出站锚点：/concepts/interrupts#resuming-a-run、/concepts/metadata#resume-entries、/concepts/reasoning#migration-from-thinking-events、/spec/1.0/events/lifecycle#token-usage
 
 ## 范围补充（本轮发现）
 

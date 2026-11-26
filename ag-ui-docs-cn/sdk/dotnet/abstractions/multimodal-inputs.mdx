@@ -1,12 +1,12 @@
 ---
-title: "Multimodal Inputs"
-description: "Use modality-specific user input parts with typed data and URL sources in AGUI.Abstractions"
+title: "多模态输入"
+description: "在 AGUI.Abstractions 中使用带类型化数据来源与 URL 来源的模态特有用户输入部分"
 ---
 
-# Multimodal Inputs
+# 多模态输入
 
-`AGUIUserMessage.Content` accepts either plain text or an ordered array of
-multimodal content parts through the `AGUIContent` union.
+`AGUIUserMessage.Content` 通过 `AGUIContent` 联合类型接受纯文本或多模态内容部分
+（content parts）的有序数组。
 
 ```csharp
 using System.Text.Json;
@@ -41,10 +41,10 @@ var message = new AGUIUserMessage
 };
 ```
 
-## User Message Content
+## 用户消息内容
 
-The AG-UI wire model for user messages is `content: string | InputContent[]`.
-In .NET, that is represented by `AGUIContent`.
+用户消息的 AG-UI 线上模型是 `content: string | InputContent[]`。
+在 .NET 中由 `AGUIContent` 表示。
 
 ```csharp
 var plainText = new AGUIUserMessage
@@ -71,18 +71,16 @@ var parts = new AGUIUserMessage
 };
 ```
 
-`AGUIContent` has implicit conversions from `string`,
-`List<AGUIInputContent>`, and `AGUIInputContent[]`, supports collection
-expressions, and implements `IReadOnlyList<AGUIInputContent>` for normalized
-reads. When the stored value is a string, the read-only list facade exposes it
-as a single `AGUITextInputContent`.
+`AGUIContent` 支持从 `string`、`List<AGUIInputContent>` 和
+`AGUIInputContent[]` 隐式转换，支持集合表达式，并实现
+`IReadOnlyList<AGUIInputContent>` 以提供规范化的读取。当存储的值是字符串时，
+只读列表门面会把它暴露为单个 `AGUITextInputContent`。
 
-## Input Content Types
+## 输入内容类型
 
-All content parts derive from `AGUIInputContent` and use the JSON `type`
-discriminator.
+所有内容部分都派生自 `AGUIInputContent`，并使用 JSON `type` 判别值。
 
-| C# type | JSON `type` | Properties |
+| C# 类型 | JSON `type` | 属性 |
 | ------- | ----------- | ---------- |
 | `AGUITextInputContent` | `text` | `text` |
 | `AGUIImageInputContent` | `image` | `source`, optional `metadata` |
@@ -91,7 +89,7 @@ discriminator.
 | `AGUIDocumentInputContent` | `document` | `source`, optional `metadata` |
 | `AGUIBinaryInputContent` | `binary` | `mimeType`, optional `id`, `url`, `data`, `filename` |
 
-### Text
+### 文本
 
 ```csharp
 var text = new AGUITextInputContent
@@ -100,16 +98,16 @@ var text = new AGUITextInputContent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"text"` | Content discriminator |
-| `Id` | `id` | `string?` | Optional part identifier |
-| `Text` | `text` | `string` | Text content |
-| `Metadata` | `metadata` | `JsonElement?` | Optional metadata, such as a search hit's source and title |
+| `Type` | `type` | `"text"` | 内容判别值 |
+| `Id` | `id` | `string?` | 可选的部分标识符 |
+| `Text` | `text` | `string` | 文本内容 |
+| `Metadata` | `metadata` | `JsonElement?` | 可选的元数据，例如搜索命中的来源与标题 |
 
-### Media Parts
+### 媒体部分
 
-Images, audio, video, and documents all derive from `AGUIMediaInputContent`.
+图像、音频、视频和文档都派生自 `AGUIMediaInputContent`。
 
 ```csharp
 var image = new AGUIImageInputContent
@@ -123,37 +121,33 @@ var image = new AGUIImageInputContent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"image"`, `"audio"`, `"video"`, or `"document"` | Content discriminator |
-| `Id` | `id` | `string?` | Optional part identifier |
-| `Source` | `source` | `AGUIInputContentSource` | Data, URL or provider file source |
-| `Metadata` | `metadata` | `JsonElement?` | Optional modality-specific metadata |
+| `Type` | `type` | `"image"`、`"audio"`、`"video"` 或 `"document"` | 内容判别值 |
+| `Id` | `id` | `string?` | 可选的部分标识符 |
+| `Source` | `source` | `AGUIInputContentSource` | 数据、URL 或提供商文件来源 |
+| `Metadata` | `metadata` | `JsonElement?` | 可选的模态特有元数据 |
 
-When a server adapts an AG-UI request to Microsoft.Extensions.AI,
-`AGUIChatMessageExtensions.AsChatMessages()` maps data sources to `DataContent`,
-URL sources to `UriContent` and file sources to `HostedFileContent` (the handle
-becomes `FileId`; `Provider` has no counterpart there and is dropped on that
-hop, though it round-trips through JSON and protobuf). The source MIME type is
-preserved; when a URL source omits `mimeType`, `UriContent` infers it from the
-URL. If the URL does
-not have a recognized extension, the canonical discriminator supplies
-`image/*`, `audio/*`, or `video/*` so the modality is not lost.
+当服务端把 AG-UI 请求适配到 Microsoft.Extensions.AI 时，
+`AGUIChatMessageExtensions.AsChatMessages()` 会把数据来源映射为 `DataContent`、
+URL 来源映射为 `UriContent`、文件来源映射为 `HostedFileContent`（句柄（handle）成为
+`FileId`；`Provider` 在那边没有对应物，会在这一跳被丢弃，不过它在 JSON 与 protobuf
+之间可以完整往返）。来源的 MIME 类型会保留；当 URL 来源省略 `mimeType` 时，
+`UriContent` 会从 URL 推断。如果 URL 没有可识别的扩展名，规范判别值会补上
+`image/*`、`audio/*` 或 `video/*`，以免丢失模态信息。
 
-The complete `metadata` value is preserved under the MEAI content's
-`AdditionalProperties["metadata"]` key, including object-shaped values. For
-inline data, a string `metadata.filename` property is also assigned to
-`DataContent.Name` so file-capable providers receive the filename.
+完整的 `metadata` 值会保留在 MEAI 内容的 `AdditionalProperties["metadata"]`
+键下，包括对象形状的值。对于内联数据，字符串类型的 `metadata.filename` 属性还会赋给
+`DataContent.Name`，让支持文件的提供商能收到文件名。
 
-In the client direction, `AsAGUIMessages(jsonSerializerOptions)` maps
-`DataContent` and `UriContent`
-to canonical media parts based on their MIME type and serializes their
-`AdditionalProperties` as the part's `metadata`. `DataContent.Name` is included
-as `metadata.filename` when that property is not already present.
+在客户端方向，`AsAGUIMessages(jsonSerializerOptions)` 会根据 MIME 类型把
+`DataContent` 和 `UriContent` 映射为规范的媒体部分，并把它们的
+`AdditionalProperties` 序列化为该部分的 `metadata`。当该属性尚不存在时，
+`DataContent.Name` 会作为 `metadata.filename` 一并包含。
 
-### Binary
+### 二进制
 
-`AGUIBinaryInputContent` represents an arbitrary binary input part.
+`AGUIBinaryInputContent` 表示任意的二进制输入部分。
 
 ```csharp
 var binary = new AGUIBinaryInputContent
@@ -164,24 +158,23 @@ var binary = new AGUIBinaryInputContent
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"binary"` | Content discriminator |
-| `MimeType` | `mimeType` | `string` | MIME type |
-| `Id` | `id` | `string?` | Optional binary identifier |
-| `Url` | `url` | `string?` | Optional URL for the binary |
-| `Data` | `data` | `string?` | Optional inline base64 data |
-| `Filename` | `filename` | `string?` | Optional file name |
+| `Type` | `type` | `"binary"` | 内容判别值 |
+| `MimeType` | `mimeType` | `string` | MIME 类型 |
+| `Id` | `id` | `string?` | 可选的二进制标识符 |
+| `Url` | `url` | `string?` | 可选的二进制数据 URL |
+| `Data` | `data` | `string?` | 可选的内联 base64 数据 |
+| `Filename` | `filename` | `string?` | 可选的文件名 |
 
-## Source Types
+## 来源类型
 
-Media input parts use `AGUIInputContentSource`, a discriminator-based hierarchy
-with JSON field `type`.
+媒体输入部分使用 `AGUIInputContentSource`，一个以 JSON 字段 `type` 为判别依据的
+层级结构。
 
-### Data Source
+### 数据来源
 
-Use `AGUIInputContentDataSource` for inline base64 payloads. `mimeType` is
-required.
+内联 base64 负载使用 `AGUIInputContentDataSource`。`mimeType` 为必填。
 
 ```csharp
 var source = new AGUIInputContentDataSource
@@ -191,16 +184,15 @@ var source = new AGUIInputContentDataSource
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"data"` | Source discriminator |
-| `Value` | `value` | `string` | Inline base64 payload |
-| `MimeType` | `mimeType` | `string` | Payload MIME type |
+| `Type` | `type` | `"data"` | 来源判别值 |
+| `Value` | `value` | `string` | 内联 base64 负载 |
+| `MimeType` | `mimeType` | `string` | 负载的 MIME 类型 |
 
-### URL Source
+### URL 来源
 
-Use `AGUIInputContentUrlSource` for HTTP(S) URLs or data URLs. `mimeType` is
-optional.
+HTTP(S) URL 或 data URL 使用 `AGUIInputContentUrlSource`。`mimeType` 可选。
 
 ```csharp
 var source = new AGUIInputContentUrlSource
@@ -210,18 +202,17 @@ var source = new AGUIInputContentUrlSource
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"url"` | Source discriminator |
-| `Value` | `value` | `string` | URL or data URL |
-| `MimeType` | `mimeType` | `string?` | Optional MIME type |
+| `Type` | `type` | `"url"` | 来源判别值 |
+| `Value` | `value` | `string` | URL 或 data URL |
+| `MimeType` | `mimeType` | `string?` | 可选的 MIME 类型 |
 
-### File Source
+### 文件来源
 
-Use `AGUIInputContentFileSource` for bytes that already live at the model
-provider — an OpenAI or Anthropic file id, a Gemini file URI. Nothing is
-fetched and `Value` is opaque: hand it to the provider that issued it, or drop
-the part. `provider` and `mimeType` are optional.
+已经存放在模型提供商处的字节使用 `AGUIInputContentFileSource`——例如 OpenAI 或
+Anthropic 的文件 ID、Gemini 的文件 URI。不会发生任何抓取，`Value` 是不透明的：
+把它交回签发它的提供商，或者丢弃该部分。`provider` 和 `mimeType` 可选。
 
 ```csharp
 var source = new AGUIInputContentFileSource
@@ -232,16 +223,16 @@ var source = new AGUIInputContentFileSource
 };
 ```
 
-| C# property | JSON field | Type | Description |
+| C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
-| `Type` | `type` | `"file"` | Source discriminator |
-| `Value` | `value` | `string` | The provider's handle, exactly as issued |
-| `Provider` | `provider` | `string?` | Who issued it, e.g. `"openai"`, `"anthropic"`, `"google"` |
-| `MimeType` | `mimeType` | `string?` | Optional MIME type |
+| `Type` | `type` | `"file"` | 来源判别值 |
+| `Value` | `value` | `string` | 提供商的句柄，与签发时完全一致 |
+| `Provider` | `provider` | `string?` | 签发方，例如 `"openai"`、`"anthropic"`、`"google"` |
+| `MimeType` | `mimeType` | `string?` | 可选的 MIME 类型 |
 
-## Common Use Cases
+## 常见用例
 
-### Visual QA
+### 视觉问答
 
 ```csharp
 var message = new AGUIUserMessage
@@ -266,7 +257,7 @@ var message = new AGUIUserMessage
 };
 ```
 
-### Audio Transcription
+### 音频转录
 
 ```csharp
 var message = new AGUIUserMessage
@@ -290,7 +281,7 @@ var message = new AGUIUserMessage
 };
 ```
 
-### Mixed Media Comparison
+### 混合媒体对比
 
 ```csharp
 var message = new AGUIUserMessage
@@ -323,6 +314,6 @@ var message = new AGUIUserMessage
 ```
 
 <Tip>
-  Use plain string `Content` for simple text-only turns. Use multimodal parts
-  when order matters or when the user message includes media alongside text.
+  简单的纯文本轮次直接用字符串形式的 `Content` 即可。当顺序很重要，或用户消息在文本
+  之外还包含媒体时，使用多模态部分。
 </Tip>

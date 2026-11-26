@@ -1,53 +1,47 @@
 ---
-title: "Overview"
-description: "Protocol types in the AG-UI .NET SDK"
+title: "概述"
+description: "AG-UI .NET SDK 中的协议类型"
 ---
 
 # AGUI.Abstractions
 
-`AGUI.Abstractions` is the protocol-types package for the AG-UI .NET SDK. It
-defines the shared event, message, tool, context, capability, interrupt, and
-serialization types used by AG-UI clients and servers.
+`AGUI.Abstractions` 是 AG-UI .NET SDK 的协议类型包，定义了 AG-UI 客户端与服务端共用的
+事件、消息、工具、上下文、能力、中断以及序列化类型。
 
 ```bash
 dotnet add package AGUI.Abstractions
 ```
 
-The package has no opinion about HTTP, ASP.NET Core, or a specific agent
-runtime. It is the .NET sibling of `@ag-ui/core`: stable wire types for the
-event stream and request payload.
+该包不预设 HTTP、ASP.NET Core 或任何特定的智能体运行时，它是 `@ag-ui/core` 在 .NET
+侧的对应包：为事件流和请求负载提供稳定的线上类型（wire types）。
 
 <Note>
-  `AGUI.Abstractions` targets `net10.0`, `net9.0`, `net8.0`,
-  `netstandard2.0`, and `net472`. It is AOT-compatible: serializable protocol
-  types are registered in the source-generated `AGUIJsonSerializerContext`.
+  `AGUI.Abstractions` 面向 `net10.0`、`net9.0`、`net8.0`、
+  `netstandard2.0` 和 `net472`，并兼容 AOT：可序列化的协议类型都注册在源生成的
+  `AGUIJsonSerializerContext` 中。
 </Note>
 
-## SDK packages
+## SDK 包
 
-The .NET SDK is split into small packages so protocol types, wire formats,
-client code, and server code can be adopted independently.
+.NET SDK 拆分为多个小包，协议类型、线上格式、客户端代码与服务端代码可以按需独立采用。
 
-| Package | Use it for |
+| 包 | 用途 |
 | --- | --- |
-| `AGUI.Abstractions` | Protocol events, messages, tools, capabilities, interrupts, and JSON serialization. |
-| `AGUI.Formatting` | Event-stream formatter abstractions and Server-Sent Events support. |
-| `AGUI.Protobuf` | Protobuf event-stream formatting and binary protocol support. |
-| `AGUI.Client` | HTTP client and `IChatClient` implementation for consuming AG-UI endpoints. |
-| `AGUI.Server` | Framework-agnostic adapter from `ChatResponseUpdate` streams to AG-UI events. |
+| `AGUI.Abstractions` | 协议事件、消息、工具、能力、中断以及 JSON 序列化。 |
+| `AGUI.Formatting` | 事件流格式化器抽象与 SSE（服务器推送事件）支持。 |
+| `AGUI.Protobuf` | protobuf 事件流格式化与二进制协议支持。 |
+| `AGUI.Client` | 用于消费 AG-UI 端点的 HTTP 客户端与 `IChatClient` 实现。 |
+| `AGUI.Server` | 与框架无关的适配器，将 `ChatResponseUpdate` 流转换为 AG-UI 事件。 |
 
-## Wire formats and parity
+## 线上格式与对等性
 
-JSON over Server-Sent Events is the full-fidelity event stream.
-`AGUI.Formatting` defines the event-stream formatter contract and SSE support.
-`AGUI.Protobuf` adds binary event-stream formatting for the protocol subset
-supported by the shared proto schema.
+基于 SSE 的 JSON 是全保真的事件流。`AGUI.Formatting` 定义了事件流格式化器契约与
+SSE 支持；`AGUI.Protobuf` 则为共享 proto schema 所支持的协议子集提供二进制事件流格式化。
 
-Protocol parity starts in `AGUI.Abstractions`. When the TypeScript reference SDK
-adds or changes a wire type, the matching .NET event, message, tool, or
-capability type should update alongside `AGUIJsonSerializerContext` and the
-compatibility fixtures. Public API tracking files should update whenever a
-protocol change adds or changes .NET types.
+协议对等性从 `AGUI.Abstractions` 开始维护。当 TypeScript 参考实现新增或修改某个线上
+类型（wire type）时，对应的 .NET 事件、消息、工具或能力类型应同步更新，
+`AGUIJsonSerializerContext` 与兼容性测试样例（compatibility fixtures）也应一并更新。
+凡是协议变更新增或修改了 .NET 类型，公开 API 追踪文件都应随之更新。
 
 ```bash
 cd sdks/dotnet
@@ -56,67 +50,65 @@ dotnet test tests/AGUI.Formatting.UnitTests/
 dotnet test tests/AGUI.Protobuf.UnitTests/
 ```
 
-## Types
+## 类型
 
-Core data structures that represent the building blocks of the protocol:
+构成协议基础模块的核心数据结构：
 
-- [RunAgentInput](/sdk/dotnet/abstractions/types#runagentinput) - Input payload
-  for running agents
-- [Message types](/sdk/dotnet/abstractions/types#message-types) - Conversation,
-  tool, activity, and reasoning messages
-- [AGUIContext](/sdk/dotnet/abstractions/types#context) - Contextual information
-  provided to agents
-- [AGUITool](/sdk/dotnet/abstractions/types#tool) - Tool definitions with JSON
-  Schema parameters
+- [RunAgentInput](/sdk/dotnet/abstractions/types#runagentinput) - 运行智能体时的
+  输入负载
+- [消息类型](/sdk/dotnet/abstractions/types#message-types) - 对话、工具、活动与
+  推理消息
+- [AGUIContext](/sdk/dotnet/abstractions/types#context) - 提供给智能体的上下文信息
+- [AGUITool](/sdk/dotnet/abstractions/types#tool) - 带 JSON Schema 参数的工具定义
 - [AgentCapabilities](/sdk/dotnet/abstractions/types#agentcapabilities) -
-  Structured capability declarations
+  结构化的能力声明
 
 <CardGroup cols={2}>
   <Card
-    title="Types Reference"
+    title="类型参考"
     icon="cube"
     href="/sdk/dotnet/abstractions/types"
     color="#3B82F6"
     iconType="solid"
   >
-    Complete documentation of the protocol types in `AGUI.Abstractions`
+    `AGUI.Abstractions` 中协议类型的完整文档
   </Card>
   <Card
-    title="Multimodal Inputs"
+    title="多模态输入"
     icon="image"
     href="/sdk/dotnet/abstractions/multimodal-inputs"
     color="#3B82F6"
     iconType="solid"
   >
-    User message content parts for text, image, audio, video, document, and binary input
+    用户消息的内容部分，涵盖文本、图像、音频、视频、文档与二进制输入
   </Card>
 </CardGroup>
 
-## Events
+## 事件
 
-Events power communication between agents and frontends:
+事件驱动智能体与前端之间的通信：
 
-- [Lifecycle events](/sdk/dotnet/abstractions/events#lifecycle-events) - Run and
-  step tracking
-- [Text message events](/sdk/dotnet/abstractions/events#text-message-events) -
-  Assistant message streaming
-- [Tool call events](/sdk/dotnet/abstractions/events#tool-call-events) -
-  Function call lifecycle
-- [State management events](/sdk/dotnet/abstractions/events#state-management-events) -
-  Agent state and message snapshots
-- [Reasoning events](/sdk/dotnet/abstractions/events#reasoning-events) -
-  Reasoning stream support
-- [Activity events](/sdk/dotnet/abstractions/events#activity-events) -
-  Structured progress and transient UI state
-- [Special events](/sdk/dotnet/abstractions/events#special-events) - Raw and
-  custom events
+- [生命周期事件](/sdk/dotnet/abstractions/events#lifecycle-events) - 运行与
+  步骤追踪
+- [文本消息事件](/sdk/dotnet/abstractions/events#text-message-events) -
+  助手消息流式传输
+- [工具调用事件](/sdk/dotnet/abstractions/events#tool-call-events) -
+  函数调用的生命周期
+- [状态管理事件](/sdk/dotnet/abstractions/events#state-management-events) -
+  智能体状态与消息快照
+- [推理事件](/sdk/dotnet/abstractions/events#reasoning-events) -
+  推理流支持
+- [活动事件](/sdk/dotnet/abstractions/events#activity-events) -
+  结构化进度与瞬态 UI 状态
+- [特殊事件](/sdk/dotnet/abstractions/events#special-events) - Raw 事件与
+  自定义事件
 
 <Card
-  title="Events Reference"
+  title="事件参考"
   icon="bolt"
   href="/sdk/dotnet/abstractions/events"
   color="#3B82F6"
   iconType="solid"
 >
-  Complete documentation of all event types in `AGUI.Abstractions`
+  `AGUI.Abstractions` 中所有事件类型的完整文档
 </Card>

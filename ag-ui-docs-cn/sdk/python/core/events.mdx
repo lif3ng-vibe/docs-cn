@@ -1,21 +1,19 @@
 ---
-title: "Events"
+title: "事件"
 description:
-  "Documentation for the events used in the Agent User Interaction Protocol
-  Python SDK"
+  "智能体–用户交互协议 Python SDK 所用事件的文档"
 ---
 
-# Events
+# 事件
 
-The Agent User Interaction Protocol Python SDK uses a streaming event-based
-architecture. Events are the fundamental units of communication between agents
-and the frontend. This section documents the event types and their properties.
+智能体–用户交互协议（AG-UI）Python SDK 采用基于事件的流式架构。事件是智能体与前端
+之间通信的基本单位。本节记录事件类型及其属性。
 
-## EventType Enum
+## EventType 枚举
 
 `from ag_ui.core import EventType`
 
-The `EventType` enum defines all possible event types in the system:
+`EventType` 枚举定义了系统中所有可能的事件类型：
 
 ```python
 class EventType(str, Enum):
@@ -54,8 +52,7 @@ class EventType(str, Enum):
 
 `from ag_ui.core import BaseEvent`
 
-All events inherit from the `BaseEvent` class, which provides common properties
-shared across all event types.
+所有事件都继承自 `BaseEvent` 类，它提供所有事件类型共享的公共属性。
 
 ```python
 class BaseEvent(ConfiguredBaseModel):
@@ -65,29 +62,27 @@ class BaseEvent(ConfiguredBaseModel):
     metadata: Optional[Dict[str, Any]] = None
 ```
 
-| Property    | Type            | Description                                           |
+| 属性        | 类型            | 说明                                           |
 | ----------- | --------------- | ----------------------------------------------------- |
-| `type`      | `EventType`     | The type of event (discriminator field for the union) |
-| `timestamp` | `Optional[int]` | Timestamp when the event was created                  |
-| `raw_event` | `Optional[Any]` | Original event data if this event was transformed     |
-| `metadata`  | `Optional[Dict[str, Any]]` | Extra information attached to the event               |
+| `type`      | `EventType`     | 事件类型（联合类型的判别字段） |
+| `timestamp` | `Optional[int]` | 事件创建时的时间戳                  |
+| `raw_event` | `Optional[Any]` | 该事件若经过转换，则保存原始事件数据     |
+| `metadata`  | `Optional[Dict[str, Any]]` | 附加到事件上的额外信息               |
 
-`metadata` is open by key: any JSON value is allowed under a key, including
-`None`. The object may be absent, but a present one is never `None` — an
-explicit `null` is read back as absent, so a plain `model_dump_json()`
-round-trips. `EventEncoder` uses `exclude_none=True`, so an absent object is
-omitted from the wire rather than emitted as `null`. The `ag-ui` key is reserved
-for AG-UI's own use.
+`metadata` 按键开放：key 下允许任意 JSON 值，包括 `None`。对象可以缺省，但一旦出现
+就绝不会是 `None`——显式的 `null` 读回时视为缺省，因此普通的 `model_dump_json()`
+可以完整往返。`EventEncoder` 使用 `exclude_none=True`，所以缺省的对象在线上直接省略，
+而不会输出为 `null`。`ag-ui` key 保留为 AG-UI 自用。
 
-## Lifecycle Events
+## 生命周期事件
 
-These events represent the lifecycle of an agent run.
+这些事件表示一次智能体运行的生命周期。
 
 ### RunStartedEvent
 
 `from ag_ui.core import RunStartedEvent`
 
-Signals the start of an agent run.
+表示一次智能体运行的开始。
 
 ```python
 class RunStartedEvent(BaseEvent):
@@ -98,23 +93,21 @@ class RunStartedEvent(BaseEvent):
     input: Optional[RunAgentInput] = None
 ```
 
-| Property        | Type                      | Description                                                                                                    |
+| 属性            | 类型                      | 说明                                                                                                    |
 | --------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `thread_id`     | `str`                     | ID of the conversation thread                                                                                  |
-| `run_id`        | `str`                     | ID of the agent run                                                                                            |
-| `parent_run_id` | `Optional[str]`           | (Optional) Lineage pointer for branching/time travel. If present, refers to a prior run within the same thread |
-| `input`         | `Optional[RunAgentInput]` | (Optional) The exact agent input payload sent to the agent for this run. May omit messages already in history  |
+| `thread_id`     | `str`                     | 会话线程的 ID                                                                                  |
+| `run_id`        | `str`                     | 智能体运行的 ID                                                                                            |
+| `parent_run_id` | `Optional[str]`           | （可选）用于分支/时间旅行的血统指针。若存在，指向同一线程内较早的一次运行 |
+| `input`         | `Optional[RunAgentInput]` | （可选）本次运行发送给智能体的确切输入负载。可以省略历史中已有的消息  |
 
 ### TokenUsage
 
 `from ag_ui.core import TokenUsage`
 
-A reusable, numeric-only token usage summary carried on terminal run events.
-It intentionally contains **only** provider/model labels and token counts — no
-prompts, completions, messages, or identifiers. The counts follow the
-protocol's [accounting](/spec/1.0/events/lifecycle#token-usage): the input
-and output counts are totals, and the cache and reasoning counts are parts of
-them, never additions.
+一个可复用、只含数字的 token 用量摘要，由终止性运行事件携带。它在设计上**只**包含
+提供商/模型标签与 token 计数——不含提示词、补全、消息或标识符。这些计数遵循协议的
+[记账规则](/spec/1.0/events/lifecycle#token-usage)：输入与输出计数是总量，缓存与
+推理计数是总量的一部分，绝不是额外累加。
 
 ```python
 class TokenUsage(ConfiguredBaseModel):
@@ -128,22 +121,22 @@ class TokenUsage(ConfiguredBaseModel):
     cache_write_input_tokens: Optional[int] = None
 ```
 
-| Property                   | Type            | Description                                                     |
+| 属性                       | 类型            | 说明                                                     |
 | -------------------------- | --------------- | --------------------------------------------------------------- |
-| `provider`                 | `Optional[str]` | Provider that reported the usage (e.g. `openai`)                |
-| `model`                    | `Optional[str]` | Model that produced the usage                                   |
-| `input_tokens`             | `Optional[int]` | All input tokens, cache reads and writes included               |
-| `output_tokens`            | `Optional[int]` | All output tokens, reasoning included                           |
-| `total_tokens`             | `Optional[int]` | `input_tokens` plus `output_tokens`                             |
-| `reasoning_tokens`         | `Optional[int]` | Output tokens spent on reasoning; part of `output_tokens`       |
-| `cached_input_tokens`      | `Optional[int]` | Input tokens read from a prompt cache; part of `input_tokens`   |
-| `cache_write_input_tokens` | `Optional[int]` | Input tokens written to a prompt cache; part of `input_tokens`  |
+| `provider`                 | `Optional[str]` | 上报该用量的提供商（例如 `openai`）                |
+| `model`                    | `Optional[str]` | 产生该用量的模型                                   |
+| `input_tokens`             | `Optional[int]` | 全部输入 token，含缓存读取与写入               |
+| `output_tokens`            | `Optional[int]` | 全部输出 token，含推理                           |
+| `total_tokens`             | `Optional[int]` | `input_tokens` 加 `output_tokens`                             |
+| `reasoning_tokens`         | `Optional[int]` | 用于推理的输出 token；是 `output_tokens` 的一部分       |
+| `cached_input_tokens`      | `Optional[int]` | 从提示词缓存读取的输入 token；是 `input_tokens` 的一部分   |
+| `cache_write_input_tokens` | `Optional[int]` | 写入提示词缓存的输入 token；是 `input_tokens` 的一部分  |
 
 ### RunFinishedEvent
 
 `from ag_ui.core import RunFinishedEvent`
 
-Signals the successful completion of an agent run.
+表示一次智能体运行的成功完成。
 
 ```python
 class RunFinishedEvent(BaseEvent):
@@ -154,18 +147,18 @@ class RunFinishedEvent(BaseEvent):
     usage: Optional[List[TokenUsage]] = None
 ```
 
-| Property    | Type                       | Description                                                   |
+| 属性        | 类型                       | 说明                                                   |
 | ----------- | -------------------------- | ------------------------------------------------------------- |
-| `thread_id` | `str`                      | ID of the conversation thread                                 |
-| `run_id`    | `str`                      | ID of the agent run                                           |
-| `result`    | `Optional[Any]`            | Result data from the agent run                                |
-| `usage`     | `Optional[List[TokenUsage]]` | Per-(provider, model) token usage for the run, when reported |
+| `thread_id` | `str`                      | 会话线程 ID                                 |
+| `run_id`    | `str`                      | 智能体运行 ID                                           |
+| `result`    | `Optional[Any]`            | 来自该次运行的结果数据                                |
+| `usage`     | `Optional[List[TokenUsage]]` | 该运行按（提供商，模型）记录的 token 用量（如有上报） |
 
 ### RunErrorEvent
 
 `from ag_ui.core import RunErrorEvent`
 
-Signals an error during an agent run.
+表示智能体运行期间发生错误。
 
 ```python
 class RunErrorEvent(BaseEvent):
@@ -175,17 +168,17 @@ class RunErrorEvent(BaseEvent):
     usage: Optional[List[TokenUsage]] = None
 ```
 
-| Property  | Type                         | Description                                          |
+| 属性      | 类型                         | 说明                                          |
 | --------- | ---------------------------- | ---------------------------------------------------- |
-| `message` | `str`                        | Error message                                        |
-| `code`    | `Optional[str]`              | Error code                                           |
-| `usage`   | `Optional[List[TokenUsage]]` | Partial token usage from model calls that completed  |
+| `message` | `str`                        | 错误消息                                        |
+| `code`    | `Optional[str]`              | 错误码                                           |
+| `usage`   | `Optional[List[TokenUsage]]` | 已完成的模型调用所产生的部分 token 用量  |
 
 ### StepStartedEvent
 
 `from ag_ui.core import StepStartedEvent`
 
-Signals the start of a step within an agent run.
+表示一次智能体运行中某个步骤的开始。
 
 ```python
 class StepStartedEvent(BaseEvent):
@@ -193,15 +186,15 @@ class StepStartedEvent(BaseEvent):
     step_name: str
 ```
 
-| Property    | Type  | Description      |
+| 属性        | 类型  | 说明      |
 | ----------- | ----- | ---------------- |
-| `step_name` | `str` | Name of the step |
+| `step_name` | `str` | 步骤名称 |
 
 ### StepFinishedEvent
 
 `from ag_ui.core import StepFinishedEvent`
 
-Signals the completion of a step within an agent run.
+表示一次智能体运行中某个步骤的完成。
 
 ```python
 class StepFinishedEvent(BaseEvent):
@@ -209,19 +202,19 @@ class StepFinishedEvent(BaseEvent):
     step_name: str
 ```
 
-| Property    | Type  | Description      |
+| 属性        | 类型  | 说明      |
 | ----------- | ----- | ---------------- |
-| `step_name` | `str` | Name of the step |
+| `step_name` | `str` | 步骤名称 |
 
-## Text Message Events
+## 文本消息事件
 
-These events represent the lifecycle of text messages in a conversation.
+这些事件表示会话中文本消息的生命周期。
 
 ### TextMessageStartEvent
 
 `from ag_ui.core import TextMessageStartEvent`
 
-Signals the start of a text message.
+表示一条文本消息的开始。
 
 ```python
 class TextMessageStartEvent(BaseEvent):
@@ -230,16 +223,16 @@ class TextMessageStartEvent(BaseEvent):
     role: Literal["assistant"]
 ```
 
-| Property     | Type                   | Description                       |
+| 属性         | 类型                   | 说明                       |
 | ------------ | ---------------------- | --------------------------------- |
-| `message_id` | `str`                  | Unique identifier for the message |
-| `role`       | `Literal["assistant"]` | Role is always "assistant"        |
+| `message_id` | `str`                  | 消息的唯一标识符 |
+| `role`       | `Literal["assistant"]` | 角色始终为 “assistant”        |
 
 ### TextMessageContentEvent
 
 `from ag_ui.core import TextMessageContentEvent`
 
-Represents a chunk of content in a streaming text message.
+表示流式文本消息中的一段内容。
 
 ```python
 class TextMessageContentEvent(BaseEvent):
@@ -252,16 +245,16 @@ class TextMessageContentEvent(BaseEvent):
             raise ValueError("Delta must not be an empty string")
 ```
 
-| Property     | Type  | Description                               |
+| 属性         | 类型  | 说明                               |
 | ------------ | ----- | ----------------------------------------- |
-| `message_id` | `str` | Matches the ID from TextMessageStartEvent |
-| `delta`      | `str` | Text content chunk (non-empty)            |
+| `message_id` | `str` | 与 TextMessageStartEvent 中的 ID 一致 |
+| `delta`      | `str` | 文本内容 chunk（非空）            |
 
 ### TextMessageEndEvent
 
 `from ag_ui.core import TextMessageEndEvent`
 
-Signals the end of a text message.
+表示一条文本消息的结束。
 
 ```python
 class TextMessageEndEvent(BaseEvent):
@@ -269,19 +262,19 @@ class TextMessageEndEvent(BaseEvent):
     message_id: str
 ```
 
-| Property     | Type  | Description                               |
+| 属性         | 类型  | 说明                               |
 | ------------ | ----- | ----------------------------------------- |
-| `message_id` | `str` | Matches the ID from TextMessageStartEvent |
+| `message_id` | `str` | 与 TextMessageStartEvent 中的 ID 一致 |
 
-## Tool Call Events
+## 工具调用事件
 
-These events represent the lifecycle of tool calls made by agents.
+这些事件表示智能体发起的工具调用的生命周期。
 
 ### ToolCallStartEvent
 
 `from ag_ui.core import ToolCallStartEvent`
 
-Signals the start of a tool call.
+表示一次工具调用的开始。
 
 ```python
 class ToolCallStartEvent(BaseEvent):
@@ -291,17 +284,17 @@ class ToolCallStartEvent(BaseEvent):
     parent_message_id: Optional[str] = None
 ```
 
-| Property            | Type            | Description                         |
+| 属性                | 类型            | 说明                         |
 | ------------------- | --------------- | ----------------------------------- |
-| `tool_call_id`      | `str`           | Unique identifier for the tool call |
-| `tool_call_name`    | `str`           | Name of the tool being called       |
-| `parent_message_id` | `Optional[str]` | ID of the parent message            |
+| `tool_call_id`      | `str`           | 工具调用的唯一标识符 |
+| `tool_call_name`    | `str`           | 被调用工具的名称       |
+| `parent_message_id` | `Optional[str]` | 父消息的 ID            |
 
 ### ToolCallArgsEvent
 
 `from ag_ui.core import ToolCallArgsEvent`
 
-Represents a chunk of argument data for a tool call.
+表示一次工具调用的一段参数数据。
 
 ```python
 class ToolCallArgsEvent(BaseEvent):
@@ -310,16 +303,16 @@ class ToolCallArgsEvent(BaseEvent):
     delta: str
 ```
 
-| Property       | Type  | Description                            |
+| 属性           | 类型  | 说明                            |
 | -------------- | ----- | -------------------------------------- |
-| `tool_call_id` | `str` | Matches the ID from ToolCallStartEvent |
-| `delta`        | `str` | Argument data chunk                    |
+| `tool_call_id` | `str` | 与 ToolCallStartEvent 中的 ID 一致 |
+| `delta`        | `str` | 参数数据 chunk                    |
 
 ### ToolCallEndEvent
 
 `from ag_ui.core import ToolCallEndEvent`
 
-Signals the end of a tool call.
+表示一次工具调用的结束。
 
 ```python
 class ToolCallEndEvent(BaseEvent):
@@ -327,15 +320,15 @@ class ToolCallEndEvent(BaseEvent):
     tool_call_id: str
 ```
 
-| Property       | Type  | Description                            |
+| 属性           | 类型  | 说明                            |
 | -------------- | ----- | -------------------------------------- |
-| `tool_call_id` | `str` | Matches the ID from ToolCallStartEvent |
+| `tool_call_id` | `str` | 与 ToolCallStartEvent 中的 ID 一致 |
 
 ### ToolCallResultEvent
 
 `from ag_ui.core import ToolCallResultEvent`
 
-Provides the result of a tool call execution.
+提供一次工具调用执行的结果。
 
 ```python
 class ToolCallResultEvent(BaseEvent):
@@ -346,22 +339,22 @@ class ToolCallResultEvent(BaseEvent):
     role: Optional[Literal["tool"]] = None
 ```
 
-| Property       | Type                        | Description                                                 |
+| 属性           | 类型                        | 说明                                                 |
 | -------------- | --------------------------- | ----------------------------------------------------------- |
-| `message_id`   | `str`                       | ID of the conversation message this result belongs to       |
-| `tool_call_id` | `str`                       | Matches the ID from the corresponding ToolCallStartEvent    |
-| `content`      | `str`                       | The actual result/output content from the tool execution    |
-| `role`         | `Optional[Literal["tool"]]` | Optional role identifier, typically "tool" for tool results |
+| `message_id`   | `str`                       | 该结果所属会话消息的 ID       |
+| `tool_call_id` | `str`                       | 与对应 ToolCallStartEvent 中的 ID 一致    |
+| `content`      | `str`                       | 工具执行产生的实际结果/输出内容    |
+| `role`         | `Optional[Literal["tool"]]` | 可选的角色标识，工具结果通常为 “tool” |
 
-## State Management Events
+## 状态管理事件
 
-These events are used to manage agent state.
+这些事件用于管理智能体状态。
 
 ### StateSnapshotEvent
 
 `from ag_ui.core import StateSnapshotEvent`
 
-Provides a complete snapshot of an agent's state.
+提供智能体状态的完整快照。
 
 ```python
 class StateSnapshotEvent(BaseEvent):
@@ -369,15 +362,15 @@ class StateSnapshotEvent(BaseEvent):
     snapshot: State
 ```
 
-| Property   | Type    | Description             |
+| 属性       | 类型    | 说明             |
 | ---------- | ------- | ----------------------- |
-| `snapshot` | `State` | Complete state snapshot |
+| `snapshot` | `State` | 完整的状态快照 |
 
 ### StateDeltaEvent
 
 `from ag_ui.core import StateDeltaEvent`
 
-Provides a partial update to an agent's state using JSON Patch.
+使用 JSON Patch 提供智能体状态的部分更新。
 
 ```python
 class StateDeltaEvent(BaseEvent):
@@ -385,15 +378,15 @@ class StateDeltaEvent(BaseEvent):
     delta: List[Any]  # JSON Patch (RFC 6902)
 ```
 
-| Property | Type        | Description                    |
+| 属性     | 类型        | 说明                    |
 | -------- | ----------- | ------------------------------ |
-| `delta`  | `List[Any]` | Array of JSON Patch operations |
+| `delta`  | `List[Any]` | JSON Patch 操作的数组 |
 
 ### MessagesSnapshotEvent
 
 `from ag_ui.core import MessagesSnapshotEvent`
 
-Provides a snapshot of all messages in a conversation.
+提供会话中所有消息的快照。
 
 ```python
 class MessagesSnapshotEvent(BaseEvent):
@@ -401,15 +394,15 @@ class MessagesSnapshotEvent(BaseEvent):
     messages: List[Message]
 ```
 
-| Property   | Type            | Description              |
+| 属性       | 类型            | 说明              |
 | ---------- | --------------- | ------------------------ |
-| `messages` | `List[Message]` | Array of message objects |
+| `messages` | `List[Message]` | 消息对象的数组 |
 
 ### ActivitySnapshotEvent
 
 `from ag_ui.core import ActivitySnapshotEvent`
 
-Delivers a complete snapshot of an activity message.
+交付一条活动消息的完整快照。
 
 ```python
 class ActivitySnapshotEvent(BaseEvent):
@@ -420,18 +413,18 @@ class ActivitySnapshotEvent(BaseEvent):
     replace: bool = True
 ```
 
-| Property        | Type                    | Description                                                                        |
+| 属性            | 类型                    | 说明                                                                        |
 | --------------- | ----------------------- | ---------------------------------------------------------------------------------- |
-| `message_id`    | `str`                   | Identifier for the target `ActivityMessage`                                        |
-| `activity_type` | `str`                   | Activity discriminator such as `"PLAN"` or `"SEARCH"`                              |
-| `content`       | `Any`                   | Structured payload describing the full activity state                              |
-| `replace`       | `bool` (default `True`) | When `False`, the snapshot is ignored if a message with the same ID already exists |
+| `message_id`    | `str`                   | 目标 `ActivityMessage` 的标识符                                        |
+| `activity_type` | `str`                   | 活动判别值，例如 `"PLAN"` 或 `"SEARCH"`                              |
+| `content`       | `Any`                   | 描述完整活动状态的结构化负载                              |
+| `replace`       | `bool`（默认 `True`） | 为 `False` 时，若同 ID 的消息已存在，则忽略该快照 |
 
 ### ActivityDeltaEvent
 
 `from ag_ui.core import ActivityDeltaEvent`
 
-Provides incremental updates to an activity snapshot using JSON Patch.
+使用 JSON Patch 提供活动快照的增量更新。
 
 ```python
 class ActivityDeltaEvent(BaseEvent):
@@ -441,19 +434,19 @@ class ActivityDeltaEvent(BaseEvent):
     patch: List[Any]
 ```
 
-| Property        | Type        | Description                                                      |
+| 属性            | 类型        | 说明                                                      |
 | --------------- | ----------- | ---------------------------------------------------------------- |
-| `message_id`    | `str`       | Identifier for the target `ActivityMessage`                      |
-| `activity_type` | `str`       | Activity discriminator mirroring the most recent snapshot        |
-| `patch`         | `List[Any]` | JSON Patch operations applied to the structured activity content |
+| `message_id`    | `str`       | 目标 `ActivityMessage` 的标识符                      |
+| `activity_type` | `str`       | 与最近一次快照一致的活动判别值        |
+| `patch`         | `List[Any]` | 应用到结构化活动内容上的 JSON Patch 操作 |
 
-## Special Events
+## 特殊事件
 
 ### RawEvent
 
 `from ag_ui.core import RawEvent`
 
-Used to pass through events from external systems.
+用于透传来自外部系统的事件。
 
 ```python
 class RawEvent(BaseEvent):
@@ -462,16 +455,16 @@ class RawEvent(BaseEvent):
     source: Optional[str] = None
 ```
 
-| Property | Type            | Description         |
+| 属性     | 类型            | 说明         |
 | -------- | --------------- | ------------------- |
-| `event`  | `Any`           | Original event data |
-| `source` | `Optional[str]` | Source of the event |
+| `event`  | `Any`           | 原始事件数据 |
+| `source` | `Optional[str]` | 事件的来源 |
 
 ### CustomEvent
 
 `from ag_ui.core import CustomEvent`
 
-Used for application-specific custom events.
+用于应用特有的自定义事件。
 
 ```python
 class CustomEvent(BaseEvent):
@@ -480,24 +473,22 @@ class CustomEvent(BaseEvent):
     value: Any
 ```
 
-| Property | Type  | Description                     |
+| 属性     | 类型  | 说明                     |
 | -------- | ----- | ------------------------------- |
-| `name`   | `str` | Name of the custom event        |
-| `value`  | `Any` | Value associated with the event |
+| `name`   | `str` | 自定义事件的名称        |
+| `value`  | `Any` | 与该事件关联的值 |
 
-## Reasoning Events
+## 推理事件
 
-These events represent the lifecycle of reasoning/thinking processes within an
-agent. Reasoning events allow agents to expose their internal thought process to
-the frontend, creating `ReasoningMessage` objects that persist in the message
-history with the role `"reasoning"`.
+这些事件表示智能体内部推理/思考过程的生命周期。推理事件让智能体可以把内部思考过程
+暴露给前端，创建以 `"reasoning"` 为角色、并保留在消息历史中的
+`ReasoningMessage` 对象。
 
 ### ReasoningStartEvent
 
 `from ag_ui.core import ReasoningStartEvent`
 
-Signals the start of a reasoning phase. This is a pass-through event that
-notifies subscribers but does not create messages.
+表示一个推理阶段的开始。这是一个透传事件，只通知订阅者，不创建消息。
 
 ```python
 class ReasoningStartEvent(BaseEvent):
@@ -505,16 +496,15 @@ class ReasoningStartEvent(BaseEvent):
     message_id: str
 ```
 
-| Property     | Type  | Description                        |
+| 属性         | 类型  | 说明                        |
 | ------------ | ----- | ---------------------------------- |
-| `message_id` | `str` | Identifier for the reasoning phase |
+| `message_id` | `str` | 该推理阶段的标识符 |
 
 ### ReasoningMessageStartEvent
 
 `from ag_ui.core import ReasoningMessageStartEvent`
 
-Signals the start of a reasoning message. Creates a new `ReasoningMessage` in
-the message history.
+表示一条推理消息的开始。在消息历史中创建新的 `ReasoningMessage`。
 
 ```python
 class ReasoningMessageStartEvent(BaseEvent):
@@ -523,16 +513,16 @@ class ReasoningMessageStartEvent(BaseEvent):
     role: Literal["reasoning"]
 ```
 
-| Property     | Type                    | Description                       |
+| 属性         | 类型                    | 说明                       |
 | ------------ | ----------------------- | --------------------------------- |
-| `message_id` | `str`                   | Unique identifier for the message |
-| `role`       | `Literal["reasoning"]`  | Role is always "reasoning"        |
+| `message_id` | `str`                   | 消息的唯一标识符 |
+| `role`       | `Literal["reasoning"]`  | 角色始终为 “reasoning”        |
 
 ### ReasoningMessageContentEvent
 
 `from ag_ui.core import ReasoningMessageContentEvent`
 
-Represents a chunk of content in a streaming reasoning message.
+表示流式推理消息中的一段内容。
 
 ```python
 class ReasoningMessageContentEvent(BaseEvent):
@@ -541,16 +531,16 @@ class ReasoningMessageContentEvent(BaseEvent):
     delta: str
 ```
 
-| Property     | Type  | Description                                    |
+| 属性         | 类型  | 说明                                    |
 | ------------ | ----- | ---------------------------------------------- |
-| `message_id` | `str` | Matches the ID from ReasoningMessageStartEvent |
-| `delta`      | `str` | Reasoning content chunk                        |
+| `message_id` | `str` | 与 ReasoningMessageStartEvent 中的 ID 一致 |
+| `delta`      | `str` | 推理内容 chunk                        |
 
 ### ReasoningMessageEndEvent
 
 `from ag_ui.core import ReasoningMessageEndEvent`
 
-Signals the end of a reasoning message.
+表示一条推理消息的结束。
 
 ```python
 class ReasoningMessageEndEvent(BaseEvent):
@@ -558,16 +548,16 @@ class ReasoningMessageEndEvent(BaseEvent):
     message_id: str
 ```
 
-| Property     | Type  | Description                                    |
+| 属性         | 类型  | 说明                                    |
 | ------------ | ----- | ---------------------------------------------- |
-| `message_id` | `str` | Matches the ID from ReasoningMessageStartEvent |
+| `message_id` | `str` | 与 ReasoningMessageStartEvent 中的 ID 一致 |
 
 ### ReasoningMessageChunkEvent
 
 `from ag_ui.core import ReasoningMessageChunkEvent`
 
-Convenience event for complete reasoning messages without manually emitting
-`ReasoningMessageStart`/`ReasoningMessageEnd`.
+便捷事件，用于发送完整的推理消息而无需手动发出
+`ReasoningMessageStart`/`ReasoningMessageEnd`。
 
 ```python
 class ReasoningMessageChunkEvent(BaseEvent):
@@ -576,21 +566,20 @@ class ReasoningMessageChunkEvent(BaseEvent):
     delta: Optional[str] = None
 ```
 
-Behavior
+行为
 
-- Convenience: Some consumers (e.g., the JS/TS client) expand chunk events into
-  the standard start/content/end sequence automatically.
-- First chunk requirements: The first chunk for a given message must include
-  `message_id`.
-- Streaming: Subsequent chunks with the same `message_id` correspond to content
-  pieces; completion triggers an implied end in clients that perform expansion.
+- 便捷性：一些消费方（例如 JS/TS 客户端）会自动把 chunk 事件展开为标准的
+  start/content/end 序列。
+- 首个 chunk 的要求：某条消息的第一个 chunk 必须包含
+  `message_id`。
+- 流式：后续携带相同 `message_id` 的 chunk 对应各个内容片段；完成时会触发一个隐式
+  end（在执行展开的客户端中）。
 
 ### ReasoningEndEvent
 
 `from ag_ui.core import ReasoningEndEvent`
 
-Signals the end of a reasoning phase. This is a pass-through event that notifies
-subscribers but does not modify messages.
+表示一个推理阶段的结束。这是一个透传事件，只通知订阅者，不修改消息。
 
 ```python
 class ReasoningEndEvent(BaseEvent):
@@ -598,17 +587,16 @@ class ReasoningEndEvent(BaseEvent):
     message_id: str
 ```
 
-| Property     | Type  | Description                        |
+| 属性         | 类型  | 说明                        |
 | ------------ | ----- | ---------------------------------- |
-| `message_id` | `str` | Identifier for the reasoning phase |
+| `message_id` | `str` | 该推理阶段的标识符 |
 
 ### ReasoningEncryptedValueEvent
 
 `from ag_ui.core import ReasoningEncryptedValueEvent`
 
-Attaches an encrypted value to a message or tool call. When this event is
-emitted, it finds the referenced entity by `entity_id` and sets its
-`encrypted_value` field.
+将加密值附加到消息或工具调用上。该事件发出时会按 `entity_id` 找到被引用的实体，并
+设置它的 `encrypted_value` 字段。
 
 ```python
 ReasoningEncryptedValueSubtype = Literal["tool-call", "message"]
@@ -620,30 +608,28 @@ class ReasoningEncryptedValueEvent(BaseEvent):
     encrypted_value: str
 ```
 
-| Property          | Type                             | Description                                        |
+| 属性              | 类型                             | 说明                                        |
 | ----------------- | -------------------------------- | -------------------------------------------------- |
-| `subtype`         | `ReasoningEncryptedValueSubtype` | The type of entity this value belongs to           |
-| `entity_id`       | `str`                            | ID of the tool call or message to attach the value |
-| `encrypted_value` | `str`                            | The encrypted value to attach to the entity        |
+| `subtype`         | `ReasoningEncryptedValueSubtype` | 该值所属实体的类型           |
+| `entity_id`       | `str`                            | 要附加该值的工具调用或消息的 ID |
+| `encrypted_value` | `str`                            | 要附加到实体上的加密值        |
 
-## Subagent Events
+## 子智能体事件
 
-These events report that the agent delegated work to a child agent, so a frontend
-can attribute output to the subagent that produced it. Attribution itself travels
-as an optional `subagent_run_id` on most other event types.
+这些事件报告智能体已把工作委托给子智能体，前端借此可以把输出归因到产生它的子智能体。
+归因本身以可选的 `subagent_run_id` 字段随大多数其他事件类型一起传输。
 
-`subagent_run_id` identifies **one invocation**, not a reusable subagent
-definition — the same subagent run twice yields two different values. See
-[Subagents](/concepts/subagents) for the full model.
+`subagent_run_id` 标识的是**一次调用**，而不是可复用的子智能体定义——同一个子智能体
+运行两次会得到两个不同的值。完整模型见[子智能体](/concepts/subagents)。
 
-Field names are snake_case in Python and serialize to camelCase on the wire, so
-`subagent_run_id` appears as `subagentRunId` in JSON.
+字段名在 Python 中是 snake_case，在线上序列化为 camelCase，因此
+`subagent_run_id` 在 JSON 中显示为 `subagentRunId`。
 
 ### SubagentStartedEvent
 
 `from ag_ui.core import SubagentStartedEvent`
 
-Announces a new subagent invocation and names it for display.
+宣告一次新的子智能体调用，并给出用于展示的名称。
 
 ```python
 class SubagentStartedEvent(BaseEvent):
@@ -656,20 +642,20 @@ class SubagentStartedEvent(BaseEvent):
     parent_message_id: Optional[str] = None
 ```
 
-| Property                 | Type  | Description                                   |
+| 属性                     | 类型  | 说明                                   |
 | ------------------------ | ----- | --------------------------------------------- |
-| `subagent_run_id`        | `str` | Opaque identifier for this invocation         |
-| `name`                   | `str` | Declared subagent name or type, for display   |
-| `description`            | `str` | Optional description                          |
-| `parent_subagent_run_id` | `str` | Optional enclosing subagent, when nesting     |
-| `parent_tool_call_id`    | `str` | Optional tool call that spawned this subagent |
-| `parent_message_id`      | `str` | Optional message holding that tool call       |
+| `subagent_run_id`        | `str` | 本次调用的不透明标识符         |
+| `name`                   | `str` | 声明的子智能体名称或类型，用于展示   |
+| `description`            | `str` | 可选的描述                          |
+| `parent_subagent_run_id` | `str` | 嵌套时的可选外层子智能体     |
+| `parent_tool_call_id`    | `str` | 派生出该子智能体的可选工具调用 |
+| `parent_message_id`      | `str` | 持有该工具调用的可选消息       |
 
 ### SubagentFinishedEvent
 
 `from ag_ui.core import SubagentFinishedEvent`
 
-Marks a subagent invocation as complete.
+将一次子智能体调用标记为完成。
 
 ```python
 class SubagentFinishedEvent(BaseEvent):
@@ -679,17 +665,17 @@ class SubagentFinishedEvent(BaseEvent):
     outcome: Optional[SubagentFinishedOutcome] = None
 ```
 
-| Property          | Type  | Description                                            |
+| 属性              | 类型  | 说明                                            |
 | ----------------- | ----- | ------------------------------------------------------ |
-| `subagent_run_id` | `str` | Matches the id from `SubagentStartedEvent`               |
-| `result`          | `Any` | Optional payload, mirroring `RunFinishedEvent.result`   |
-| `outcome`         | `Optional[SubagentFinishedOutcome]` | Discriminated union of `SubagentFinishedSuccessOutcome` and `SubagentFinishedSuspendedOutcome` (with optional `interrupt_ids`); `None` means success (the legacy reading). Suspended says the subagent is checkpointed awaiting outside input; `interrupt_ids` names the run-level interrupts whose answers resume it. |
+| `subagent_run_id` | `str` | 与 `SubagentStartedEvent` 中的 ID 一致               |
+| `result`          | `Any` | 可选负载，对应 `RunFinishedEvent.result`   |
+| `outcome`         | `Optional[SubagentFinishedOutcome]` | `SubagentFinishedSuccessOutcome` 与 `SubagentFinishedSuspendedOutcome`（带可选的 `interrupt_ids`）构成的可辨识联合；`None` 表示成功（沿用旧的读法）。Suspended 表示子智能体已设置检查点、等待外部输入；`interrupt_ids` 指出哪些运行级中断的答案可以恢复它 |
 
 ### SubagentErrorEvent
 
 `from ag_ui.core import SubagentErrorEvent`
 
-Marks a subagent invocation as failed.
+将一次子智能体调用标记为失败。
 
 ```python
 class SubagentErrorEvent(BaseEvent):
@@ -699,39 +685,36 @@ class SubagentErrorEvent(BaseEvent):
     code: Optional[str] = None
 ```
 
-| Property          | Type  | Description                                |
+| 属性              | 类型  | 说明                                |
 | ----------------- | ----- | ------------------------------------------ |
-| `subagent_run_id` | `str` | Matches the id from `SubagentStartedEvent`  |
-| `message`         | `str` | Human-readable error message               |
-| `code`            | `str` | Optional error code                        |
+| `subagent_run_id` | `str` | 与 `SubagentStartedEvent` 中的 ID 一致  |
+| `message`         | `str` | 人类可读的错误消息               |
+| `code`            | `str` | 可选的错误码                        |
 
-### Attribution on other events
+### 其他事件上的归因
 
-Most event types accept an optional `subagent_run_id`. An event without it
-belongs to the parent agent, so a stream that never sets the field behaves
-exactly as it did before subagents existed.
+大多数事件类型接受可选的 `subagent_run_id`。不带该字段的事件属于父智能体，因此从不
+设置该字段的事件流，其行为与子智能体出现之前完全一致。
 
-`RunStartedEvent`, `RunFinishedEvent` and `RunErrorEvent` are not attributable —
-they describe the run as a whole. `MessagesSnapshotEvent` carries attribution
-per-message instead.
+`RunStartedEvent`、`RunFinishedEvent` 和 `RunErrorEvent` 不可归因——它们描述的是
+运行整体。`MessagesSnapshotEvent` 则按消息携带归因。
 
-`StateSnapshotEvent` and `StateDeltaEvent` are attributable, but attribution on
-them is provenance rather than ownership — it records which subagent produced the
-update. State stays run-scoped, so an attributed snapshot or delta is applied to
-the run's one state document just as an unattributed one is.
+`StateSnapshotEvent` 和 `StateDeltaEvent` 可以归因，但其归因表示的是
+来源（provenance）而非所有权——它记录是哪个子智能体产生了这次更新。状态始终以运行
+为作用域，因此带归因的快照或增量与不带归因的一样，都应用到该运行的唯一一份状态文档上。
 
-## Deprecated Events
+## 已废弃事件
 
 <Warning>
-  The `THINKING_*` events are deprecated and will be removed in version 1.0.0.
-  New implementations should use `REASONING_*` events instead.
+  `THINKING_*` 事件已废弃，将在 1.0.0 版本中移除。
+  新实现应改用 `REASONING_*` 事件。
 </Warning>
 
-### Thinking Events (Deprecated)
+### Thinking 事件（已废弃）
 
-The following event types are deprecated:
+以下事件类型已废弃：
 
-| Deprecated Event                | Replacement                 |
+| 已废弃事件                | 替代事件                 |
 | ------------------------------- | --------------------------- |
 | `THINKING_START`                | `REASONING_START`           |
 | `THINKING_END`                  | `REASONING_END`             |
@@ -739,14 +722,13 @@ The following event types are deprecated:
 | `THINKING_TEXT_MESSAGE_CONTENT` | `REASONING_MESSAGE_CONTENT` |
 | `THINKING_TEXT_MESSAGE_END`     | `REASONING_MESSAGE_END`     |
 
-See [Reasoning Migration](/concepts/reasoning#migration-from-thinking-events)
-for detailed migration guidance.
+详细的迁移指引见[推理迁移](/concepts/reasoning#migration-from-thinking-events)。
 
-## Event Discrimination
+## 事件判别
 
 `from ag_ui.core import Event`
 
-The SDK uses Pydantic's discriminated unions for event validation:
+SDK 使用 Pydantic 的可辨识联合来做事件校验：
 
 ```python
 Event = Annotated[
@@ -782,13 +764,12 @@ Event = Annotated[
 ]
 ```
 
-This allows for runtime validation of events and type checking at development
-time.
+这允许在运行时校验事件，并在开发期做类型检查。
 
 ### TextMessageChunkEvent
 
-Convenience event for complete text messages without manually emitting
-`TextMessageStart`/`TextMessageEnd`.
+便捷事件，用于发送完整的文本消息而无需手动发出
+`TextMessageStart`/`TextMessageEnd`。
 
 ```python
 from ag_ui.core import TextMessageChunkEvent
@@ -800,20 +781,19 @@ class TextMessageChunkEvent(BaseEvent):
     delta: Optional[str] = None
 ```
 
-Behavior
+行为
 
-- Convenience: Some consumers (e.g., the JS/TS client) expand chunk events into
-  the standard start/content/end sequence automatically, allowing producers to
-  omit explicit start/end events when using chunks.
-- First chunk requirements: The first chunk for a given message must include
-  `message_id`.
-- Streaming: Subsequent chunks with the same `message_id` correspond to content
-  pieces; completion triggers an implied end in clients that perform expansion.
+- 便捷性：一些消费方（例如 JS/TS 客户端）会自动把 chunk 事件展开为标准的
+  start/content/end 序列，让生产方在使用 chunk 时可以省略显式的 start/end 事件。
+- 首个 chunk 的要求：某条消息的第一个 chunk 必须包含
+  `message_id`。
+- 流式：后续携带相同 `message_id` 的 chunk 对应各个内容片段；完成时会触发一个隐式
+  end（在执行展开的客户端中）。
 
 ### ToolCallChunkEvent
 
-Convenience event for tool calls without manually emitting
-`ToolCallStart`/`ToolCallEnd`.
+便捷事件，用于工具调用而无需手动发出
+`ToolCallStart`/`ToolCallEnd`。
 
 ```python
 from ag_ui.core import ToolCallChunkEvent
@@ -826,11 +806,11 @@ class ToolCallChunkEvent(BaseEvent):
     delta: Optional[str] = None
 ```
 
-Behavior
+行为
 
-- Convenience: Consumers may expand chunk sequences into the standard
-  start/args/end triad (the JS/TS client does this automatically).
-- First chunk requirements: Include both `tool_call_id` and `tool_call_name` on
-  the first chunk.
-- Streaming: Subsequent chunks with the same `tool_call_id` correspond to args
-  pieces; completion triggers an implied end in clients that perform expansion.
+- 便捷性：消费方可以把 chunk 序列展开为标准的 start/args/end 三元组
+  （JS/TS 客户端会自动这样做）。
+- 首个 chunk 的要求：第一个 chunk 要同时给出 `tool_call_id` 和
+  `tool_call_name`。
+- 流式：后续携带相同 `tool_call_id` 的 chunk 对应各段参数；完成时会触发一个隐式
+  end（在执行展开的客户端中）。

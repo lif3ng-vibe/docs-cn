@@ -1,13 +1,13 @@
 ---
-title: "Extensibility"
-description: "Customize AG-UI stream conversion with AGUIStreamOptions"
+title: "可扩展性"
+description: "用 AGUIStreamOptions 定制 AG-UI 流转换"
 ---
 
-# Extensibility
+# 可扩展性
 
-`AGUIStreamOptions` customizes how `ChatResponseUpdate` streams are converted
-to AG-UI events. It is fluent and method-only: create an instance, register
-`Map*` hooks, and pass it to `ToChatRequestContext`.
+`AGUIStreamOptions` 用于定制 `ChatResponseUpdate` 流到 AG-UI 事件的转换方式。它是
+流式 API 且仅由方法构成：创建一个实例，注册 `Map*` 钩子，然后传给
+`ToChatRequestContext`。
 
 ```csharp
 var streamOptions = new AGUIStreamOptions()
@@ -16,35 +16,31 @@ var streamOptions = new AGUIStreamOptions()
 var ctx = input.ToChatRequestContext(jsonSerializerOptions, streamOptions);
 ```
 
-Use stream options when your server needs to surface framework-specific content
-types, custom interrupts, state updates, or streaming tool-argument previews.
+当服务端需要呈现框架特有的内容类型、自定义中断、状态更新或流式工具参数预览时，
+使用流选项。
 
-## Built-in conversion
+## 内置转换
 
-You do not need stream options for the common path. The hosting layer already
-maps:
+常见路径不需要流选项。托管层已经映射：
 
-- `TextContent` to `TEXT_MESSAGE_*`
-- `TextReasoningContent` to `REASONING_*`
-- `FunctionCallContent` to `TOOL_CALL_*`
-- `FunctionResultContent` to `TOOL_CALL_RESULT`
-- `ToolApprovalRequestContent` and `InterruptRequestContent` to interrupt
-  outcomes
-- `ChatResponseUpdate.RawRepresentation` containing a `BaseEvent` directly to
-  that event
+- `TextContent` → `TEXT_MESSAGE_*`
+- `TextReasoningContent` → `REASONING_*`
+- `FunctionCallContent` → `TOOL_CALL_*`
+- `FunctionResultContent` → `TOOL_CALL_RESULT`
+- `ToolApprovalRequestContent` 与 `InterruptRequestContent` → 中断结果
+- 携带 `BaseEvent` 的 `ChatResponseUpdate.RawRepresentation` → 直接作为该事件
 
 <Note>
-  If a `ChatResponseUpdate.RawRepresentation` is a `BaseEvent`, the hosting
-  layer emits it verbatim. This is often the simplest way for a custom
-  `IChatClient` wrapper to inject `StateSnapshotEvent`, `CustomEvent`, or
-  `RawEvent` values.
+  如果 `ChatResponseUpdate.RawRepresentation` 是一个 `BaseEvent`，托管层会原样发出
+  它。对于自定义 `IChatClient` 包装层来说，这往往是注入 `StateSnapshotEvent`、
+  `CustomEvent` 或 `RawEvent` 值的最简单方式。
 </Note>
 
 ## MapContent
 
-`MapContent(Func<AIContent, IEnumerable<BaseEvent>?> mapper)` receives an
-otherwise-unmapped `AIContent` and returns AG-UI events to emit. Return `null`
-to let the next mapper try the content.
+`MapContent(Func<AIContent, IEnumerable<BaseEvent>?> mapper)` 接收一个尚未被其他
+映射器处理的 `AIContent`，返回要发出的 AG-UI 事件。返回 `null` 则让下一个映射器
+尝试处理该内容。
 
 ```csharp
 using AGUI.Abstractions;
@@ -63,22 +59,19 @@ var streamOptions = new AGUIStreamOptions()
             : null);
 ```
 
-Use this for framework-specific content types such as workflow markers,
-progress notifications, or domain events.
+框架特有的内容类型，例如工作流标记、进度通知或领域事件，都适合用这个钩子。
 
 <Tip>
-  `TextReasoningContent` is already handled natively. The Step 07 sample emits
-  `TextReasoningContent`, and the hosting layer converts it to reasoning events
-  without custom `MapContent` configuration.
+  `TextReasoningContent` 已经被原生处理。Step 07 示例会发出
+  `TextReasoningContent`，托管层无需自定义 `MapContent` 配置就能把它转换为推理事件。
 </Tip>
 
 ## MapInterrupt
 
-`MapInterrupt(Func<AIContent, AGUIInterrupt?> mapper)` receives an
-otherwise-unmapped `AIContent` and returns an `AGUIInterrupt` when the run needs
-user input. The hosting layer emits `RunFinishedEvent` with an interrupt
-outcome and stops the run. Return `null` to continue to the next mapper or to
-`MapContent`.
+`MapInterrupt(Func<AIContent, AGUIInterrupt?> mapper)` 接收一个尚未被其他映射器处理
+的 `AIContent`，当运行需要用户输入时返回一个 `AGUIInterrupt`。托管层会发出带中断
+结果的 `RunFinishedEvent` 并停止运行。返回 `null` 则继续尝试下一个映射器或
+`MapContent`。
 
 ```csharp
 using AGUI.Abstractions;
@@ -104,14 +97,14 @@ var streamOptions = new AGUIStreamOptions()
             : null);
 ```
 
-Use this for custom human-in-the-loop content that is not represented by the
-built-in `InterruptRequestContent` or tool approval content.
+内置 `InterruptRequestContent` 或工具批准内容没有覆盖的自定义人在回路
+（human-in-the-loop）内容，适合用这个钩子。
 
 ## MapCall
 
 `MapCall(string toolName, Func<FunctionCallContent, IEnumerable<BaseEvent>>
-mapper)` receives a matching `FunctionCallContent` and emits extra events after
-the normal tool call start, args, and end events.
+mapper)` 接收匹配的 `FunctionCallContent`，在正常的工具调用 start、args、end 事件
+之后发出额外事件。
 
 ```csharp
 using System.Text.Json;
@@ -143,15 +136,14 @@ var streamOptions = new AGUIStreamOptions()
     });
 ```
 
-Use this for streaming tool-argument previews. For example, while a model is
-building arguments for `write_document`, the UI can update a live document
-preview before the server-side tool finishes.
+它适合做流式工具参数预览。例如，当模型正在为 `write_document` 构建参数时，UI 可以
+在服务端侧工具完成之前就更新实时文档预览。
 
 ## MapResult
 
 `MapResult(string toolName, Func<FunctionResultContent,
-IEnumerable<BaseEvent>> mapper)` receives a matching tool result and emits
-extra events after the normal `ToolCallResultEvent`.
+IEnumerable<BaseEvent>> mapper)` 接收匹配的工具结果，在正常的
+`ToolCallResultEvent` 之后发出额外事件。
 
 ```csharp
 using System.Text.Json;
@@ -179,12 +171,11 @@ var streamOptions = new AGUIStreamOptions()
     });
 ```
 
-Use this when a server-side tool result should also update state, activity, or
-application-specific UI.
+当一个服务端侧的工具结果还应该更新状态、活动或应用特有的 UI 时，使用这个钩子。
 
-## State mapping helpers
+## 状态映射辅助方法
 
-Two convenience methods cover the common state-management cases:
+两个便捷方法覆盖了常见的状态管理场景：
 
 ```csharp
 var streamOptions = new AGUIStreamOptions()
@@ -192,17 +183,16 @@ var streamOptions = new AGUIStreamOptions()
     .MapResultAsStateDelta("update_plan_step");
 ```
 
-- `MapResultAsStateSnapshot(toolName)` emits a `StateSnapshotEvent`
-- `MapResultAsStateDelta(toolName)` emits a `StateDeltaEvent`
+- `MapResultAsStateSnapshot(toolName)` 发出一个 `StateSnapshotEvent`
+- `MapResultAsStateDelta(toolName)` 发出一个 `StateDeltaEvent`
 
-Both helpers expect `FunctionResultContent.Result` to be a `JsonElement`. If
-your tool returns another type, use `MapResult` and serialize the value
-yourself.
+两个辅助方法都要求 `FunctionResultContent.Result` 是 `JsonElement`。如果你的工具
+返回其他类型，请改用 `MapResult` 并自行序列化该值。
 
-## RawRepresentation pass-through
+## RawRepresentation 透传
 
-For custom `IChatClient` wrappers, setting `RawRepresentation` to an AG-UI
-event is often simpler than defining a new `AIContent` type.
+对自定义 `IChatClient` 包装层来说，把 `RawRepresentation` 设为 AG-UI 事件往往比
+定义新的 `AIContent` 类型更简单。
 
 ```csharp
 using System.Text.Json;
@@ -223,13 +213,13 @@ yield return new ChatResponseUpdate
 };
 ```
 
-The converter emits the `StateSnapshotEvent` directly. If the raw event appears
-before a run has started, the hosting layer emits `RUN_STARTED` first.
+转换器会直接发出 `StateSnapshotEvent`。如果该原始事件出现在运行开始之前，托管层会
+先发出 `RUN_STARTED`。
 
-## Chaining
+## 链式注册
 
-You can register multiple `MapContent` or `MapInterrupt` callbacks. They are
-tried in registration order, and the first non-null result wins.
+可以注册多个 `MapContent` 或 `MapInterrupt` 回调。它们按注册顺序依次尝试，第一个
+非 null 的结果生效。
 
 ```csharp
 var streamOptions = new AGUIStreamOptions()
@@ -239,6 +229,5 @@ var streamOptions = new AGUIStreamOptions()
     .MapContent(TryMapProgress);
 ```
 
-Keep mappings small and focused. Use the built-in conversion for standard text,
-reasoning, tools, and interrupts, then add stream options only for the events
-that are specific to your server.
+映射要保持小而专注。标准文本、推理、工具与中断交给内置转换处理，只为你的服务端特有
+的事件添加流选项。
