@@ -14,7 +14,7 @@ import DraftNotice from "/snippets/draft-notice.mdx";
 绑定 MUST 提供：
 
 - 运行事件的**有序、完整投递**，按生产者发出的顺序。协议的顺序就是到达顺序；能重排或丢事件的传输层，若没有一层把两者还原，就无法承载 AG-UI。
-- **开启交换的 `RunAgentInput` 的投递**，先于任何事件。继续[携带后续运行](/spec/draft/events/lifecycle#several-runs-on-one-stream)的流——回放线程——不为它们投递进一步的输入：那些运行是生产者在重述历史，每个 `RUN_STARTED` MAY 携带自己的 `input` 回显。
+- **开启交换的 `RunAgentInput` 的投递**，先于任何事件。继续[携带后续运行](/spec/draft/events/lifecycle#一条流上的多次运行)的流——回放线程——不为它们投递进一步的输入：那些运行是生产者在重述历史，每个 `RUN_STARTED` MAY 携带自己的 `input` 回显。
 - 消费者能据此与截断区分开的**终止信号**：在终止事件之后干净结束的流是一次已关闭的运行，没有终止事件就断掉的连接是一次被截断的运行。
 - **被拒输入的错误路径**——结构无效的 `RunAgentInput` 在 `RUN_STARTED` 之前、在流之外被拒绝。
 

@@ -16,13 +16,13 @@ description: "默认绑定：一个 POST 携带运行输入，一个 text/event-
 - 每个 SSE 事件的 `data` 负载恰好是一个协议事件的 JSON 对象——绝不多于一个，也绝不是片段。多行 `data:` 字段按 SSE 规范拼接。
 - 生产者 MUST 以 LF（`\n`）行结束符为流分帧。SSE 语法也容许 CR 与 CRLF，但本绑定钉死这种所有已知消费者都能解析的形式；消费者 MAY 额外接受完整语法。
 - 消费者 MUST 忽略 `data` 之外的 SSE 字段（`event:`、`id:`、`retry:`），并 MUST 容忍 SSE 注释行（`: keep-alive`），生产者 MAY 以任意节奏发送注释行。
-- 生产者在最后一次运行的终止事件之后关闭响应体。一个 POST 携带一次请求；但当生产者在所请求的运行之前回放线程历史时，响应 MAY [携带多次运行](/spec/1.0/events/lifecycle#several-runs-on-one-stream)——按[绑定契约](/spec/1.0/basic/transports#the-binding-contract)，不为它们传输进一步的输入。
+- 生产者在最后一次运行的终止事件之后关闭响应体。一个 POST 携带一次请求；但当生产者在所请求的运行之前回放线程历史时，响应 MAY [携带多次运行](/spec/1.0/events/lifecycle#一条流上的多次运行)——按[绑定契约](/spec/1.0/basic/transports#绑定契约)，不为它们传输进一步的输入。
 
 ## 错误
 
 - 运行开始之前被拒绝的输入——JSON 格式错误、校验失败、认证被拒——是一个不带事件流的 HTTP 错误状态。运行从未开始。
 - 流开启之后的失败走流内传输，即 `RUN_ERROR`。HTTP 状态已经发出、无法更改；消费者 MUST NOT 仅凭 `200` 推断成功。
-- 没有终止事件就断开的连接是一次[被截断的运行](/spec/1.0/basic/transports#truncation)。
+- 没有终止事件就断开的连接是一次[被截断的运行](/spec/1.0/basic/transports#截断)。
 
 ## 不可续传
 

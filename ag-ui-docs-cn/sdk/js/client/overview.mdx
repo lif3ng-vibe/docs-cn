@@ -15,10 +15,10 @@ npm install @ag-ui/client
 
 `AbstractAgent` 是实现自定义智能体连接的抽象智能体基类（base agent class）。继承该类并实现 `run()`，即可将你自己的服务或智能体实现接入 AG-UI。
 
-- [配置](/sdk/js/client/abstract-agent#configuration) - 使用智能体 ID、消息与状态完成设置
-- [核心方法](/sdk/js/client/abstract-agent#core-methods) - 运行、中止与克隆功能
-- [受保护方法](/sdk/js/client/abstract-agent#protected-methods) - 面向自定义实现的可扩展钩子
-- [属性](/sdk/js/client/abstract-agent#properties) - 状态与消息追踪
+- [配置](/sdk/js/client/abstract-agent#配置) - 使用智能体 ID、消息与状态完成设置
+- [核心方法](/sdk/js/client/abstract-agent#核心方法) - 运行、中止与克隆功能
+- [受保护方法](/sdk/js/client/abstract-agent#受保护方法) - 面向自定义实现的可扩展钩子
+- [属性](/sdk/js/client/abstract-agent#属性) - 状态与消息追踪
 
 <Card
   title="AbstractAgent 参考文档"
@@ -34,10 +34,10 @@ npm install @ag-ui/client
 
 基于 HTTP 的智能体连接的具体实现：
 
-- [配置](/sdk/js/client/http-agent#configuration) - URL 与请求头设置
-- [方法](/sdk/js/client/http-agent#methods) - HTTP 专属的执行与取消
-- [受保护方法](/sdk/js/client/http-agent#protected-methods) - 可自定义的 HTTP 请求处理
-- [属性](/sdk/js/client/http-agent#properties) - 连接管理
+- [配置](/sdk/js/client/http-agent#配置) - URL 与请求头设置
+- [方法](/sdk/js/client/http-agent#方法) - HTTP 专属的执行与取消
+- [受保护方法](/sdk/js/client/http-agent#受保护方法) - 可自定义的 HTTP 请求处理
+- [属性](/sdk/js/client/http-agent#属性) - 连接管理
 
 <Card
   title="HttpAgent 参考文档"
@@ -53,10 +53,10 @@ npm install @ag-ui/client
 
 通过一套灵活的中间件系统，转换并拦截流经智能体的事件流：
 
-- [函数式中间件](/sdk/js/client/middleware#function-based-middleware) - 用普通函数完成简单转换
-- [类式中间件](/sdk/js/client/middleware#class-based-middleware) - 带配置的有状态中间件
-- [内置中间件](/sdk/js/client/middleware#built-in-middleware) - FilterToolCallsMiddleware 等
-- [中间件模式](/sdk/js/client/middleware#middleware-patterns) - 常见用例与示例
+- [函数式中间件](/sdk/js/client/middleware#函数式中间件) - 用普通函数完成简单转换
+- [类式中间件](/sdk/js/client/middleware#类式中间件) - 带配置的有状态中间件
+- [内置中间件](/sdk/js/client/middleware#内置中间件) - FilterToolCallsMiddleware 等
+- [中间件模式](/sdk/js/client/middleware#中间件模式) - 常见用例与示例
 
 <Card
   title="Middleware 参考文档"
@@ -72,10 +72,10 @@ npm install @ag-ui/client
 
 面向事件驱动的订阅者（subscriber）系统，用于在智能体执行期间处理生命周期事件与状态变更：
 
-- [事件处理器](/sdk/js/client/subscriber#event-handlers) - 生命周期、消息、工具调用与状态事件
+- [事件处理器](/sdk/js/client/subscriber#事件处理器) - 生命周期、消息、工具调用与状态事件
 - [状态管理](/sdk/js/client/subscriber#state-management) - 变更控制与传播处理
 - [使用示例](/sdk/js/client/subscriber#usage-examples) - 日志、持久化与错误处理模式
-- [集成](/sdk/js/client/subscriber#integration-with-agents) - 在智能体上注册与使用订阅者
+- [集成](/sdk/js/client/subscriber#与智能体集成) - 在智能体上注册与使用订阅者
 
 <Card
   title="AgentSubscriber 参考文档"

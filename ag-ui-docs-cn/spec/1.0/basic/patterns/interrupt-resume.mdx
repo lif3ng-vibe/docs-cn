@@ -9,7 +9,7 @@ description: "一次运行如何向外部索要某样东西，下一次运行又
 
 需要外部输入的运行以 `RUN_FINISHED` 结束，其 `outcome` 为 interrupt outcome，携带一个或多个 `Interrupt` 对象——至少一个，因为没有任何东西可应答的 interrupt outcome 会让消费者无事可做。
 
-- 生产者 MUST NOT 把被中断的运行报告为成功：interrupt outcome 是结束一次停下来*发问*的运行的唯一符合规范的途径——生产者指名自己在等待什么，resume 条目来应答它。因调用[前端工具](/spec/1.0/events/tool-calls#frontend-tools)而停止的运行是另一条寻常路径：它以 success 结束，在 success outcome 的 `pendingToolCallIds` 中列名未应答的调用，答案搭下一次输入的消息过来。因*被叫停*而停止的运行两者都不是：它以 [cancelled outcome](/spec/1.0/events/lifecycle#cancelled-runs) 结束，什么也不要。
+- 生产者 MUST NOT 把被中断的运行报告为成功：interrupt outcome 是结束一次停下来*发问*的运行的唯一符合规范的途径——生产者指名自己在等待什么，resume 条目来应答它。因调用[前端工具](/spec/1.0/events/tool-calls#前端工具)而停止的运行是另一条寻常路径：它以 success 结束，在 success outcome 的 `pendingToolCallIds` 中列名未应答的调用，答案搭下一次输入的消息过来。因*被叫停*而停止的运行两者都不是：它以 [cancelled outcome](/spec/1.0/events/lifecycle#被取消的运行) 结束，什么也不要。
 - 每个中断的 `id` MUST 在运行内唯一；resume 条目以这个 id 应答它。
 - 中断的 `reason` 是开放字符串——协议不打算对智能体需要输入的每一种原因都做分类。`message` 是给应答者看的人类可读提示词；`toolCallId` 指名批准所涉及的工具调用；`responseSchema` 描述答案应有的形态，以不透明方式承载，让消费者可以据此构建表单。
 - 在子智能体内部引发的中断 MAY 携带该子智能体的 `subagentRunId`；归因与随之而来的 suspended outcome 由[子智能体规则](/spec/1.0/events/subagents)管辖。
@@ -25,7 +25,7 @@ description: "一次运行如何向外部索要某样东西，下一次运行又
 - resume 列表 MUST 覆盖被延续运行的每一个中断：每个中断要么被应答，要么由携带 abandoned 状态的条目显式放弃。省略不是放弃。覆盖是*消费者*一方必须执行的规则：手中握着关闭用的 `RUN_FINISHED` 所交付的中断、又是它来组装 resume 列表的，正是消费者，所以它是唯一总能判断列表是否完整的参与者。消费者 MUST 在运行开始之前——在任何东西发出之前——拒绝让某个中断未被覆盖的恢复输入，也 MUST NOT 在自己没有对应条目的中断上悄然继续。协议不要求生产者检查这一点，它也无需为符合规范而保留被中断运行的任何东西；而有缺陷的消费者真发了不完整列表时生产者怎么办，属于它的错误处理，见下文。被放弃的中断对智能体的工作意味着什么，是生产者的事。
 - `expiresAt` 有意不约束格式，因此一个中断*是否*已过期，由作判断的消费者自行解读——参考实现把它当日期读，并把当前时刻及更早视为已过期。规则附着在判断上，而不是附着在 schema 拒绝规定格式的解析上：被消费者判定为已过期的中断不再能被*应答*——消费者会在运行开始前拒绝解析它的 resume 条目，一如拒绝未覆盖的中断。它仍然可以——并且，既然覆盖是强制性的，就必须——被放弃，这就是线程越过无人及时应答的中断的方式。
 - 线程与状态的连续性跨越这道鸿沟依然成立：恢复的运行携带相同的 `threadId`、累积的消息，以及被中断运行留下的状态，与任何[顺序运行](/spec/1.0/events/lifecycle)完全一样。
-- token 用量不跨鸿沟携带：恢复运行的 `usage` [只覆盖](/spec/1.0/events/lifecycle#token-usage)它自己发起的模型调用。被中断的运行已在打断它的那次 `RUN_FINISHED` 上报告了自己的用量。
+- token 用量不跨鸿沟携带：恢复运行的 `usage` [只覆盖](/spec/1.0/events/lifecycle#token-用量)它自己发起的模型调用。被中断的运行已在打断它的那次 `RUN_FINISHED` 上报告了自己的用量。
 
 收到 resume 条目的生产者，把它们当作自己停下来等待的那些答案。这份列表是消费者对"作出了哪些决定"的完整陈述，生产者照单全收：它无须记住上一次运行的中断，无须把列表与之对照，也无须为此在任何两次运行之间保存状态。跨鸿沟什么都不带的生产者是符合规范的。
 

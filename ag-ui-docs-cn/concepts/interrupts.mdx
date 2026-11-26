@@ -76,7 +76,7 @@ type Interrupt = {
 | `responseSchema` | 预期 `resume.payload` 的 JSON Schema。                                                                                                                                                                                                                                                                                                                                                                                          |
 | `expiresAt`      | 可选的 ISO-8601 有效期。过期后的恢复会产生 `RunError`。                                                                                                                                                                                                                                                                                                                                                                         |
 | `metadata`       | 自由格式的框架专属数据。                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `subagentRunId`  | 引发该中断的子智能体——由根级直接引发时缺省。归属信息按中断记录，因为一次运行可能携带来自多个子智能体的中断。会发出子智能体生命周期事件的生产方还会以 `outcome: { type: "suspended" }` 关闭该子智能体——生命周期事件仍然是可选的，因此这里的归属信息单独成立（见[子智能体](/concepts/subagents#suspension)）。 |
+| `subagentRunId`  | 引发该中断的子智能体——由根级直接引发时缺省。归属信息按中断记录，因为一次运行可能携带来自多个子智能体的中断。会发出子智能体生命周期事件的生产方还会以 `outcome: { type: "suspended" }` 关闭该子智能体——生命周期事件仍然是可选的，因此这里的归属信息单独成立（见[子智能体](/concepts/subagents#挂起)）。 |
 
 ## 恢复运行
 

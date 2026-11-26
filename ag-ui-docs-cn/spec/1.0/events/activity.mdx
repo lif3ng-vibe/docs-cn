@@ -35,7 +35,7 @@ description: "UI 渲染为独立组件的结构化进度，在消息序列中占
 - 生产者 MUST NOT 为自己没有用快照创建过的活动消息发送增量——快照是[该模式](/spec/1.0/basic/patterns/snapshots)要求的基准。
 - 指名不存在消息、或非活动消息的增量会被跳过；消费者 SHOULD 暴露警告，且 MUST NOT 让运行失败。
 - 打完补丁的结果 MUST 仍是对象：按 schema，`content` 就是对象，生产者 MUST NOT 发送应用之后会让它变成别的东西的补丁——比如根替换。消费者无须检测该违例。
-- 补丁失败的处理遵循[该模式](/spec/1.0/basic/patterns/snapshots#when-a-patch-does-not-apply)，重新同步靠同一条 `messageId` 的新快照。
+- 补丁失败的处理遵循[该模式](/spec/1.0/basic/patterns/snapshots#补丁不适用时)，重新同步靠同一条 `messageId` 的新快照。
 
 ## 对话中的活动消息
 

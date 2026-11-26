@@ -36,7 +36,7 @@ import DraftNotice from "/snippets/draft-notice.mdx";
 | `TOOL_CALL_START` / `ARGS` / `END` | **工具调用本身**——而不是拥有它的那条助手消息 |
 | `TOOL_CALL_RESULT` | 它创建的那条工具消息 |
 | `ACTIVITY_SNAPSHOT` / `ACTIVITY_DELTA` | 该活动消息——已累积的元数据会在替换型快照下存活（[活动](/spec/draft/events/activity)） |
-| chunk（`*_CHUNK`） | 其合成事件所合并到的目标（[chunk 元数据](/spec/draft/basic/patterns/streaming#chunk-metadata)） |
+| chunk（`*_CHUNK`） | 其合成事件所合并到的目标（[chunk 元数据](/spec/draft/basic/patterns/streaming#chunk-元数据)） |
 | 其余一切（`RUN_*`、`STEP_*`、快照、`RAW`、`CUSTOM` 等） | 不合并——见下文 |
 
 <Note>

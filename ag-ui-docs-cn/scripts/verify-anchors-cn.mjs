@@ -15,7 +15,15 @@ const STRIP = (process.env.DOCS_BASE || '/docs-cn/ag-ui').replace(/\/+$/, '');
 
 const decode = (s) => {
   try {
-    return decodeURIComponent(s);
+    // href 可能是百分号编码（%3E）或 HTML 实体形态（&gt;），两种都归一
+    return decodeURIComponent(
+      s
+        .replace(/&gt;/g, '>')
+        .replace(/&lt;/g, '<')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, '&')
+    );
   } catch {
     return s;
   }
@@ -33,7 +41,16 @@ function walk(dir) {
       const html = readFileSync(p, 'utf8');
       rawHTML.set(rel, html);
       const set = new Set();
-      for (const m of html.matchAll(/id="([^"]+)"/g)) set.add(m[1]);
+      // id 值是 HTML 实体转义形态（&gt; 等），先实体解码再百分号解码，与 href 片段对齐
+      for (const m of html.matchAll(/id="([^"]+)"/g)) {
+        const raw = m[1]
+          .replace(/&gt;/g, '>')
+          .replace(/&lt;/g, '<')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&amp;/g, '&');
+        set.add(decode(raw));
+      }
       ids.set(rel, set);
     }
   }

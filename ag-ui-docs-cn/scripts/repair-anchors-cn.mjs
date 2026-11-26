@@ -39,8 +39,10 @@ function walk(dir, ext, out = []) {
   if (!existsSync(dir)) return out;
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
-    if (e.isDirectory()) walk(p, ext, out);
-    else if (e.name.endsWith(ext)) out.push(p);
+    if (e.isDirectory()) {
+      if (e.name === 'node_modules') continue; // 第三方依赖不入扫描
+      walk(p, ext, out);
+    } else if (e.name.endsWith(ext)) out.push(p);
   }
   return out;
 }
@@ -68,11 +70,23 @@ function loadDistHeadings(dist) {
 }
 
 // ---------- 锚点映射加载 ----------
-// 页路径（如 spec/1.0/events/lifecycle）→ 映射条目 [{old,new}]
+// 映射文件名 = 页路径（'/'→'-'），但页 slug 自身也含 '-'，故从磁盘页面列表精确反查
+const pagePaths = new Set(
+  walk(ROOT, '.mdx')
+    .filter((f) => !f.includes(`${ROOT}/snippets/`))
+    .map((f) => f.slice(ROOT.length + 1).replace(/\.mdx$/, ''))
+);
 const maps = new Map();
+const mapsAlias = (p) => {
+  // /index 结尾的页面在 dist 与链接里按去 index 的路径引用，注册别名
+  if (p.endsWith('/index')) {
+    const stripped = p.slice(0, -'/index'.length);
+    if (stripped && !maps.has(stripped)) maps.set(stripped, maps.get(p));
+  }
+};
 for (const dirBase of walk(MAPS, '.map.md')) {
   const base = dirBase.split('/').pop().replace(/\.map\.md$/, '');
-  const pagePath = base.replace(/-/g, '/'); // 与子代理约定：页路径 / → -
+  const pagePath = [...pagePaths].find((p) => p.replace(/\//g, '-') === base);
   const entries = [];
   for (const line of readFileSync(dirBase, 'utf8').split('\n')) {
     const m = line.match(/^([^|\n]+)\|([^|\n]+)\|([^|\n]+)$/);
@@ -82,7 +96,10 @@ for (const dirBase of walk(MAPS, '.map.md')) {
     if (!old || !nw || /^[-: ]+$/.test(old)) continue;
     entries.push({ old, nw });
   }
-  if (entries.length) maps.set(pagePath, entries);
+  if (entries.length) {
+    maps.set(pagePath, entries);
+    mapsAlias(pagePath);
+  }
 }
 
 // ---------- 旧标题/新标题 → 实测 id ----------
@@ -157,20 +174,27 @@ function targetPage(file, target) {
 const enPages = loadDistHeadings(join(DIST_EN, '') );
 const cnPages = DIST_CN ? loadDistHeadings(DIST_CN) : null;
 const bridge = resolveBridge(enPages, cnPages);
+if (process.env.DBG) {
+  console.error('[dbg] maps total:', maps.size);
+  console.error('[dbg] bridge has tool-calls:', bridge.has('spec/1.0/events/tool-calls'));
+}
 
 const sources = walk(ROOT, '.mdx').filter((f) => !f.includes('node_modules') && !f.includes('/snippets/') || f.includes('/snippets/'));
 const plan = [];
 for (const file of sources) {
   const rel = file.slice(ROOT.length + 1);
   const { hits, lines } = scanLinks(file);
+  if (process.env.DBG) console.error('[dbg]', rel, 'hits=', hits.length);
   for (const h of hits) {
     const page = targetPage(file, h.target);
     if (!page) continue;
     const b = bridge.get(page);
+    if (process.env.DBG && rel === 'spec/1.0/changelog.mdx') console.error('[dbg-link]', h.line, h.target, h.anchor, 'page=', page, 'bridged=', b ? b.oldIdToEntry.has(h.anchor) : 'no-bridge');
     if (!b || !b.oldIdToEntry.has(h.anchor)) continue;
     const entry = b.oldIdToEntry.get(h.anchor);
     const newId = cnPages ? b.newIdFor.get(entry) : null;
     if (cnPages && !newId) continue; // 桥不到新 id（映射缺或标题不符）→ 留给 verify 报告
+    if (newId === h.anchor) continue; // 锚点未变（标题保留英文等），无需改写
     plan.push({ file: rel, line: h.line, col: h.col, matchLen: h.matchLen, raw: h.raw, page, anchor: h.anchor, newId, text: lines[h.line - 1].trim().slice(0, 120) });
   }
 }

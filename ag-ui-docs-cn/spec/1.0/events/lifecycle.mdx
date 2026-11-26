@@ -22,13 +22,13 @@ stateDiagram-v2
 
 ### `RUN_STARTED`
 
-开启运行。它携带运行的标识符；生产者自己的 `protocolVersion` 声明（按[版本管理规则](/spec/1.0/basic/versioning#version-negotiation)）；并 MAY 回显本次运行由以启动的那份输入，让未发起请求的消费者也能看到智能体被要求做什么。`parentRunId` 指名派生本次运行的那次运行——当一个智能体把另一个智能体作为独立运行、而非一次运行内的[子智能体](/spec/1.0/events/subagents)来调用时出现。
+开启运行。它携带运行的标识符；生产者自己的 `protocolVersion` 声明（按[版本管理规则](/spec/1.0/basic/versioning#版本协商)）；并 MAY 回显本次运行由以启动的那份输入，让未发起请求的消费者也能看到智能体被要求做什么。`parentRunId` 指名派生本次运行的那次运行——当一个智能体把另一个智能体作为独立运行、而非一次运行内的[子智能体](/spec/1.0/events/subagents)来调用时出现。
 
 ### `RUN_FINISHED`
 
 关闭一次未失败的运行，并报告它如何结束：
 
-- 它的 `outcome` 区分完成了的运行、因等待外部输入而被中断的运行、以及在完成之前被停止的运行；outcome 缺省表示成功。interrupt outcome 及其后续由[中断与恢复](/spec/1.0/basic/patterns/interrupt-resume)规定；cancelled outcome 规定在[下文](#被取消的运行)。outcome 报告的是生产者对运行结束原因的了解：因[前端工具调用](/spec/1.0/events/tool-calls#frontend-tools)而停止的运行是一次已完成的运行，其 success outcome MAY 在 `pendingToolCallIds` 中列名自己未获应答的调用，因为这样的调用之后应用是否延续线程，是应用的决定，不是生产者的。
+- 它的 `outcome` 区分完成了的运行、因等待外部输入而被中断的运行、以及在完成之前被停止的运行；outcome 缺省表示成功。interrupt outcome 及其后续由[中断与恢复](/spec/1.0/basic/patterns/interrupt-resume)规定；cancelled outcome 规定在[下文](#被取消的运行)。outcome 报告的是生产者对运行结束原因的了解：因[前端工具调用](/spec/1.0/events/tool-calls#前端工具)而停止的运行是一次已完成的运行，其 success outcome MAY 在 `pendingToolCallIds` 中列名自己未获应答的调用，因为这样的调用之后应用是否延续线程，是应用的决定，不是生产者的。
 - 生产者 MUST NOT 发送 schema 未描述的 outcome 取值。
 - `result` 是 OPTIONAL 的，携带运行的返回值（如果有）。
 - `usage` 是 OPTIONAL 的，报告 token 用量，每个提供方与模型一条记录，按[下文记账](#token-用量)执行。只想要总量的消费者把各条相加即可。
@@ -49,7 +49,7 @@ stateDiagram-v2
 - 被取消的运行什么也不等。它的 outcome 不携带中断，线程上的下一次运行是一次普通的新运行，不是恢复。
 - 消费者 MUST NOT 把被取消的运行呈现为已成功，也 MUST NOT 把它呈现为已失败——用户自己要求的停止不是该展示给他们的错误。运行在停止之前交付的一切仍然算已交付，与 `RUN_ERROR` 之后一样。除此之外如何呈现这次停止，是消费者的事。
 
-取消是生产者对自己正在运行的运行所作的报告。抛弃一条流的消费者——关闭连接、停止读取——得到的是一次[被截断的运行](/spec/1.0/basic/transports#truncation)，不是被取消的运行：对一次自己从未收到结局的运行，它 MUST NOT 合成 `RUN_FINISHED`，无论 cancelled 还是别的。
+取消是生产者对自己正在运行的运行所作的报告。抛弃一条流的消费者——关闭连接、停止读取——得到的是一次[被截断的运行](/spec/1.0/basic/transports#截断)，不是被取消的运行：对一次自己从未收到结局的运行，它 MUST NOT 合成 `RUN_FINISHED`，无论 cancelled 还是别的。
 
 ### `RUN_ERROR`
 

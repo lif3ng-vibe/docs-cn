@@ -26,7 +26,7 @@ description: "归因、所有权、嵌套、并行执行、状态与终止——
 
 `SUBAGENT_ERROR` 结束的是调用，不是运行。父智能体 MAY 处理失败的子智能体并继续；这正是它不是 `RUN_ERROR` 的原因。
 
-子智能体的模型调用是这个运行的：没有任何子智能体事件携带 token 用量，运行的终止事件会[报告](/spec/1.0/events/lifecycle#token-usage)整个运行的用量，子智能体包括在内。
+子智能体的模型调用是这个运行的：没有任何子智能体事件携带 token 用量，运行的终止事件会[报告](/spec/1.0/events/lifecycle#token-用量)整个运行的用量，子智能体包括在内。
 
 `SUBAGENT_FINISHED` 报告该区段为何结束。outcome 缺省表示成功。suspended outcome 表示该调用已暂停、等待外部输入——对这条流而言是终点，对调用本身则不是，后续运行 MAY 以同一 id 延续它。生产者 MUST NOT 发送 schema 未描述的 outcome 取值，也 MUST NOT 把中断 id 附到 success outcome 上。
 

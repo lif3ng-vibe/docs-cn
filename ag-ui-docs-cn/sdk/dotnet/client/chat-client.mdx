@@ -257,7 +257,7 @@ static ChatMessage CreateInterruptResponse(InterruptRequestContent request)
 `InterruptResponseContent.Metadata` 可选地携带关于该响应的信封数据——证明决定未被
 篡改的签名、路由 key 等——与之相对，`Payload` 是智能体索求的答案。客户端会把它复制到
 resume 条目的 `metadata` 上，托管层再通过 `InterruptResponseContent` 把它交回服务端
-管线；见[元数据](/concepts/metadata#resume-entries)。
+管线；见[元数据](/concepts/metadata#恢复条目)。
 
 ```csharp
 new InterruptResponseContent(request.RequestId)

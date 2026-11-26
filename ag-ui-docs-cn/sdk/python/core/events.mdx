@@ -106,7 +106,7 @@ class RunStartedEvent(BaseEvent):
 
 一个可复用、只含数字的 token 用量摘要，由终止性运行事件携带。它在设计上**只**包含
 提供商/模型标签与 token 计数——不含提示词、补全、消息或标识符。这些计数遵循协议的
-[记账规则](/spec/1.0/events/lifecycle#token-usage)：输入与输出计数是总量，缓存与
+[记账规则](/spec/1.0/events/lifecycle#token-用量)：输入与输出计数是总量，缓存与
 推理计数是总量的一部分，绝不是额外累加。
 
 ```python
@@ -722,7 +722,7 @@ class SubagentErrorEvent(BaseEvent):
 | `THINKING_TEXT_MESSAGE_CONTENT` | `REASONING_MESSAGE_CONTENT` |
 | `THINKING_TEXT_MESSAGE_END`     | `REASONING_MESSAGE_END`     |
 
-详细的迁移指引见[推理迁移](/concepts/reasoning#migration-from-thinking-events)。
+详细的迁移指引见[推理迁移](/concepts/reasoning#从-thinking-事件迁移)。
 
 ## 事件判别
 

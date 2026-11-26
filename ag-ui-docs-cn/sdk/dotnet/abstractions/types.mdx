@@ -64,7 +64,7 @@ var input = new RunAgentInput
 ## AGUIResume
 
 `RunAgentInput.Resume` 中每个中断对应一条响应，针对上一次运行中的某个中断。
-完整的 resume 契约见[中断](/concepts/interrupts#resuming-a-run)。
+完整的 resume 契约见[中断](/concepts/interrupts#恢复运行)。
 
 | C# 属性 | JSON 字段 | 类型 | 说明 |
 | ----------- | ---------- | ---- | ----------- |
@@ -76,7 +76,7 @@ var input = new RunAgentInput
 `Metadata` 遵循协议中其他所有元数据相同的约定：按键开放（open by key），key 下允许
 任意 JSON 值（包括 `null`）；对象本身要么缺省、要么是对象，在线上绝不会是 `null`；
 并且 `ag-ui` 这个 key（`AGUIMetadata.ReservedKey`）保留为 AG-UI 自用。resume 条目是
-一个请求字段，因此不会有任何内容合并进它；见[元数据](/concepts/metadata#resume-entries)。
+一个请求字段，因此不会有任何内容合并进它；见[元数据](/concepts/metadata#恢复条目)。
 对于非工具类中断，托管层（hosting layer）会把它带到 `InterruptResponseContent.Metadata`
 上，`AGUIChatClient` 再把它从 `InterruptResponseContent` 复制到它发送的条目上。
 工具批准条目会经由 MEAI 自己的批准内容类型转换，而那些类型没有元数据入口——如果在那里

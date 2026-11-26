@@ -21,7 +21,7 @@ import DraftNotice from "/snippets/draft-notice.mdx";
 
 - 一帧是一个 4 字节长度头——无符号 32 位大端整数——后跟恰好那么多字节的一个已编码事件。
 - 帧之间直接相接，没有分隔符。消费者 MUST 容忍帧被传输层分块切开、以及一个分块内含多帧的情形。
-- 在帧中途结束的响应体是一次[被截断的运行](/spec/draft/basic/transports#truncation)。
+- 在帧中途结束的响应体是一次[被截断的运行](/spec/draft/basic/transports#截断)。
 
 ## 线上 schema
 
@@ -33,8 +33,8 @@ protobuf 消息定义与各 SDK 一样，由同一份 [JSON Schema](/spec/draft/
 - 线上 schema 以开放负载承载的材料——`RUN_FINISHED.outcome`、元数据、状态、`rawEvent`——在解码后存活并到达该管线：经由本绑定到达的无法识别 outcome，会由强制执行剥离并给出警告，与 SSE 上完全一致，绑定 MUST NOT 在解码时拒绝它。
 - 其余方面，二进制线上格式天然更窄。比本构建的线上 schema 更新的*字段*，会被 protobuf 解码本身静默跳过——"剥离并警告"的行为只有在 JSON 线上格式上才完全可观察。同样的收窄也覆盖线上 schema 未建模的、协议上合法的开放成员：JSON Patch 操作的扩展成员在 JSON 线上格式 MUST 保留，在这条线上则无法存活。
   信封分支比本构建更新的*事件*，没有类型字符串可以传递，绑定会丢弃该帧并给出警告——与强制执行给出的答案相同，只是在传输层说出。
-- 字节无法按消息解码的帧是格式错误的传输材料，对流而言是致命的。而只是在中途结束的响应体不是：那是一次[被截断的运行](/spec/draft/basic/transports#truncation)。
+- 字节无法按消息解码的帧是格式错误的传输材料，对流而言是致命的。而只是在中途结束的响应体不是：那是一次[被截断的运行](/spec/draft/basic/transports#截断)。
 
 ## 错误
 
-与 [SSE 绑定](/spec/draft/basic/transports/http-sse#errors)相同：流开始前的拒绝是 HTTP 错误状态；流内的失败是 `RUN_ERROR`，作为与其他帧无异的又一帧传输。
+与 [SSE 绑定](/spec/draft/basic/transports/http-sse#错误)相同：流开始前的拒绝是 HTTP 错误状态；流内的失败是 `RUN_ERROR`，作为与其他帧无异的又一帧传输。

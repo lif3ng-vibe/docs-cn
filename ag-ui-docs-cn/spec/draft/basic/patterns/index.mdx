@@ -9,7 +9,7 @@ import DraftNotice from "/snippets/draft-notice.mdx";
 
 本页定义核心协议的事件模式：生产者把事件组合成流的种种方式。每种[传输层](/spec/draft/basic/transports)都承载所有这些模式；传输层之间的差别只在事件如何分帧与投递。
 
-协议的方向是固定的。事件从生产者流向消费者；消费者在每次交换中只说一次话——发送开启这次交换的[运行输入](/spec/draft/basic/run-input)。生产者 MUST NOT 要求消费者在运行中途发来任何消息——需要外部输入的运行会结束，答案在下一次运行时到达：或经由一个中断与它的 resume 条目，或经由一个未被应答、而在下一次输入的消息中得到应答的[前端工具调用](/spec/draft/events/tool-calls#frontend-tools)。
+协议的方向是固定的。事件从生产者流向消费者；消费者在每次交换中只说一次话——发送开启这次交换的[运行输入](/spec/draft/basic/run-input)。生产者 MUST NOT 要求消费者在运行中途发来任何消息——需要外部输入的运行会结束，答案在下一次运行时到达：或经由一个中断与它的 resume 条目，或经由一个未被应答、而在下一次输入的消息中得到应答的[前端工具调用](/spec/draft/events/tool-calls#前端工具)。
 
 ## 流式
 

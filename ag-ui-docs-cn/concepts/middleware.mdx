@@ -171,7 +171,7 @@ agent.use(middleware1, middleware2, middleware3)
 
 ## `RUN_STARTED` 上的协议版本
 
-每次运行的 `RUN_STARTED.protocolVersion` 标明的是这次运行的事件流所“说”的版本，而不是谁来转发它（[版本管理](/spec/1.0/basic/versioning#version-negotiation)）。对中间件而言，这意味着一条规则，由这次运行的产出方决定：
+每次运行的 `RUN_STARTED.protocolVersion` 标明的是这次运行的事件流所“说”的版本，而不是谁来转发它（[版本管理](/spec/1.0/basic/versioning#版本协商)）。对中间件而言，这意味着一条规则，由这次运行的产出方决定：
 
 - **转发运行**。当 `RUN_STARTED` 来自链中的下一个智能体时，原样透传，不要动它的 `protocolVersion`：不要新增、覆盖或删除。如果下游智能体早于该字段出现，缺失声明才是如实的情况。
 - **合成运行**。当中间件自行响应请求并发出自己的 `RUN_STARTED`（没有下游智能体运行）时，中间件就是这次运行的产出方。请用 SDK 的 `PROTOCOL_VERSION` 常量声明它构建时所针对的版本。不要照抄客户端的 `RunAgentInput.protocolVersion`，也不要省略该字段。

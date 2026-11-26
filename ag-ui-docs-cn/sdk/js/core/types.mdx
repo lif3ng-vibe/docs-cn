@@ -42,7 +42,7 @@ type RunAgentInput = {
 
 ## ResumeEntry
 
-`RunAgentInput.resume` 中针对每次中断的响应，用于应答上一次运行产生的中断。完整的恢复（resume）约定参见 [Interrupts（中断）](/concepts/interrupts#resuming-a-run)。
+`RunAgentInput.resume` 中针对每次中断的响应，用于应答上一次运行产生的中断。完整的恢复（resume）约定参见 [Interrupts（中断）](/concepts/interrupts#恢复运行)。
 
 ```typescript
 type ResumeEntry = {
@@ -60,7 +60,7 @@ type ResumeEntry = {
 | `payload` | `any (optional)` | 响应本身，需通过该中断的 `responseSchema` 校验 |
 | `metadata` | `Record<string, any> (optional)` | 关于响应的信封数据——签名、路由 key 等——绝不是答案本身 |
 
-`metadata` 遵循协议中其他所有地方元数据的相同约定：按键开放，任意 key 下允许任何 JSON 值（包括 `null`），对象本身要么缺失、要么是对象但绝不能是 `null`，且 `ag-ui` key 为保留 key。resume 条目是请求字段，因此不会有任何内容合并进来；参见 [Metadata（元数据）](/concepts/metadata#resume-entries)。
+`metadata` 遵循协议中其他所有地方元数据的相同约定：按键开放，任意 key 下允许任何 JSON 值（包括 `null`），对象本身要么缺失、要么是对象但绝不能是 `null`，且 `ag-ui` key 为保留 key。resume 条目是请求字段，因此不会有任何内容合并进来；参见 [Metadata（元数据）](/concepts/metadata#恢复条目)。
 
 ## 消息类型
 

@@ -23,15 +23,15 @@ dotnet add package AGUI.Client
 `AGUIChatClient` 是本包中的主类型。它包装一个 AG-UI HTTP+SSE 端点，同时暴露
 `IChatClient` 的 `GetStreamingResponseAsync` 与 `GetResponseAsync`。
 
-- [构建](/sdk/dotnet/client/chat-client#construction) - 从 `HttpClient` 与端点创建
+- [构建](/sdk/dotnet/client/chat-client#构建) - 从 `HttpClient` 与端点创建
   客户端，或从自定义传输层创建
-- [流式](/sdk/dotnet/client/chat-client#streaming-responses) - 以
+- [流式](/sdk/dotnet/client/chat-client#流式响应) - 以
   `ChatResponseUpdate` 值的形式消费 AG-UI 事件
-- [无状态行为](/sdk/dotnet/client/chat-client#statelessness-and-conversationid) -
+- [无状态行为](/sdk/dotnet/client/chat-client#无状态与-conversationid) -
   每一轮都发送完整的消息历史
-- [线程延续性](/sdk/dotnet/client/chat-client#thread-continuity) - 保持稳定的线程，
+- [线程延续性](/sdk/dotnet/client/chat-client#线程延续性) - 保持稳定的线程，
   或从上一次运行分支
-- [中断与批准](/sdk/dotnet/client/chat-client#interrupts-and-approvals) -
+- [中断与批准](/sdk/dotnet/client/chat-client#中断与批准) -
   用标准 MEAI 内容类型处理服务端暂停
 
 <Card
@@ -52,8 +52,8 @@ AG-UI 事件流。默认路径使用 HTTP POST 与 SSE（服务器推送事件�
 
 - [IAGUITransport](/sdk/dotnet/client/transport#iaguitransport) -
   `AGUIChatClient` 使用的传输层接口
-- [HTTP 传输层](/sdk/dotnet/client/transport#http-transport) - 内置的 HTTP+SSE 行为
-- [自定义传输层](/sdk/dotnet/client/transport#custom-transports) - 接入内存实现或
+- [HTTP 传输层](/sdk/dotnet/client/transport#http-传输层) - 内置的 HTTP+SSE 行为
+- [自定义传输层](/sdk/dotnet/client/transport#自定义传输层) - 接入内存实现或
   其他线上协议
 
 <Card

@@ -48,7 +48,7 @@ class RunAgentInput(ConfiguredBaseModel):
 `from ag_ui.core import ResumeEntry`
 
 `RunAgentInput.resume` 中每个中断对应一条响应，针对上一次运行中的某个中断。
-完整的 resume 契约见[中断](/concepts/interrupts#resuming-a-run)。
+完整的 resume 契约见[中断](/concepts/interrupts#恢复运行)。
 
 ```python
 class ResumeEntry(GeneratedBaseModel):
@@ -68,7 +68,7 @@ class ResumeEntry(GeneratedBaseModel):
 `metadata` 遵循协议中其他所有元数据相同的约定：按键开放，key 下允许任意 JSON 值
 （包括 `None`）；对象本身要么缺省、要么是映射（mapping），在线上绝不会是 `null`；
 并且 `ag-ui` 这个 key 保留为 AG-UI 自用。resume 条目是一个请求字段，因此不会有任何
-内容合并进它；见[元数据](/concepts/metadata#resume-entries)。
+内容合并进它；见[元数据](/concepts/metadata#恢复条目)。
 
 ## 消息类型
 

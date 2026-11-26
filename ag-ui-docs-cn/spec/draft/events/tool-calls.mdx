@@ -48,7 +48,7 @@ import { Since } from "/snippets/since.mdx";
 
 ### `TOOL_CALL_CHUNK`
 
-紧凑写法。消费者 MUST 按[流式模式](/spec/draft/basic/patterns/streaming#the-chunked-form)的规定展开 chunk：首个 chunk MUST 携带 `toolCallId` 与 `toolCallName`，延续 chunk 以冲突值重复 `toolCallName` 或 `parentMessageId` 则是致命的。
+紧凑写法。消费者 MUST 按[流式模式](/spec/draft/basic/patterns/streaming#chunk-形式)的规定展开 chunk：首个 chunk MUST 携带 `toolCallId` 与 `toolCallName`，延续 chunk 以冲突值重复 `toolCallName` 或 `parentMessageId` 则是致命的。
 
 ### `TOOL_CALL_RESULT`
 
@@ -67,7 +67,7 @@ import { Since } from "/snippets/since.mdx";
 
 #### 结果内容
 
-`content` MUST 是字符串，或 [`ContentPart`](/spec/draft/schema#contentpart) 的有序列表——与[用户消息](/spec/draft/basic/run-input#messages)所携带的部分相同：`text`、`image`、`audio`、`video` 与 `document`，每个媒体部分带一个 `source`，为内联数据、URL 或[提供方文件句柄](/spec/draft/basic/run-input#provider-file-handles)。事件生成的工具消息形态与之完全一致，因此结果可以原封不动地进入下一次运行的 `messages`。
+`content` MUST 是字符串，或 [`ContentPart`](/spec/draft/schema#contentpart) 的有序列表——与[用户消息](/spec/draft/basic/run-input#messages)所携带的部分相同：`text`、`image`、`audio`、`video` 与 `document`，每个媒体部分带一个 `source`，为内联数据、URL 或[提供方文件句柄](/spec/draft/basic/run-input#提供方文件句柄)。事件生成的工具消息形态与之完全一致，因此结果可以原封不动地进入下一次运行的 `messages`。
 
 ```json
 {
@@ -87,7 +87,7 @@ import { Since } from "/snippets/since.mdx";
 
 - 返回结构化数据的工具——比如一个 JSON 对象——会把它序列化为字符串形式，或放进一个 `text` 部分。协议没有 JSON 部分：每个提供方都接受文本形式的工具结果，而一个带类型的对象横竖都要在提供方边界变成文本。
 - 部分不建模的东西——搜索命中的来源与标题、文档的文件名——放进该部分的 `metadata`。协议不为提供方专属的结果块下定义（带引用的搜索结果、浏览器状态等）；需要这类东西的生产者，要么把它映射到这些部分上，要么作为透传携带。
-- 把输出上传到了模型提供方的工具——生成的报告如今躺在提供方的文件库里——以 `file` 来源返回句柄，而不是重发那些字节；[同样的规则](/spec/draft/basic/run-input#provider-file-handles)与输入端一样适用，渲染结果的消费者把句柄视为不透明。
+- 把输出上传到了模型提供方的工具——生成的报告如今躺在提供方的文件库里——以 `file` 来源返回句柄，而不是重发那些字节；[同样的规则](/spec/draft/basic/run-input#提供方文件句柄)与输入端一样适用，渲染结果的消费者把句柄视为不透明。
 - 拿到自己的模型无法接受的部分的生产者——把图像交给纯文本模型、把音频交给工具结果中一概不收的提供方、拿到别的提供方签发的文件句柄——MUST NOT 因此让运行失败。它丢弃该部分并继续，正如[运行输入规则](/spec/draft/basic/run-input#messages)对用户内容已经说过的那样；并且它 MUST 仍然应答这次调用：每个部分都被丢弃的结果以空字符串应答，因为未获应答的工具调用是多数模型会直接拒绝的东西。
 - 只能持有字符串的消费者——渲染器、存储、旧桥接——把部分列表渲染为其 `text` 部分按序拼接的结果，忽略其余。这样做是有损的，SHOULD 予以宣告，如同任何降级一样（[版本管理](/spec/draft/basic/versioning)）。
 - 内容部分出现之前的对端不发送 `protocolVersion`；知道自己正在与这种对端通信的生产者，MAY 在发出前以同样方式把结果压平，并在压平丢弃了部分时 MUST 给出警告。它 MUST NOT 在被丢弃部分的位置放占位物：降级是重塑，不是捏造。

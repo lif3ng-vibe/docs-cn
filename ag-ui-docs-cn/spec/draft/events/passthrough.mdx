@@ -7,7 +7,7 @@ import DraftNotice from "/snippets/draft-notice.mdx";
 
 <DraftNotice />
 
-有两种事件类型承载协议未建模的东西：`RAW`，原样透传、不作翻译的提供方原生事件；`CUSTOM`，应用自己的事件。两者都是独立的——它们不开启也不关闭自己的任何条目，MAY 出现在一次开启的运行内的任何位置；不过 `CUSTOM` 与 `RAW` 不同，它会结束其泳道中开启的 [chunk 流](/spec/draft/basic/patterns/streaming#closing-a-chunk-stream)。边界才是重点：本页的一切，都是为了让逃生舱无法悄悄变成第二套协议。
+有两种事件类型承载协议未建模的东西：`RAW`，原样透传、不作翻译的提供方原生事件；`CUSTOM`，应用自己的事件。两者都是独立的——它们不开启也不关闭自己的任何条目，MAY 出现在一次开启的运行内的任何位置；不过 `CUSTOM` 与 `RAW` 不同，它会结束其泳道中开启的 [chunk 流](/spec/draft/basic/patterns/streaming#关闭-chunk-流)。边界才是重点：本页的一切，都是为了让逃生舱无法悄悄变成第二套协议。
 
 ## `RAW`
 
