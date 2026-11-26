@@ -1,38 +1,34 @@
 ---
-title: Google ADK JavaScript quickstart
-description: Run a native Google ADK JavaScript agent behind an AG-UI endpoint.
+title: Google ADK JavaScript 快速上手
+description: 在 AG-UI 端点后面运行原生 Google ADK JavaScript 智能体。
 ---
 
-`@ag-ui/adk-js` adapts a server-side Google ADK JavaScript `Runner` to an AG-UI
-`AbstractAgent`. Use it when the agent and web runtime run in Node.js. The
-existing `@ag-ui/adk` package remains the HTTP client for the Python ADK
-middleware.
+`@ag-ui/adk-js` 把服务端 Google ADK JavaScript `Runner` 适配为 AG-UI `AbstractAgent`。当智能体与 Web 运行时都运行在 Node.js 中时可以使用它。现有的 `@ag-ui/adk` 包仍然是 Python ADK 中间件的 HTTP 客户端。
 
-## Prerequisites
+## 前置要求
 
-- Node.js 20.19 or newer
-- `@ag-ui/client` and `@ag-ui/core` 1.x (use a CopilotKit release that
-  resolves the 1.x line)
-- A Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+- Node.js 20.19 或更新版本
+- `@ag-ui/client` 与 `@ag-ui/core` 1.x（使用能解析到 1.x 版本线的 CopilotKit 发布版）
+- 来自 [Google AI Studio](https://aistudio.google.com/apikey) 的 Gemini API key
 
-## Add ADK JavaScript to an application
+## 将 ADK JavaScript 添加到应用
 
-Install the server dependencies:
+安装服务端依赖：
 
 ```bash
 npm install @ag-ui/adk-js @google/adk @copilotkit/runtime hono
 ```
 
-`@ag-ui/adk-js` requires `@google/adk` 2.x.
+`@ag-ui/adk-js` 需要 `@google/adk` 2.x。
 
-Set your Gemini key in the environment the server reads:
+在服务端读取的环境变量中设置你的 Gemini key：
 
 ```dotenv
 GOOGLE_GENAI_API_KEY=your-api-key
 GOOGLE_GENAI_USE_VERTEXAI=0
 ```
 
-Create `app/api/copilotkit/route.ts`:
+创建 `app/api/copilotkit/route.ts`：
 
 ```typescript
 import { ADKJSAgent } from "@ag-ui/adk-js"
@@ -72,47 +68,25 @@ const endpoint = createCopilotEndpointSingleRoute({
 export const POST = handle(endpoint)
 ```
 
-The frontend can now select the `assistant` agent through any AG-UI client. A
-CopilotKit React application uses `runtimeUrl="/api/copilotkit"` and
-`agent="assistant"` on its `CopilotKit` provider.
+前端现在可以通过任意 AG-UI 客户端选择 `assistant` 智能体。CopilotKit React 应用在其 `CopilotKit` provider 上使用 `runtimeUrl="/api/copilotkit"` 与 `agent="assistant"`。
 
-## Runs and concurrency
+## 运行与并发
 
-Different threads run concurrently on one shared agent instance; a second run
-on the same user and thread is refused with `THREAD_BUSY`. ADK closes every
-toolset after each run, so give roots that share a closable toolset (or keep
-per-run state) per-run instances with a factory
-(`agent: () => new Workflow(...)`), or pass `runner:` to bring a fully
-configured Runner. Failures after the client disconnected go to `logger`
-(default `console`).
+多个线程可以在同一个共享智能体实例上并发运行；同一用户与线程上的第二次运行会被以 `THREAD_BUSY` 拒绝。ADK 会在每次运行结束后关闭所有工具集（toolset），因此对于共享可关闭工具集（或保存按次运行状态）的根智能体，请用工厂函数（`agent: () => new Workflow(...)`）为每次运行提供独立实例，或者传入 `runner:` 以注入一个完整配置好的 Runner。客户端断开连接之后的失败会记录到 `logger`（默认为 `console`）。
 
-## Supported integration behavior
+## 支持的集成行为
 
-- Streaming assistant messages and lifecycle events
-- Backend and frontend tool calls
-- AG-UI state snapshots and RFC 6902 state deltas
-- ADK input, confirmation, and credential requests as resumable interrupts.
-  A tool that raises its own confirmation at runtime must also answer `true`
-  from `checkRequireConfirmation` (or declare `requireConfirmation` on a
-  `FunctionTool`), because ADK 2.x binds an approval to the tool it names.
-- Restored message history with stable message IDs
-- Provider/model token usage when ADK reports it
-- A bare ADK `Workflow` as the `Runner` root (its workflow nodes are reported
-  as sub-agents and their frontend tools are discovered)
-- The AG-UI subagent protocol for ADK multi-agent trees (see below)
+- 流式助手消息与生命周期事件
+- 后端与前端工具调用
+- AG-UI 状态快照与 RFC 6902 状态增量
+- ADK 的输入、确认与凭据请求以可恢复中断的形式呈现。在运行时自行发起确认的工具，还必须让 `checkRequireConfirmation` 返回 `true`（或在 `FunctionTool` 上声明 `requireConfirmation`），因为 ADK 2.x 把批准绑定到它点名的那个工具上。
+- 使用稳定消息 ID 恢复消息历史
+- 当 ADK 上报时提供提供商/模型的 token 用量
+- 以裸 ADK `Workflow` 作为 `Runner` 根（其工作流节点会作为子智能体上报，并且会发现它们的前端工具）
+- 面向 ADK 多智能体树的 AG-UI 子智能体协议（见下文）
 
-The integration is server-only. Never import `@ag-ui/adk-js` or `@google/adk`
-from a browser component. See the
-[live Dojo examples](https://dojo.ag-ui.com/adk-js/feature/agentic_chat?openCopilot=true)
-for tools, shared state, generative UI, and interrupts.
+该集成仅限服务端使用。绝不要在浏览器组件中导入 `@ag-ui/adk-js` 或 `@google/adk`。工具、共享状态、生成式 UI 与中断的可运行示例参见 [Dojo 实例](https://dojo.ag-ui.com/adk-js/feature/agentic_chat?openCopilot=true)。
 
-## Sub-agents
+## 子智能体
 
-`subagents: "steps"` emits `STEP_STARTED` / `STEP_FINISHED` (`agent:<name>`) and
-`CUSTOM` `MultiAgentHandoff` events around ADK sub-agent work — safe for every
-client and what the Dojo multi-agent page reads. `subagents: "attributed"` adds
-the AG-UI subagent protocol (`SUBAGENT_STARTED/FINISHED/ERROR`, `subagentRunId`
-on events, messages, and interrupts, continuation of a suspended sub-agent under
-the same id on resume); the consuming client needs `@ag-ui/client` 1.x,
-because older clients reject those event types before any application code
-runs. The default is `off`.
+`subagents: "steps"` 会在 ADK 子智能体工作前后发出 `STEP_STARTED` / `STEP_FINISHED`（`agent:<name>`）以及 `CUSTOM` `MultiAgentHandoff` 事件——对所有客户端都安全，Dojo 多智能体页面读取的正是这些事件。`subagents: "attributed"` 会额外启用 AG-UI 子智能体协议（`SUBAGENT_STARTED/FINISHED/ERROR`、事件/消息/中断上的 `subagentRunId`，以及恢复时在同一 id 下继续已挂起的子智能体）；消费端客户端需要 `@ag-ui/client` 1.x，因为较旧的客户端会在任何应用代码运行之前就拒绝这些事件类型。默认值为 `off`。

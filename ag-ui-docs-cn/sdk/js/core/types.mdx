@@ -1,24 +1,18 @@
 ---
-title: "Types"
+title: "类型"
 description:
-  "Documentation for the core types used in the Agent User Interaction Protocol
-  SDK"
+  "智能体–用户交互协议 SDK 中所用核心类型的文档"
 ---
 
-# Core Types
+# 核心类型
 
-The Agent User Interaction Protocol SDK is built on a set of core types that
-represent the fundamental structures used throughout the system. This page
-documents these types and their properties.
+智能体–用户交互协议 SDK 构建在一组核心类型之上，它们表示整个系统中使用的基础结构。本页记录这些类型及其属性。
 
 ## RunAgentInput
 
-Input parameters for running an agent. In the HTTP API, this is the body of the
-`POST` request.
+运行智能体的输入参数。在 HTTP API 中，它是 `POST` 请求的请求体。
 
-`tools` contains tools provided by the client for this run. Backend-defined
-tools should remain in the backend agent or framework configuration, and may be
-advertised separately through agent capabilities.
+`tools` 包含客户端为本次运行提供的工具。后端定义的工具应保留在后端智能体或框架配置中，并可通过智能体能力（capabilities）单独对外声明。
 
 ```typescript
 type RunAgentInput = {
@@ -34,23 +28,21 @@ type RunAgentInput = {
 }
 ```
 
-| Property         | Type                       | Description                                                                              |
+| 属性 | 类型 | 描述 |
 | ---------------- | -------------------------- | ---------------------------------------------------------------------------------------- |
-| `threadId`       | `string`                   | ID of the conversation thread                                                            |
-| `runId`          | `string`                   | ID of the current run                                                                    |
-| `parentRunId`    | `string (optional)`        | ID of the run that spawned this run                                                      |
-| `state`          | `any (optional)`           | Current state of the agent; absent means "no state", and a bare `null` is read as absent |
-| `messages`       | `Message[]`                | Array of messages in the conversation                                                    |
-| `tools`          | `Tool[]`                   | Client-provided tools available for this run                                             |
-| `context`        | `Context[]`                | Array of context objects provided to the agent                                           |
-| `forwardedProps` | `any`                      | Additional properties forwarded to the agent                                             |
-| `resume`         | `ResumeEntry[] (optional)` | Per-interrupt responses resuming a run that finished with an interrupt outcome           |
+| `threadId` | `string` | 会话线程的 ID |
+| `runId` | `string` | 当前运行的 ID |
+| `parentRunId` | `string (optional)` | 生成此运行的父运行的 ID |
+| `state` | `any (optional)` | 智能体的当前状态；缺失表示"无状态"，单独一个 `null` 会被读作缺失 |
+| `messages` | `Message[]` | 会话中的消息数组 |
+| `tools` | `Tool[]` | 本次运行可用的客户端提供的工具 |
+| `context` | `Context[]` | 提供给智能体的上下文对象数组 |
+| `forwardedProps` | `any` | 转发给智能体的附加属性 |
+| `resume` | `ResumeEntry[] (optional)` | 针对每次中断的响应，用于恢复一个以中断（interrupt）结果结束的运行 |
 
 ## ResumeEntry
 
-One per-interrupt response inside `RunAgentInput.resume`, addressing an
-interrupt from the previous run. See
-[Interrupts](/concepts/interrupts#resuming-a-run) for the full resume contract.
+`RunAgentInput.resume` 中针对每次中断的响应，用于应答上一次运行产生的中断。完整的恢复（resume）约定参见 [Interrupts（中断）](/concepts/interrupts#resuming-a-run)。
 
 ```typescript
 type ResumeEntry = {
@@ -61,37 +53,27 @@ type ResumeEntry = {
 }
 ```
 
-| Property      | Type                             | Description                                                                           |
+| 属性 | 类型 | 描述 |
 | ------------- | -------------------------------- | ------------------------------------------------------------------------------------- |
-| `interruptId` | `string`                         | ID of the interrupt this entry addresses                                              |
-| `status`      | `"resolved" \| "cancelled"`      | Whether the user responded or abandoned the interrupt                                 |
-| `payload`     | `any (optional)`                 | The response itself, validated against the interrupt's `responseSchema`               |
-| `metadata`    | `Record<string, any> (optional)` | Envelope data about the response — signatures, routing keys — never the answer itself |
+| `interruptId` | `string` | 此条目所应答的中断的 ID |
+| `status` | `"resolved" \| "cancelled"` | 用户是响应了该中断，还是放弃了它 |
+| `payload` | `any (optional)` | 响应本身，需通过该中断的 `responseSchema` 校验 |
+| `metadata` | `Record<string, any> (optional)` | 关于响应的信封数据——签名、路由 key 等——绝不是答案本身 |
 
-`metadata` follows the same conventions as metadata everywhere else in the
-protocol: open by key, any JSON value allowed under a key including `null`, the
-object itself absent or an object but never `null`, and the `ag-ui` key
-reserved. A resume entry is a request field, so nothing merges into it; see
-[Metadata](/concepts/metadata#resume-entries).
+`metadata` 遵循协议中其他所有地方元数据的相同约定：按键开放，任意 key 下允许任何 JSON 值（包括 `null`），对象本身要么缺失、要么是对象但绝不能是 `null`，且 `ag-ui` key 为保留 key。resume 条目是请求字段，因此不会有任何内容合并进来；参见 [Metadata（元数据）](/concepts/metadata#resume-entries)。
 
-## Message Types
+## 消息类型
 
-The SDK includes several message types that represent different kinds of
-messages in the system.
+SDK 包含若干消息类型，表示系统中不同种类的消息。
 
 <Note>
-  Every message type carries an optional `metadata` object
-  (`Record<string, any>`), and so does `ToolCall`. Both are omitted from the
-  per-type tables below for brevity.
-  It is open by key — any JSON value is allowed under a key, including `null` —
-  and the object itself may be absent but is never `null`. The `ag-ui` key is
-  reserved for AG-UI's own use. Metadata accumulates as a message is built from
-  its events; see [Metadata](/concepts/metadata) for the merge rules.
+  每种消息类型都带有一个可选的 `metadata` 对象（`Record<string, any>`），`ToolCall` 也是如此。为简洁起见，下面的分类型表格中省略了它们。
+  它是按键开放的——任意 key 下允许任何 JSON 值，包括 `null`——对象本身可以缺失，但绝不会是 `null`。`ag-ui` key 为 AG-UI 自用保留。元数据会随着消息由其事件逐步构建而累积；合并规则参见 [Metadata（元数据）](/concepts/metadata)。
 </Note>
 
 ### Role
 
-Represents the possible roles a message sender can have.
+表示消息发送者可能具有的角色。
 
 ```typescript
 type Role =
@@ -106,7 +88,7 @@ type Role =
 
 ### DeveloperMessage
 
-Represents a message from a developer.
+表示来自开发者（developer）的消息。
 
 ```typescript
 type DeveloperMessage = {
@@ -117,16 +99,16 @@ type DeveloperMessage = {
 }
 ```
 
-| Property  | Type          | Description                                      |
+| 属性 | 类型 | 描述 |
 | --------- | ------------- | ------------------------------------------------ |
-| `id`      | `string`      | Unique identifier for the message                |
-| `role`    | `"developer"` | Role of the message sender, fixed as "developer" |
-| `content` | `string`      | Text content of the message (required)           |
-| `name`    | `string`      | Optional name of the sender                      |
+| `id` | `string` | 消息的唯一标识符 |
+| `role` | `"developer"` | 消息发送者的角色，固定为 "developer" |
+| `content` | `string` | 消息的文本内容（必填） |
+| `name` | `string` | 发送者的可选名称 |
 
 ### SystemMessage
 
-Represents a system message.
+表示系统消息。
 
 ```typescript
 type SystemMessage = {
@@ -137,16 +119,16 @@ type SystemMessage = {
 }
 ```
 
-| Property  | Type       | Description                                   |
+| 属性 | 类型 | 描述 |
 | --------- | ---------- | --------------------------------------------- |
-| `id`      | `string`   | Unique identifier for the message             |
-| `role`    | `"system"` | Role of the message sender, fixed as "system" |
-| `content` | `string`   | Text content of the message (required)        |
-| `name`    | `string`   | Optional name of the sender                   |
+| `id` | `string` | 消息的唯一标识符 |
+| `role` | `"system"` | 消息发送者的角色，固定为 "system" |
+| `content` | `string` | 消息的文本内容（必填） |
+| `name` | `string` | 发送者的可选名称 |
 
 ### AssistantMessage
 
-Represents a message from an assistant.
+表示来自助手（assistant）的消息。
 
 ```typescript
 type AssistantMessage = {
@@ -158,17 +140,17 @@ type AssistantMessage = {
 }
 ```
 
-| Property    | Type                    | Description                                      |
+| 属性 | 类型 | 描述 |
 | ----------- | ----------------------- | ------------------------------------------------ |
-| `id`        | `string`                | Unique identifier for the message                |
-| `role`      | `"assistant"`           | Role of the message sender, fixed as "assistant" |
-| `content`   | `string` (optional)     | Text content of the message                      |
-| `name`      | `string` (optional)     | Name of the sender                               |
-| `toolCalls` | `ToolCall[]` (optional) | Tool calls made in this message                  |
+| `id` | `string` | 消息的唯一标识符 |
+| `role` | `"assistant"` | 消息发送者的角色，固定为 "assistant" |
+| `content` | `string` (optional) | 消息的文本内容 |
+| `name` | `string` (optional) | 发送者的名称 |
+| `toolCalls` | `ToolCall[]` (optional) | 此消息中发起的工具调用 |
 
 ### UserMessage
 
-Represents a message from a user.
+表示来自用户（user）的消息。
 
 ```typescript
 type UserMessage = {
@@ -179,19 +161,16 @@ type UserMessage = {
 }
 ```
 
-| Property  | Type                      | Description                                                           |
+| 属性 | 类型 | 描述 |
 | --------- | ------------------------- | --------------------------------------------------------------------- |
-| `id`      | `string`                  | Unique identifier for the message                                     |
-| `role`    | `"user"`                  | Role of the message sender, fixed as "user"                           |
-| `content` | `string \| ContentPart[]` | Either plain text or an ordered array of multimodal content fragments |
-| `name`    | `string`                  | Optional name of the sender                                           |
+| `id` | `string` | 消息的唯一标识符 |
+| `role` | `"user"` | 消息发送者的角色，固定为 "user" |
+| `content` | `string \| ContentPart[]` | 纯文本，或多模态内容片段的有序数组 |
+| `name` | `string` | 发送者的可选名称 |
 
 ### ContentPart
 
-Union of supported content parts. The same parts appear on a `UserMessage`
-and on a `ToolMessage`: a tool result is a string or a list of them. Every part
-may carry an optional `id`; `metadata` is unconstrained and is where a text
-search hit keeps its source and title.
+受支持的内容部分（content part）的联合类型。同样的部分既出现在 `UserMessage` 上，也出现在 `ToolMessage` 上：工具调用结果可以是字符串，也可以是这些部分组成的列表。每个部分都可以携带可选的 `id`；`metadata` 不作约束，文本搜索命中会在其中保存来源与标题。
 
 ```typescript
 type ContentPart = TextPart | ImagePart | AudioPart | VideoPart | DocumentPart
@@ -222,10 +201,7 @@ type FileSource = {
 }
 ```
 
-A `FileSource` names bytes that already live at the model provider — an
-OpenAI or Anthropic file id, a Gemini file URI. Nothing is fetched and `value`
-is opaque: an agent hands it to its provider or drops the part, and never
-treats it as a URL.
+`FileSource` 指向已经存放在模型提供商侧的字节——一个 OpenAI 或 Anthropic 的文件 id，或一个 Gemini 文件 URI。不会发生任何抓取，`value` 是不透明的：智能体把它交给自己的提供商，或者丢弃这个部分，绝不把它当作 URL 使用。
 
 ### TextPart
 
@@ -284,7 +260,7 @@ type DocumentPart = {
 
 ### ToolMessage
 
-Represents a message from a tool.
+表示来自工具（tool）的消息。
 
 ```typescript
 type ToolMessage = {
@@ -297,18 +273,18 @@ type ToolMessage = {
 }
 ```
 
-| Property         | Type                | Description                                     |
+| 属性 | 类型 | 描述 |
 | ---------------- | ------------------- | ----------------------------------------------- |
-| `id`             | `string`            | Unique identifier for the message               |
-| `content`        | `string`            | Text content of the message                     |
-| `role`           | `"tool"`            | Role of the message sender, fixed as "tool"     |
-| `toolCallId`     | `string`            | ID of the tool call this message responds to    |
-| `error`          | `string` (optional) | Error message if the tool call failed           |
-| `encryptedValue` | `string` (optional) | Optional encrypted value attached via signature |
+| `id` | `string` | 消息的唯一标识符 |
+| `content` | `string` | 消息的文本内容 |
+| `role` | `"tool"` | 消息发送者的角色，固定为 "tool" |
+| `toolCallId` | `string` | 此消息所响应的工具调用的 ID |
+| `error` | `string` (optional) | 工具调用失败时的错误消息 |
+| `encryptedValue` | `string` (optional) | 通过签名附加的可选加密值 |
 
 ### ActivityMessage
 
-Represents structured activity progress emitted between chat messages.
+表示在对话消息之间发出的结构化活动进度。
 
 ```typescript
 type ActivityMessage = {
@@ -319,17 +295,16 @@ type ActivityMessage = {
 }
 ```
 
-| Property       | Type                  | Description                                             |
+| 属性 | 类型 | 描述 |
 | -------------- | --------------------- | ------------------------------------------------------- |
-| `id`           | `string`              | Unique identifier for the activity message              |
-| `role`         | `"activity"`          | Fixed discriminator identifying the message as activity |
-| `activityType` | `string`              | Activity discriminator used for renderer selection      |
-| `content`      | `Record<string, any>` | Structured payload representing the activity state      |
+| `id` | `string` | 活动消息的唯一标识符 |
+| `role` | `"activity"` | 固定的判别值，标识该消息为活动消息 |
+| `activityType` | `string` | 用于选择渲染器的活动判别值 |
+| `content` | `Record<string, any>` | 表示活动状态的结构化负载 |
 
 ### ReasoningMessage
 
-Represents a reasoning/thinking message from an agent's internal thought
-process.
+表示来自智能体内部思考过程的推理/思考消息。
 
 ```typescript
 type ReasoningMessage = {
@@ -340,16 +315,16 @@ type ReasoningMessage = {
 }
 ```
 
-| Property         | Type                | Description                                        |
+| 属性 | 类型 | 描述 |
 | ---------------- | ------------------- | -------------------------------------------------- |
-| `id`             | `string`            | Unique identifier for the reasoning message        |
-| `role`           | `"reasoning"`       | Fixed discriminator identifying the reasoning role |
-| `content`        | `string`            | The reasoning/thinking content                     |
-| `encryptedValue` | `string` (optional) | Optional encrypted value attached via signature    |
+| `id` | `string` | 推理消息的唯一标识符 |
+| `role` | `"reasoning"` | 标识推理角色的固定判别值 |
+| `content` | `string` | 推理/思考内容 |
+| `encryptedValue` | `string` (optional) | 通过签名附加的可选加密值 |
 
 ### Message
 
-A union type representing any type of message in the system.
+表示系统中任意消息类型的联合类型。
 
 ```typescript
 type Message =
@@ -364,7 +339,7 @@ type Message =
 
 ### ToolCall
 
-Represents a tool call made by an agent.
+表示智能体发起的一次工具调用。
 
 ```typescript
 type ToolCall = {
@@ -375,16 +350,16 @@ type ToolCall = {
 }
 ```
 
-| Property         | Type                | Description                                     |
+| 属性 | 类型 | 描述 |
 | ---------------- | ------------------- | ----------------------------------------------- |
-| `id`             | `string`            | Unique identifier for the tool call             |
-| `type`           | `"function"`        | Type of the tool call, always "function"        |
-| `function`       | `FunctionCall`      | Details about the function being called         |
-| `encryptedValue` | `string` (optional) | Optional encrypted value attached via signature |
+| `id` | `string` | 工具调用的唯一标识符 |
+| `type` | `"function"` | 工具调用的类型，始终为 "function" |
+| `function` | `FunctionCall` | 被调用函数的详细信息 |
+| `encryptedValue` | `string` (optional) | 通过签名附加的可选加密值 |
 
 #### FunctionCall
 
-Represents function name and arguments in a tool call.
+表示工具调用中的函数名与参数。
 
 ```typescript
 type FunctionCall = {
@@ -393,14 +368,14 @@ type FunctionCall = {
 }
 ```
 
-| Property    | Type     | Description                                      |
+| 属性 | 类型 | 描述 |
 | ----------- | -------- | ------------------------------------------------ |
-| `name`      | `string` | Name of the function to call                     |
-| `arguments` | `string` | JSON-encoded string of arguments to the function |
+| `name` | `string` | 要调用的函数名 |
+| `arguments` | `string` | 传给函数的参数的 JSON 编码字符串 |
 
 ## Context
 
-Represents a piece of contextual information provided to an agent.
+表示提供给智能体的一段上下文信息。
 
 ```typescript
 type Context = {
@@ -409,14 +384,14 @@ type Context = {
 }
 ```
 
-| Property      | Type     | Description                                 |
+| 属性 | 类型 | 描述 |
 | ------------- | -------- | ------------------------------------------- |
-| `description` | `string` | Description of what this context represents |
-| `value`       | `string` | The actual context value                    |
+| `description` | `string` | 对这段上下文所表示内容的描述 |
+| `value` | `string` | 实际的上下文值 |
 
 ## Tool
 
-Defines a tool that can be called by an agent.
+定义一个可被智能体调用的工具。
 
 ```typescript
 type Tool = {
@@ -426,27 +401,25 @@ type Tool = {
 }
 ```
 
-| Property      | Type     | Description                                      |
+| 属性 | 类型 | 描述 |
 | ------------- | -------- | ------------------------------------------------ |
-| `name`        | `string` | Name of the tool                                 |
-| `description` | `string` | Description of what the tool does                |
-| `parameters`  | `any`    | JSON Schema defining the parameters for the tool |
+| `name` | `string` | 工具名称 |
+| `description` | `string` | 对工具用途的描述 |
+| `parameters` | `any` | 定义工具参数的 JSON Schema |
 
 ## State
 
-Represents the state of an agent during execution.
+表示智能体在执行期间的状态。
 
 ```typescript
 type State = any
 ```
 
-The state type is flexible and can hold any data structure needed by the agent
-implementation.
+状态类型十分灵活，可以容纳智能体实现所需的任何数据结构。
 
 ## AgentCapabilities
 
-Typed capability declaration returned by `getCapabilities()`. All fields are
-optional — agents only declare what they support.
+`getCapabilities()` 返回的类型化能力声明。所有字段都是可选的——智能体只声明自己支持的能力。
 
 ```typescript
 interface AgentCapabilities {
@@ -464,19 +437,18 @@ interface AgentCapabilities {
 }
 ```
 
-| Property         | Type                         | Description                                  |
+| 属性 | 类型 | 描述 |
 | ---------------- | ---------------------------- | -------------------------------------------- |
-| `identity`       | `IdentityCapabilities`       | Agent identity and metadata                  |
-| `transport`      | `TransportCapabilities`      | Supported transport mechanisms               |
-| `tools`          | `ToolsCapabilities`          | Agent-provided tools and tool calling config |
-| `output`         | `OutputCapabilities`         | Output format support                        |
-| `state`          | `StateCapabilities`          | State and memory management                  |
-| `multiAgent`     | `MultiAgentCapabilities`     | Multi-agent coordination                     |
-| `reasoning`      | `ReasoningCapabilities`      | Reasoning and thinking support               |
-| `multimodal`     | `MultimodalCapabilities`     | Multimodal input/output support              |
-| `execution`      | `ExecutionCapabilities`      | Execution control and limits                 |
-| `humanInTheLoop` | `HumanInTheLoopCapabilities` | Human-in-the-loop support                    |
-| `custom`         | `Record<string, unknown>`    | Integration-specific capabilities            |
+| `identity` | `IdentityCapabilities` | 智能体身份与元数据 |
+| `transport` | `TransportCapabilities` | 受支持的传输层（transport）机制 |
+| `tools` | `ToolsCapabilities` | 智能体提供的工具与工具调用配置 |
+| `output` | `OutputCapabilities` | 输出格式支持 |
+| `state` | `StateCapabilities` | 状态与记忆管理 |
+| `multiAgent` | `MultiAgentCapabilities` | 多智能体协作 |
+| `reasoning` | `ReasoningCapabilities` | 推理与思考（thinking）支持 |
+| `multimodal` | `MultimodalCapabilities` | 多模态输入/输出支持 |
+| `execution` | `ExecutionCapabilities` | 执行控制与限制 |
+| `humanInTheLoop` | `HumanInTheLoopCapabilities` | 人在回路（human-in-the-loop）支持 |
+| `custom` | `Record<string, unknown>` | 集成专属的能力 |
 
-See [Capabilities](/concepts/capabilities) for the full category type
-definitions and usage patterns.
+完整的类别类型定义与用法模式参见 [Capabilities（能力）](/concepts/capabilities)。

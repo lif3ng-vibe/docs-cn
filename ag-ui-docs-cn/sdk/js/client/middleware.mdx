@@ -1,11 +1,11 @@
 ---
 title: "Middleware"
-description: "Event stream transformation and filtering for AG-UI agents"
+description: "面向 AG-UI 智能体的事件流转换与过滤"
 ---
 
 # Middleware
 
-The middleware system in `@ag-ui/client` provides a powerful way to transform, filter, and augment event streams flowing through agents. Middleware can intercept and modify events, add logging, implement authentication, filter tool calls, and more.
+`@ag-ui/client` 的中间件（middleware）系统提供了一种强大的方式，用于转换、过滤和增强流经智能体的事件流。中间件可以拦截并修改事件、添加日志、实现鉴权、过滤工具调用等。
 
 ```typescript
 import {
@@ -21,13 +21,13 @@ import {
 import { Observable } from "rxjs"
 ```
 
-Examples below assume the relevant RxJS operators/utilities (`map`, `tap`, `filter`, `finalize`, `catchError`, `switchMap`, `timer`, `of`, etc.) are imported.
+下文示例假定已导入相关的 RxJS 操作符/工具函数（`map`、`tap`、`filter`、`finalize`、`catchError`、`switchMap`、`timer`、`of` 等）。
 
-## Types
+## 类型
 
 ### MiddlewareFunction
 
-A function that transforms the event stream.
+转换事件流的函数。
 
 ```typescript
 type MiddlewareFunction = (
@@ -36,11 +36,11 @@ type MiddlewareFunction = (
 ) => Observable<BaseEvent>
 ```
 
-Function middleware receives events exactly as emitted by the next middleware or agent.
+函数式中间件收到的事件，与下一个中间件或智能体发出的完全一致。
 
 ### Middleware
 
-Abstract base class for creating middleware.
+用于创建中间件的抽象基类。
 
 ```typescript
 interface EventWithState {
@@ -67,14 +67,14 @@ abstract class Middleware {
 }
 ```
 
-- `runNext()` runs `next.run(...)` and normalizes chunk events into complete `TEXT_MESSAGE_*` / `TOOL_CALL_*` sequences.
-- `runNextWithState()` does the same and also provides accumulated `messages` and `state` after each event is applied.
+- `runNext()` 执行 `next.run(...)`，并把 chunk 事件规范化为完整的 `TEXT_MESSAGE_*` / `TOOL_CALL_*` 序列。
+- `runNextWithState()` 做同样的事，还会在每个事件应用之后提供累计的 `messages` 与 `state`。
 
-## Function-Based Middleware
+## 函数式中间件
 
-The simplest way to create middleware is with a function. Function middleware is ideal for stateless transformations.
+创建中间件最简单的方式是使用函数。函数式中间件非常适合无状态转换。
 
-### Basic Example
+### 基础示例
 
 ```typescript
 const loggingMiddleware: MiddlewareFunction = (input, next) => {
@@ -89,7 +89,7 @@ const loggingMiddleware: MiddlewareFunction = (input, next) => {
 agent.use(loggingMiddleware)
 ```
 
-### Transforming Events
+### 转换事件
 
 ```typescript
 const timestampMiddleware: MiddlewareFunction = (input, next) => {
@@ -107,7 +107,7 @@ const timestampMiddleware: MiddlewareFunction = (input, next) => {
 }
 ```
 
-### Error Handling
+### 错误处理
 
 ```typescript
 const errorMiddleware: MiddlewareFunction = (input, next) => {
@@ -125,11 +125,11 @@ const errorMiddleware: MiddlewareFunction = (input, next) => {
 }
 ```
 
-## Class-Based Middleware
+## 类式中间件
 
-For stateful operations or complex logic, extend the `Middleware` class.
+对于有状态操作或复杂逻辑，可继承 `Middleware` 类。
 
-### Basic Implementation
+### 基础实现
 
 ```typescript
 class CounterMiddleware extends Middleware {
@@ -153,7 +153,7 @@ class CounterMiddleware extends Middleware {
 agent.use(new CounterMiddleware())
 ```
 
-### Configuration-Based Middleware
+### 基于配置的中间件
 
 ```typescript
 class AuthMiddleware extends Middleware {
@@ -185,17 +185,17 @@ const apiKey = process.env.API_KEY ?? ""
 agent.use(new AuthMiddleware(apiKey))
 ```
 
-## Accumulator Helpers (Class Middleware)
+## 累加辅助方法（类式中间件）
 
-Class middleware can use helper methods from `Middleware` to work with normalized events and accumulated state.
+类式中间件可以使用 `Middleware` 提供的辅助方法来处理规范化后的事件与累计状态。
 
 ### `runNext()`
 
-`runNext()` forwards execution and normalizes chunk events into full `TEXT_MESSAGE_*` and `TOOL_CALL_*` events.
+`runNext()` 转发执行，并把 chunk 事件规范化为完整的 `TEXT_MESSAGE_*` 与 `TOOL_CALL_*` 事件。
 
 ### `runNextWithState()`
 
-`runNextWithState()` returns `{ event, messages, state }`, where `messages` and `state` are the accumulated values after each event has been applied.
+`runNextWithState()` 返回 `{ event, messages, state }`，其中 `messages` 与 `state` 是每个事件应用之后的累计值。
 
 ```typescript
 class MetricsWithStateMiddleware extends Middleware {
@@ -216,19 +216,19 @@ class MetricsWithStateMiddleware extends Middleware {
 }
 ```
 
-## Built-in Middleware
+## 内置中间件
 
 ### FilterToolCallsMiddleware
 
-Filters tool calls based on allowed or disallowed lists.
+根据允许或禁止列表过滤工具调用。
 
-`FilterToolCallsMiddleware` filters emitted `TOOL_CALL_*` events (including args/results for blocked calls). It does not prevent tool execution in the upstream model/runtime.
+`FilterToolCallsMiddleware` 过滤的是已发出的 `TOOL_CALL_*` 事件（包括被屏蔽调用的参数/结果）。它并不能阻止上游模型/运行时执行工具。
 
 ```typescript
 import { FilterToolCallsMiddleware } from "@ag-ui/client"
 ```
 
-#### Configuration
+#### 配置
 
 ```typescript
 type FilterToolCallsConfig =
@@ -236,7 +236,7 @@ type FilterToolCallsConfig =
   | { disallowedToolCalls: string[]; allowedToolCalls?: never }
 ```
 
-#### Allow Specific Tools
+#### 允许特定工具
 
 ```typescript
 const allowFilter = new FilterToolCallsMiddleware({
@@ -246,7 +246,7 @@ const allowFilter = new FilterToolCallsMiddleware({
 agent.use(allowFilter)
 ```
 
-#### Block Specific Tools
+#### 屏蔽特定工具
 
 ```typescript
 const blockFilter = new FilterToolCallsMiddleware({
@@ -256,11 +256,11 @@ const blockFilter = new FilterToolCallsMiddleware({
 agent.use(blockFilter)
 ```
 
-You must specify exactly one of `allowedToolCalls` or `disallowedToolCalls`. The constructor throws if both or neither are provided.
+`allowedToolCalls` 与 `disallowedToolCalls` 必须且只能指定其中一个；两者都提供或都不提供时，构造函数会抛出错误。
 
-## Middleware Patterns
+## 中间件模式
 
-### Timing Middleware
+### 计时中间件
 
 ```typescript
 const timingMiddleware: MiddlewareFunction = (input, next) => {
@@ -275,7 +275,7 @@ const timingMiddleware: MiddlewareFunction = (input, next) => {
 }
 ```
 
-### Rate Limiting
+### 速率限制
 
 ```typescript
 class RateLimitMiddleware extends Middleware {
@@ -308,11 +308,11 @@ class RateLimitMiddleware extends Middleware {
 agent.use(new RateLimitMiddleware(1000))
 ```
 
-Other common patterns include retry logic and response caching.
+其他常见模式还包括重试逻辑与响应缓存。
 
-## Chaining Middleware
+## 链式组合中间件
 
-Multiple middleware can be combined to create sophisticated processing pipelines.
+可以组合多个中间件来构建复杂的处理管线。
 
 ```typescript
 const logger = loggingMiddleware
@@ -325,9 +325,9 @@ agent.use(logger, auth, filter)
 // logger → auth → filter → agent → filter → auth → logger
 ```
 
-## Advanced Usage
+## 高级用法
 
-### Conditional Middleware
+### 条件中间件
 
 ```typescript
 const debugMiddleware: MiddlewareFunction = (input, next) => {
@@ -345,22 +345,22 @@ const debugMiddleware: MiddlewareFunction = (input, next) => {
 }
 ```
 
-## Lifecycle Notes
+## 生命周期说明
 
-Middleware added with `agent.use(...)` runs in `runAgent()` (and the legacy bridge path). `connectAgent()` currently calls `connect()` directly and does not run middleware.
+通过 `agent.use(...)` 添加的中间件会在 `runAgent()`（以及旧的桥接路径）中运行。`connectAgent()` 目前直接调用 `connect()`，不会运行中间件。
 
-## Best Practices
+## 最佳实践
 
-1. **Single Responsibility**: Each middleware should focus on one concern
-2. **Error Handling**: Always handle errors gracefully and consider recovery strategies
-3. **Performance**: Be mindful of processing overhead in high-throughput scenarios
-4. **State Management**: Use class-based middleware when state is required
-5. **Testing**: Write unit tests for each middleware independently
-6. **Documentation**: Document middleware behavior and side effects
+1. **单一职责**：每个中间件只应关注一件事
+2. **错误处理**：始终优雅地处理错误，并考虑恢复策略
+3. **性能**：在高吞吐场景中注意处理开销
+4. **状态管理**：需要状态时使用类式中间件
+5. **测试**：为每个中间件独立编写单元测试
+6. **文档**：记录中间件的行为与副作用
 
-## TypeScript Support
+## TypeScript 支持
 
-The middleware system is fully typed for excellent IDE support:
+中间件系统具备完整的类型定义，可提供出色的 IDE 支持：
 
 ```typescript
 import {

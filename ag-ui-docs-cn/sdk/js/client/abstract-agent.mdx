@@ -1,22 +1,19 @@
 ---
 title: "AbstractAgent"
-description: "Base agent implementation with core event handling"
+description: "提供核心事件处理的智能体基础实现"
 ---
 
 # AbstractAgent
 
-The `AbstractAgent` class provides the foundation for all agent implementations
-in the Agent User Interaction Protocol. It handles the core event stream
-processing, state management, and message history.
+`AbstractAgent` 类是智能体–用户交互协议中所有智能体实现的基础。它负责核心事件流处理、状态管理与消息历史。
 
 ```typescript
 import { AbstractAgent } from "@ag-ui/client"
 ```
 
-## Configuration
+## 配置
 
-By default, all agents are configured by providing an optional `AgentConfig`
-object to the constructor.
+默认情况下，所有智能体都通过向构造函数传入一个可选的 `AgentConfig` 对象来完成配置。
 
 ```typescript
 interface AgentConfig {
@@ -29,11 +26,9 @@ interface AgentConfig {
 }
 ```
 
-### Adding Configuration Options in your Subclass
+### 在子类中添加配置选项
 
-To add additional configuration options, it is recommended to extend the
-`AgentConfig` interface and call the super constructor with the extended config
-from your subclass like this:
+要添加更多配置选项，建议扩展 `AgentConfig` 接口，并在你的子类中用扩展后的配置调用超类构造函数，如下所示：
 
 ```typescript
 interface MyAgentConfig extends AgentConfig {
@@ -50,17 +45,17 @@ class MyAgent extends AbstractAgent {
 }
 ```
 
-## Core Methods
+## 核心方法
 
 ### runAgent()
 
-The primary method for executing an agent and processing the result.
+执行智能体并处理其结果的主要方法。
 
 ```typescript
 runAgent(parameters?: RunAgentParameters, subscriber?: AgentSubscriber): Promise<RunAgentResult>
 ```
 
-#### Parameters
+#### 参数
 
 ```typescript
 interface RunAgentParameters {
@@ -71,11 +66,9 @@ interface RunAgentParameters {
 }
 ```
 
-The optional `subscriber` parameter allows you to provide an
-[AgentSubscriber](/sdk/js/client/subscriber) for handling events during this
-specific run.
+可选的 `subscriber` 参数允许你提供一个 [AgentSubscriber](/sdk/js/client/subscriber)，用于处理此次运行期间的事件。
 
-#### Return Value
+#### 返回值
 
 ```typescript
 interface RunAgentResult {
@@ -86,27 +79,25 @@ interface RunAgentResult {
 
 ### subscribe()
 
-Adds an [AgentSubscriber](/sdk/js/client/subscriber) to handle events across
-multiple agent runs.
+添加一个 [AgentSubscriber](/sdk/js/client/subscriber)，用于处理跨多次智能体运行的事件。
 
 ```typescript
 subscribe(subscriber: AgentSubscriber): { unsubscribe: () => void }
 ```
 
-Returns an object with an `unsubscribe()` method to remove the subscriber when
-no longer needed.
+返回一个带有 `unsubscribe()` 方法的对象，以便在不再需要该订阅者时将其移除。
 
 ### use()
 
-Adds middleware to the agent's event processing pipeline.
+向智能体的事件处理管线添加中间件（middleware）。
 
 ```typescript
 use(...middlewares: (Middleware | MiddlewareFunction)[]): this
 ```
 
-Middleware can be either:
-- **Function middleware**: Simple functions that transform the event stream
-- **Class middleware**: Instances of the `Middleware` class for stateful operations
+中间件可以是以下两种形式：
+- **函数式中间件**：转换事件流的简单函数
+- **类式中间件**：`Middleware` 类的实例，用于有状态操作
 
 ```typescript
 // Function middleware
@@ -124,23 +115,21 @@ agent.use(new FilterToolCallsMiddleware({
 agent.use(loggingMiddleware, authMiddleware, filterMiddleware);
 ```
 
-Middleware executes in the order added, with each wrapping the next. Middleware is applied in `runAgent()`; `connectAgent()` currently calls `connect()` directly. See the [Middleware documentation](/sdk/js/client/middleware) for more details.
+中间件按添加顺序执行，每个中间件包裹下一个。中间件会在 `runAgent()` 中生效；`connectAgent()` 目前则直接调用 `connect()`。更多细节参见 [Middleware 文档](/sdk/js/client/middleware)。
 
 ### getCapabilities()
 
-Returns the agent's current capabilities. Optional — subclasses implement this
-to advertise what they support. Returns `undefined` if not implemented.
+返回智能体当前的能力（capabilities）。可选方法——子类可实现它来声明自己支持哪些能力；未实现时返回 `undefined`。
 
 ```typescript
 getCapabilities?(): Promise<AgentCapabilities>
 ```
 
-See [Capabilities](/concepts/capabilities) for the full `AgentCapabilities`
-type definition and usage patterns.
+完整的 `AgentCapabilities` 类型定义与用法模式参见 [Capabilities（能力）](/concepts/capabilities)。
 
 ### abortRun()
 
-Cancels the current agent execution.
+取消当前的智能体执行。
 
 ```typescript
 abortRun(): void
@@ -148,7 +137,7 @@ abortRun(): void
 
 ### clone()
 
-Creates a deep copy of the agent instance.
+创建智能体实例的深拷贝。
 
 ```typescript
 clone(): AbstractAgent
@@ -156,48 +145,42 @@ clone(): AbstractAgent
 
 ### connectAgent()
 
-Establishes a persistent connection with an agent that implements the
-`connect()` method.
+与实现了 `connect()` 方法的智能体建立持久连接。
 
 ```typescript
 connectAgent(parameters?: RunAgentParameters, subscriber?: AgentSubscriber): Promise<RunAgentResult>
 ```
 
-Similar to `runAgent()` but uses the `connect()` method internally. The agent
-must implement `connect()` or this functionality must be provided by a framework
-like [CopilotKit](https://copilotkit.ai).
+与 `runAgent()` 类似，但内部使用 `connect()` 方法。智能体必须实现 `connect()`，否则该功能需由 [CopilotKit](https://copilotkit.ai) 之类的框架提供。
 
-## Observable Properties
+## 可观察属性
 
 ### events$
 
-An observable stream of all events emitted during agent execution.
+智能体执行期间发出的所有事件组成的可观察流。
 
 ```typescript
 events$: Observable<BaseEvent>
 ```
 
-This property provides direct access to the agent's event stream. Events are
-stored using a `ReplaySubject`, allowing late subscribers will receive all
-historical events.
+该属性提供对智能体事件流的直接访问。事件通过 `ReplaySubject` 存储，因此较晚加入的订阅者也能收到全部历史事件。
 
-## Properties
+## 属性
 
-- `agentId`: Unique identifier for the agent instance
-- `description`: Human-readable description
-- `threadId`: Conversation thread identifier
-- `messages`: Array of conversation messages
-- `state`: Current agent state object
-- `events$`: Observable stream of all `BaseEvent` objects emitted during agent
-  execution (replayed for late subscribers)
+- `agentId`：智能体实例的唯一标识符
+- `description`：人类可读的描述
+- `threadId`：会话线程标识符
+- `messages`：会话消息数组
+- `state`：当前智能体状态对象
+- `events$`：智能体执行期间发出的所有 `BaseEvent` 对象组成的可观察流（对较晚加入的订阅者进行重放）
 
-## Protected Methods
+## 受保护方法
 
-These methods are meant to be implemented or extended by subclasses:
+这些方法供子类实现或扩展：
 
 ### run()
 
-Executes the agent and returns an observable event stream.
+执行智能体并返回一个可观察的事件流。
 
 ```typescript
 protected abstract run(input: RunAgentInput): RunAgent
@@ -205,18 +188,17 @@ protected abstract run(input: RunAgentInput): RunAgent
 
 ### connect()
 
-Establishes a persistent connection and returns an observable event stream.
+建立持久连接并返回一个可观察的事件流。
 
 ```typescript
 protected connect(input: RunAgentInput): RunAgent
 ```
 
-Override this method to implement persistent connections. Default implementation
-throws `ConnectNotImplementedError`.
+重写该方法以实现持久连接。默认实现会抛出 `ConnectNotImplementedError`。
 
 ### apply()
 
-Processes events from the run and updates the agent state.
+处理运行产生的事件并更新智能体状态。
 
 ```typescript
 protected apply(input: RunAgentInput): ApplyEvents
@@ -224,15 +206,15 @@ protected apply(input: RunAgentInput): ApplyEvents
 
 ### prepareRunAgentInput()
 
-Prepares the input parameters for the agent execution.
+为智能体执行准备输入参数。
 
 ```typescript
 protected prepareRunAgentInput(parameters?: RunAgentParameters): RunAgentInput
 ```
 
-### onError() and onFinalize()
+### onError() 与 onFinalize()
 
-Lifecycle hooks for error handling and cleanup operations.
+用于错误处理与清理操作的生命周期钩子。
 
 ```typescript
 protected onError(error: Error): void

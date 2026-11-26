@@ -1,21 +1,19 @@
 ---
 title: "HttpAgent"
-description: "HTTP-based agent for connecting to remote AI agents"
+description: "基于 HTTP 的智能体，用于连接远程 AI 智能体"
 ---
 
 # HttpAgent
 
-The `HttpAgent` extends `AbstractAgent` to provide HTTP-based connectivity to
-remote AI agents. It handles the request/response cycle and transforms the HTTP
-event stream into standard Agent User Interaction Protocol events.
+`HttpAgent` 继承自 `AbstractAgent`，提供基于 HTTP 的方式连接远程 AI 智能体。它负责请求/响应周期，并将 HTTP 事件流转换为标准的智能体–用户交互协议事件。
 
 ```typescript
 import { HttpAgent } from "@ag-ui/client"
 ```
 
-## Configuration
+## 配置
 
-When creating an HTTP agent, you need to provide an `HttpAgentConfig` object:
+创建 HTTP 智能体时，需要提供一个 `HttpAgentConfig` 对象：
 
 ```typescript
 interface HttpAgentConfig extends AgentConfig {
@@ -24,7 +22,7 @@ interface HttpAgentConfig extends AgentConfig {
 }
 ```
 
-## Creating an HttpAgent
+## 创建 HttpAgent
 
 ```typescript
 const agent = new HttpAgent({
@@ -35,24 +33,21 @@ const agent = new HttpAgent({
 })
 ```
 
-## Methods
+## 方法
 
 ### runAgent()
 
-Executes the agent by making an HTTP request to the configured endpoint.
+通过向配置的端点发起 HTTP 请求来执行智能体。
 
 ```typescript
 runAgent(parameters?: RunAgentParameters, subscriber?: AgentSubscriber): Promise<RunAgentResult>
 ```
 
-#### Parameters
+#### 参数
 
-The `parameters` argument follows the standard `RunAgentParameters` interface.
-The optional `subscriber` parameter allows you to provide an
-[AgentSubscriber](/sdk/js/client/subscriber) for handling events during this
-specific run.
+`parameters` 参数遵循标准的 `RunAgentParameters` 接口。可选的 `subscriber` 参数允许你提供一个 [AgentSubscriber](/sdk/js/client/subscriber)，用于处理此次运行期间的事件。
 
-#### Return Value
+#### 返回值
 
 ```typescript
 interface RunAgentResult {
@@ -63,36 +58,33 @@ interface RunAgentResult {
 
 ### subscribe()
 
-Adds an [AgentSubscriber](/sdk/js/client/subscriber) to handle events across
-multiple agent runs.
+添加一个 [AgentSubscriber](/sdk/js/client/subscriber)，用于处理跨多次智能体运行的事件。
 
 ```typescript
 subscribe(subscriber: AgentSubscriber): { unsubscribe: () => void }
 ```
 
-Returns an object with an `unsubscribe()` method to remove the subscriber when
-no longer needed.
+返回一个带有 `unsubscribe()` 方法的对象，以便在不再需要该订阅者时将其移除。
 
 ### abortRun()
 
-Cancels the current HTTP request using the AbortController.
+使用 AbortController 取消当前的 HTTP 请求。
 
 ```typescript
 abortRun(): void
 ```
 
-## Protected Methods
+## 受保护方法
 
 ### requestInit()
 
-Configures the HTTP request. Override this method to customize how requests are
-made.
+配置 HTTP 请求。重写该方法即可自定义请求的发起方式。
 
 ```typescript
 protected requestInit(input: RunAgentInput): RequestInit
 ```
 
-Default implementation:
+默认实现：
 
 ```typescript
 {
@@ -109,14 +101,14 @@ Default implementation:
 
 ### run()
 
-Implements the abstract `run()` method from `AbstractAgent` using HTTP requests.
+使用 HTTP 请求实现 `AbstractAgent` 中的抽象方法 `run()`。
 
 ```typescript
 run(input: RunAgentInput): RunAgent
 ```
 
-## Properties
+## 属性
 
-- `url`: The endpoint URL for the agent service
-- `headers`: HTTP headers to include with requests
-- `abortController`: AbortController instance for request cancellation
+- `url`：智能体服务的端点 URL
+- `headers`：随请求一起发送的 HTTP 请求头
+- `abortController`：用于取消请求的 AbortController 实例

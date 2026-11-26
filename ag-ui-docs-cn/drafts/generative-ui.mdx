@@ -1,52 +1,42 @@
 ---
-title: Generative User Interfaces
-description: AI-generated interfaces without custom tool renderers
+title: 生成式用户界面
+description: 无需自定义工具渲染器的 AI 生成界面
 ---
 
-# Generative User Interfaces
+# 生成式用户界面
 
-## Summary
+## 摘要
 
-### Problem Statement
+### 问题陈述
 
-Currently, creating custom user interfaces for agent interactions requires
-programmers to define specific tool renderers. This limits the flexibility and
-adaptability of agent-driven applications.
+目前，为智能体交互创建自定义用户界面，需要程序员定义特定的工具渲染器。这限制了智能体驱动应用的灵活性与适应能力。
 
-### Motivation
+### 动机
 
-This draft describes an AG-UI extension that addresses **generative user
-interfaces**—interfaces produced directly by artificial intelligence without
-requiring a programmer to define custom tool renderers. The key idea is to
-leverage our ability to send client-side tools to the agent, thereby enabling
-this capability across all agent frameworks supported by AG-UI.
+本草案描述了 AG-UI 的一项扩展，用于实现**生成式用户界面**——由人工智能直接产出的界面，无需程序员定义自定义工具渲染器。关键思路是利用我们向智能体发送客户端侧工具的能力，从而让所有 AG-UI 支持的智能体框架都能获得这一能力。
 
-## Status
+## 状态
 
-- **Status**: Draft
-- **Author(s)**: Markus Ecker (mail@mme.xyz)
+- **状态**：草案
+- **作者**：Markus Ecker (mail@mme.xyz)
 
-## Challenges and Limitations
+## 挑战与限制
 
-### Tool Description Length
+### 工具描述长度
 
-OpenAI enforces a limit of 1024 characters for tool descriptions. Gemini and
-Anthropic impose no such limit.
+OpenAI 对工具描述强制执行 1024 字符的限制。Gemini 与 Anthropic 则没有此限制。
 
-### Arguments JSON Schema Constraints
+### 参数 JSON Schema 的限制
 
-Classes, nesting, `$ref`, and `oneOf` are not reliably supported across LLM
-providers.
+类、嵌套、`$ref` 与 `oneOf` 在各家 LLM 提供商之间无法得到可靠支持。
 
-### Context Window Considerations
+### 上下文窗口方面的考量
 
-Injecting a large UI description language into an agent may reduce its
-performance. Agents dedicated solely to UI generation perform better than agents
-combining UI generation with other tasks.
+向智能体注入大体量的 UI 描述语言可能降低其表现。专门用于 UI 生成的智能体，比把 UI 生成与其他任务混在一起的智能体表现更好。
 
-## Detailed Specification
+## 详细规范
 
-### Two-Step Generation Process
+### 两步生成流程
 
 ```mermaid
 flowchart TD
@@ -56,21 +46,19 @@ flowchart TD
     D --> E[Validated user input returned to Agent]
 ```
 
-### Step 1: What to Generate?
+### 第一步：生成什么？
 
-Inject a lightweight tool into the agent:
+向智能体注入一个轻量工具：
 
-**Tool Definition:**
+**工具定义**：
 
-- **Name:** `generateUserInterface`
-- **Arguments:**
-  - **description**: A high-level description of the UI (e.g., _"A form for
-    entering the user's address"_)
-  - **data**: Arbitrary pre-populated data for the generated UI
-  - **output**: A description or schema of the data the agent expects the user
-    to submit back (fields, required/optional, types, constraints)
+- **名称**：`generateUserInterface`
+- **参数**：
+  - **description**：对 UI 的高层描述（例如 _"一个用于输入用户地址的表单"_）
+  - **data**：用于生成 UI 的任意预填数据
+  - **output**：智能体期望用户回交数据的描述或 schema（字段、必填/可选、类型、约束）
 
-**Example Tool Call:**
+**工具调用示例**：
 
 ```json
 {
@@ -109,24 +97,19 @@ Inject a lightweight tool into the agent:
 }
 ```
 
-### Step 2: How to Generate?
+### 第二步：如何生成？
 
-Delegate UI generation to a secondary LLM or agent:
+把 UI 生成委托给第二个 LLM 或智能体：
 
-- The CopilotKit user stays in control: Can make their own generators, add
-  custom libraries, include additional prompts etc.
-- On tool invocation, the secondary model consumes `description`, `data`, and
-  `output` to generate the user interface
-- This model is focused solely on UI generation, ensuring maximum fidelity and
-  consistency
-- The generation method can be swapped as needed (e.g., JSON, HTML, or other
-  renderable formats)
-- The UI format description is not subject to structural or length constraints,
-  allowing arbitrarily complex specifications
+- CopilotKit 用户始终保持掌控：可以制作自己的生成器、添加自定义库、附加额外提示词等。
+- 工具被调用时，第二个模型会消费 `description`、`data` 与 `output` 来生成用户界面
+- 该模型只专注于 UI 生成，确保最大的保真度与一致性
+- 生成方式可以按需更换（例如 JSON、HTML 或其他可渲染格式）
+- UI 格式描述不受结构或长度约束，允许任意复杂的规格说明
 
-## Implementation Examples
+## 实现示例
 
-### Example Output: UISchemaGenerator
+### 示例输出：UISchemaGenerator
 
 ```json
 {
@@ -186,7 +169,7 @@ Delegate UI generation to a secondary LLM or agent:
 }
 ```
 
-### Example Output: ReactFormHookGenerator
+### 示例输出：ReactFormHookGenerator
 
 ```tsx
 import React from "react"
@@ -308,59 +291,58 @@ export default function AddressForm({ initialData, meta, respond }: Props) {
 }
 ```
 
-## Implementation Considerations
+## 实现注意事项
 
-### Client SDK Changes
+### 客户端 SDK 变更
 
-TypeScript SDK additions:
+TypeScript SDK 新增内容：
 
-- New `generateUserInterface` tool type
-- UI generator registry for pluggable generators
-- Validation layer for generated UI schemas
-- Response handler for user-submitted data
+- 新的 `generateUserInterface` 工具类型
+- 支持可插拔生成器的 UI 生成器注册表
+- 针对生成 UI schema 的校验层
+- 处理用户提交数据的响应处理器
 
-Python SDK additions:
+Python SDK 新增内容：
 
-- Support for UI generation tool invocation
-- Schema validation utilities
-- Serialization for UI definitions
+- 支持 UI 生成工具的调用
+- schema 校验工具
+- UI 定义的序列化
 
-### Integration Impact
+### 对集成的影响
 
-- All AG-UI integrations can leverage this capability without modification
-- Frameworks emit standard tool calls; client handles UI generation
-- Backward compatible with existing tool-based UI approaches
+- 所有 AG-UI 集成无需修改即可利用这一能力
+- 框架发出标准工具调用，由客户端处理 UI 生成
+- 向后兼容现有的基于工具的 UI 方案
 
-## Use Cases
+## 用例
 
-### Dynamic Forms
+### 动态表单
 
-Agents can generate forms on-the-fly based on conversation context without
-pre-defined schemas.
+智能体可以基于会话上下文即时生成表单，无需预先定义的 schema。
 
-### Data Visualization
+### 数据可视化
 
-Generate charts, graphs, or tables appropriate to the data being discussed.
+生成与所讨论数据相称的图表或表格。
 
-### Interactive Workflows
+### 交互式工作流
 
-Create multi-step wizards or guided processes tailored to user needs.
+创建贴合用户需求的多步骤向导或引导式流程。
 
-### Adaptive Interfaces
+### 自适应界面
 
-Generate different UI layouts based on user preferences or device capabilities.
+根据用户偏好或设备能力生成不同的 UI 布局。
 
-## Testing Strategy
+## 测试策略
 
-- Unit tests for tool injection and invocation
-- Integration tests with multiple UI generators
-- E2E tests demonstrating various UI types
-- Performance benchmarks comparing single vs. two-step generation
-- Cross-provider compatibility testing
+- 针对工具注入与调用的单元测试
+- 使用多个 UI 生成器的集成测试
+- 演示各类 UI 的端到端测试
+- 比较单步与两步生成的性能基准测试
+- 跨提供商兼容性测试
 
-## References
+## 参考资料
 
-- [AG-UI Tools Documentation](/concepts/tools)
+- [AG-UI 工具文档](/concepts/tools)
 - [JSON Schema](https://json-schema.org/)
 - [React Hook Form](https://react-hook-form.com/)
 - [JSON Forms](https://jsonforms.io/)

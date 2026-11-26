@@ -1,13 +1,11 @@
 ---
-title: "Overview"
-description: "Client package overview"
+title: "概述"
+description: "客户端包概述"
 ---
 
 # @ag-ui/client
 
-The Agent User Interaction Protocol Client SDK provides agent connectivity
-options for AI systems. This package builds on the core types and events to
-deliver flexible connection methods to agent implementations.
+智能体–用户交互协议（AG-UI）客户端 SDK 为 AI 系统提供多种智能体连接方式。该包构建于核心类型与事件之上，为智能体实现交付灵活的连接方案。
 
 ```bash
 npm install @ag-ui/client
@@ -15,97 +13,76 @@ npm install @ag-ui/client
 
 ## AbstractAgent
 
-`AbstractAgent` is the base agent class for implementing custom agent
-connectivity. Extending this class and implementing `run()` lets you bridge your
-own service or agent implementation to AG-UI.
+`AbstractAgent` 是实现自定义智能体连接的抽象智能体基类（base agent class）。继承该类并实现 `run()`，即可将你自己的服务或智能体实现接入 AG-UI。
 
-- [Configuration](/sdk/js/client/abstract-agent#configuration) - Setup with
-  agent ID, messages, and state
-- [Core Methods](/sdk/js/client/abstract-agent#core-methods) - Run, abort, and
-  clone functionality
-- [Protected Methods](/sdk/js/client/abstract-agent#protected-methods) -
-  Extensible hooks for custom implementations
-- [Properties](/sdk/js/client/abstract-agent#properties) - State and message
-  tracking
+- [配置](/sdk/js/client/abstract-agent#configuration) - 使用智能体 ID、消息与状态完成设置
+- [核心方法](/sdk/js/client/abstract-agent#core-methods) - 运行、中止与克隆功能
+- [受保护方法](/sdk/js/client/abstract-agent#protected-methods) - 面向自定义实现的可扩展钩子
+- [属性](/sdk/js/client/abstract-agent#properties) - 状态与消息追踪
 
 <Card
-  title="AbstractAgent Reference"
+  title="AbstractAgent 参考文档"
   icon="cube"
   href="/sdk/js/client/abstract-agent"
   color="#3B82F6"
   iconType="solid"
 >
-  Base class for creating custom agent connections
+  用于创建自定义智能体连接的基类
 </Card>
 
 ## HttpAgent
 
-Concrete implementation for HTTP-based agent connectivity:
+基于 HTTP 的智能体连接的具体实现：
 
-- [Configuration](/sdk/js/client/http-agent#configuration) - URL and header
-  setup
-- [Methods](/sdk/js/client/http-agent#methods) - HTTP-specific execution and
-  cancellation
-- [Protected Methods](/sdk/js/client/http-agent#protected-methods) -
-  Customizable HTTP request handling
-- [Properties](/sdk/js/client/http-agent#properties) - Connection management
+- [配置](/sdk/js/client/http-agent#configuration) - URL 与请求头设置
+- [方法](/sdk/js/client/http-agent#methods) - HTTP 专属的执行与取消
+- [受保护方法](/sdk/js/client/http-agent#protected-methods) - 可自定义的 HTTP 请求处理
+- [属性](/sdk/js/client/http-agent#properties) - 连接管理
 
 <Card
-  title="HttpAgent Reference"
+  title="HttpAgent 参考文档"
   icon="cube"
   href="/sdk/js/client/http-agent"
   color="#3B82F6"
   iconType="solid"
 >
-  Ready-to-use HTTP implementation for agent connectivity, using a highly
-  efficient event encoding format
+  开箱即用的 HTTP 智能体连接实现，采用高效的线上事件编码格式
 </Card>
 
 ## Middleware
 
-Transform and intercept event streams flowing through agents with a flexible
-middleware system:
+通过一套灵活的中间件系统，转换并拦截流经智能体的事件流：
 
-- [Function Middleware](/sdk/js/client/middleware#function-based-middleware) - Simple
-  transformations with plain functions
-- [Class Middleware](/sdk/js/client/middleware#class-based-middleware) - Stateful
-  middleware with configuration
-- [Built-in Middleware](/sdk/js/client/middleware#built-in-middleware) -
-  FilterToolCallsMiddleware and more
-- [Middleware Patterns](/sdk/js/client/middleware#middleware-patterns) - Common
-  use cases and examples
+- [函数式中间件](/sdk/js/client/middleware#function-based-middleware) - 用普通函数完成简单转换
+- [类式中间件](/sdk/js/client/middleware#class-based-middleware) - 带配置的有状态中间件
+- [内置中间件](/sdk/js/client/middleware#built-in-middleware) - FilterToolCallsMiddleware 等
+- [中间件模式](/sdk/js/client/middleware#middleware-patterns) - 常见用例与示例
 
 <Card
-  title="Middleware Reference"
+  title="Middleware 参考文档"
   icon="layer-group"
   href="/sdk/js/client/middleware"
   color="#3B82F6"
   iconType="solid"
 >
-  Powerful event stream transformation and filtering for AG-UI agents
+  为 AG-UI 智能体提供强大的事件流转换与过滤能力
 </Card>
 
 ## AgentSubscriber
 
-Event-driven subscriber system for handling agent lifecycle events and state
-mutations during agent execution:
+面向事件驱动的订阅者（subscriber）系统，用于在智能体执行期间处理生命周期事件与状态变更：
 
-- [Event Handlers](/sdk/js/client/subscriber#event-handlers) - Lifecycle,
-  message, tool call, and state events
-- [State Management](/sdk/js/client/subscriber#state-management) - Mutation
-  control and propagation handling
-- [Usage Examples](/sdk/js/client/subscriber#usage-examples) - Logging,
-  persistence, and error handling patterns
-- [Integration](/sdk/js/client/subscriber#integration-with-agents) - Registering
-  and using subscribers with agents
+- [事件处理器](/sdk/js/client/subscriber#event-handlers) - 生命周期、消息、工具调用与状态事件
+- [状态管理](/sdk/js/client/subscriber#state-management) - 变更控制与传播处理
+- [使用示例](/sdk/js/client/subscriber#usage-examples) - 日志、持久化与错误处理模式
+- [集成](/sdk/js/client/subscriber#integration-with-agents) - 在智能体上注册与使用订阅者
 
 <Card
-  title="AgentSubscriber Reference"
+  title="AgentSubscriber 参考文档"
   icon="bolt"
   href="/sdk/js/client/subscriber"
   color="#3B82F6"
   iconType="solid"
 >
-  Comprehensive event system for reactive agent interaction and middleware-style
-  functionality
+  面向响应式智能体交互与中间件式功能的完整事件系统
 </Card>

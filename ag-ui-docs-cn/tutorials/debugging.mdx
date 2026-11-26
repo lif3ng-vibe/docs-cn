@@ -1,89 +1,65 @@
 ---
-title: Debugging
+title: 调试
 description:
-  A comprehensive guide to debugging Agent User Interaction Protocol (AG-UI)
-  integrations
+  调试智能体–用户交互协议（AG-UI）集成的全面指南
 ---
 
-# Debugging AG-UI Integrations
+# 调试 AG-UI 集成
 
-Debugging agent-based applications can be challenging, especially when working
-with real-time, event-driven protocols like AG-UI. This guide introduces you to
-the AG-UI Dojo, a powerful tool for learning, testing, and debugging your AG-UI
-implementations.
+调试基于智能体的应用可能颇具挑战，尤其是在使用 AG-UI 这类实时、事件驱动的协议时。本指南将向你介绍 AG-UI Dojo——一个用于学习、测试和调试 AG-UI 实现的强大工具。
 
-## The AG-UI Dojo
+## AG-UI Dojo
 
-The AG-UI Dojo is the best way to bring AG-UI to a new surface, and is also an
-excellent resource for learning about the protocol's basic capabilities. It
-provides a structured environment where you can test and validate each component
-of the AG-UI protocol.
+AG-UI Dojo 是把 AG-UI 带到新载体（surface）上的最佳方式，也是学习协议基础能力的极佳资源。它提供了一个结构化的环境，你可以在其中测试和验证 AG-UI 协议的每个组件。
 
-### What is the Dojo?
+### Dojo 是什么？
 
-The Dojo consists of a series of "hello world"-sized demonstrations for the
-different building blocks available via AG-UI. Each demonstration:
+Dojo 由一系列"hello world"规模的小型演示组成，覆盖 AG-UI 提供的各个构建块。每个演示：
 
-1. Shows a specific AG-UI capability in action
-2. Presents both the user-visible interaction and the underlying code side by
-   side
-3. Allows you to test and verify your implementation
+1. 展示一项具体 AG-UI 能力的实际运行
+2. 并排呈现用户可见的交互与底层代码
+3. 让你可以测试并验证自己的实现
 
-### Using the Dojo as an Implementation Checklist
+### 把 Dojo 用作实现清单
 
-When working on bringing AG-UI to a new surface or platform, you can use the
-Dojo as a comprehensive "todo list":
+在把 AG-UI 带到新的载体或平台时，你可以把 Dojo 当作一份完整的"待办清单"：
 
-1. Work through each demonstration one by one
-2. Implement and test each AG-UI building block in your environment
-3. When all demonstrations work correctly in your implementation, you can be
-   confident that full-featured copilots and agent-native applications can be
-   built on your new surface
+1. 逐个过一遍每个演示
+2. 在你的环境中实现并测试每个 AG-UI 构建块
+3. 当所有演示在你的实现中都正常工作时，你就可以确信，功能完整的 copilot 与智能体原生应用都能构建在你的新载体之上
 
-This methodical approach ensures you've covered all the necessary functionality
-required for a complete AG-UI implementation.
+这种有条不紊的方法能确保你覆盖了完整 AG-UI 实现所需的全部功能。
 
-### Using the Dojo as a Learning Resource
+### 把 Dojo 用作学习资源
 
-For developers new to AG-UI, the Dojo serves as an interactive learning
-resource:
+对于刚接触 AG-UI 的开发者，Dojo 是一份交互式学习资源：
 
-- Each item demonstrates a specific AG-UI capability
-- You can see both what the interaction looks like from a user perspective
-- The underlying code is shown alongside, helping you understand how it works
-- The incremental complexity helps build understanding from basics to advanced
-  features
+- 每一项都演示了一项具体的 AG-UI 能力
+- 你既能看到从用户视角看交互是什么样子
+- 底层代码也会一并展示，帮助你理解其工作原理
+- 复杂度循序渐进，帮助你从基础一路理解到高级特性
 
-### Common Debugging Patterns
+### 常见调试模式
 
-When using the Dojo for debugging your AG-UI implementation, keep these patterns
-in mind:
+在使用 Dojo 调试你的 AG-UI 实现时，请留意以下模式：
 
-1. **Event Sequence Issues**: Verify that events are being emitted in the
-   correct order and with proper nesting (e.g., `TEXT_MESSAGE_START` before
-   `TEXT_MESSAGE_CONTENT`)
+1. **事件序列问题**：验证事件是否以正确的顺序、正确的嵌套发出（例如 `TEXT_MESSAGE_START` 在 `TEXT_MESSAGE_CONTENT` 之前）
 
-2. **Data Format Problems**: Ensure your event payloads match the expected
-   structure for each event type
+2. **数据格式问题**：确保你的事件负载符合每种事件类型的预期结构
 
-3. **Transport Layer Debugging**: Check that your chosen transport mechanism
-   (SSE, WebSockets, etc.) is correctly delivering events
+3. **传输层调试**：检查你所选的传输机制（SSE、WebSockets 等）是否正确交付事件
 
-4. **State Synchronization**: Confirm that state updates are correctly applied
-   using snapshots and deltas
+4. **状态同步**：确认状态更新是否通过快照与增量正确应用
 
-5. **Tool Execution**: Verify that tool calls and responses are properly
-   formatted and processed
+5. **工具执行**：验证工具调用与响应的格式正确且得到正确处理
 
-## Getting Started with the Dojo
+## Dojo 入门
 
-To start using the AG-UI Dojo:
+要开始使用 AG-UI Dojo：
 
-1. Clone the repository from
-   [github.com/ag-ui-protocol/ag-ui](https://github.com/ag-ui-protocol/ag-ui)
-2. Follow the setup instructions in the README
-3. Start working through the demonstrations in order
-4. Use the provided test cases to validate your implementation
+1. 从 [github.com/ag-ui-protocol/ag-ui](https://github.com/ag-ui-protocol/ag-ui) 克隆仓库
+2. 按照 README 中的设置说明操作
+3. 按顺序逐一完成各个演示
+4. 使用提供的测试用例验证你的实现
 
-The Dojo's structured approach makes it an invaluable resource for both learning
-AG-UI and ensuring your implementation meets all requirements.
+Dojo 的结构化方式使它成为学习 AG-UI 并确保实现满足全部要求的宝贵资源。

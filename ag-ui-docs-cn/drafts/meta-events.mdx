@@ -1,43 +1,37 @@
 ---
-title: Meta Events
-description: Annotations and signals independent of agent runs
+title: Meta 事件
+description: 独立于智能体运行的注解与信号
 ---
 
-# Meta Events Proposal
+# Meta 事件提案
 
-## Summary
+## 摘要
 
-### Problem Statement
+### 问题陈述
 
-Currently, AG-UI events are tightly coupled to agent runs. There's no
-standardized way to attach user feedback, annotations, or external signals to
-the event stream that are independent of the agent's execution lifecycle.
+目前，AG-UI 事件与智能体运行紧密耦合。没有一种标准化方式，可以把独立于智能体执行生命周期的用户反馈、注解或外部信号附加到事件流上。
 
-### Motivation
+### 动机
 
-AG-UI is extended with **MetaEvents**, a new class of events that can occur at
-any point in the event stream, independent of agent runs. MetaEvents provide a
-way to attach annotations, signals, or feedback to a serialized stream. They may
-originate from users, clients, or external systems rather than from agents.
-Examples include reactions such as thumbs up/down on a message.
+AG-UI 扩展了 **MetaEvents**——一类新的事件，可以出现在事件流的任意位置，独立于智能体运行。MetaEvents 提供了一种把注解、信号或反馈附加到序列化流上的方式。它们可能来自用户、客户端或外部系统，而非智能体。例子包括对消息点赞/点踩之类的反应。
 
-## Status
+## 状态
 
-- **Status**: Draft
-- **Author(s)**: Markus Ecker (mail@mme.xyz)
+- **状态**：草案
+- **作者**：Markus Ecker (mail@mme.xyz)
 
-## Detailed Specification
+## 详细规范
 
-### Overview
+### 总览
 
-This proposal introduces:
+本提案引入：
 
-- A new **MetaEvent** type for side-band annotations
-- Events that can appear anywhere in the stream
-- Support for user feedback, tags, and external annotations
-- Extensible payload structure for application-specific data
+- 用于带外注解的新 **MetaEvent** 类型
+- 可以出现在流中任意位置的事件
+- 对用户反馈、标签与外部注解的支持
+- 面向应用专属数据的可扩展负载结构
 
-## New Type: MetaEvent
+## 新类型：MetaEvent
 
 ```typescript
 type MetaEvent = BaseEvent & {
@@ -56,19 +50,18 @@ type MetaEvent = BaseEvent & {
 }
 ```
 
-### Key Characteristics
+### 关键特性
 
-- **Run-independent**: MetaEvents are not tied to any specific run lifecycle
-- **Position-flexible**: Can appear before, between, or after runs
-- **Origin-diverse**: May come from users, clients, or external systems
-- **Extensible**: Applications define their own metaType values and payload
-  schemas
+- **与运行无关**：MetaEvents 不绑定任何特定的运行生命周期
+- **位置灵活**：可以出现在运行之前、之间或之后
+- **来源多样**：可能来自用户、客户端或外部系统
+- **可扩展**：应用自定义自己的 metaType 取值与负载 schema
 
-## Implementation Examples
+## 实现示例
 
-### User Feedback
+### 用户反馈
 
-**Thumbs Up:**
+**点赞**：
 
 ```json
 {
@@ -83,7 +76,7 @@ type MetaEvent = BaseEvent & {
 }
 ```
 
-**Thumbs Down with Reason:**
+**带理由的点踩**：
 
 ```json
 {
@@ -100,9 +93,9 @@ type MetaEvent = BaseEvent & {
 }
 ```
 
-### Annotations
+### 注解
 
-**User Note:**
+**用户笔记**：
 
 ```json
 {
@@ -118,7 +111,7 @@ type MetaEvent = BaseEvent & {
 }
 ```
 
-**Tag Assignment:**
+**标签指派**：
 
 ```json
 {
@@ -133,9 +126,9 @@ type MetaEvent = BaseEvent & {
 }
 ```
 
-### External System Events
+### 外部系统事件
 
-**Analytics Event:**
+**分析事件**：
 
 ```json
 {
@@ -153,7 +146,7 @@ type MetaEvent = BaseEvent & {
 }
 ```
 
-**Moderation Flag:**
+**审核标记**：
 
 ```json
 {
@@ -170,73 +163,72 @@ type MetaEvent = BaseEvent & {
 }
 ```
 
-## Common Meta Event Types
+## 常见 Meta 事件类型
 
-While applications can define their own types, these are commonly used:
+应用可以定义自己的类型，以下是常用的类型：
 
-| MetaType      | Description       | Typical Payload                    |
+| MetaType | 描述 | 典型负载 |
 | ------------- | ----------------- | ---------------------------------- |
-| `thumbs_up`   | Positive feedback | `{ messageId, userId }`            |
-| `thumbs_down` | Negative feedback | `{ messageId, userId, reason? }`   |
-| `note`        | User annotation   | `{ text, relatedId?, author }`     |
-| `tag`         | Categorization    | `{ tags[], targetId }`             |
-| `bookmark`    | Save for later    | `{ messageId, userId }`            |
-| `copy`        | Content copied    | `{ messageId, content }`           |
-| `share`       | Content shared    | `{ messageId, method }`            |
-| `rating`      | Numeric rating    | `{ messageId, rating, maxRating }` |
+| `thumbs_up` | 正面反馈 | `{ messageId, userId }` |
+| `thumbs_down` | 负面反馈 | `{ messageId, userId, reason? }` |
+| `note` | 用户注解 | `{ text, relatedId?, author }` |
+| `tag` | 分类 | `{ tags[], targetId }` |
+| `bookmark` | 稍后保存 | `{ messageId, userId }` |
+| `copy` | 内容已复制 | `{ messageId, content }` |
+| `share` | 内容已分享 | `{ messageId, method }` |
+| `rating` | 数值评分 | `{ messageId, rating, maxRating }` |
 
-## Use Cases
+## 用例
 
-### User Feedback Collection
+### 用户反馈收集
 
-Capture user reactions to agent responses for quality improvement.
+采集用户对智能体回复的反应，用于质量改进。
 
-### Conversation Annotation
+### 会话注解
 
-Allow users to add notes, tags, or bookmarks to important parts of
-conversations.
+允许用户在会话的重要部分添加笔记、标签或书签。
 
-### Analytics and Tracking
+### 分析与追踪
 
-Record user interactions and behaviors without affecting agent execution.
+在不影响智能体执行的情况下记录用户交互与行为。
 
-### Content Moderation
+### 内容审核
 
-Flag or mark content for review by external moderation systems.
+标记内容，供外部审核系统复审。
 
-### Collaborative Features
+### 协作功能
 
-Enable multiple users to annotate or comment on shared conversations.
+让多个用户可以在共享会话上注解或评论。
 
-### Audit Trail
+### 审计链路
 
-Create a complete record of all interactions, not just agent responses.
+为所有交互创建完整记录，而不仅仅是智能体的回复。
 
-## Implementation Considerations
+## 实现注意事项
 
-### Client SDK Changes
+### 客户端 SDK 变更
 
-TypeScript SDK:
+TypeScript SDK：
 
-- New `MetaEvent` type in `@ag-ui/core`
-- Helper functions for common meta event types
-- MetaEvent filtering and querying utilities
+- `@ag-ui/core` 中新增 `MetaEvent` 类型
+- 面向常见 meta 事件类型的辅助函数
+- MetaEvent 过滤与查询工具
 
-Python SDK:
+Python SDK：
 
-- `MetaEvent` class implementation
-- Meta event builders for common types
-- Event stream filtering capabilities
+- `MetaEvent` 类实现
+- 面向常见类型的 meta 事件构建器
+- 事件流过滤能力
 
-## Testing Strategy
+## 测试策略
 
-- Unit tests for MetaEvent creation and validation
-- Integration tests with mixed event streams
-- Performance tests with high-volume meta events
-- Security tests for payload validation
+- 针对 MetaEvent 创建与校验的单元测试
+- 使用混合事件流的集成测试
+- 高容量 meta 事件的性能测试
+- 负载校验的安全性测试
 
-## References
+## 参考资料
 
-- [AG-UI Events Documentation](/concepts/events)
+- [AG-UI 事件文档](/concepts/events)
 - [Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html)
 - [CQRS Pattern](https://martinfowler.com/bliki/CQRS.html)

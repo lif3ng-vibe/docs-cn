@@ -1,38 +1,30 @@
 ---
 title: "AgentSubscriber"
 description:
-  "Event-driven subscriber system for agent lifecycle and event handling"
+  "面向智能体生命周期与事件处理的事件驱动订阅者系统"
 ---
 
 # AgentSubscriber
 
-The `AgentSubscriber` interface provides a comprehensive event-driven system for
-handling agent lifecycle events, message updates, and state mutations during
-agent execution. It allows you to hook into various stages of the agent's
-operation and modify its behavior.
+`AgentSubscriber` 接口提供了一套完整的事件驱动系统，用于在智能体执行期间处理生命周期事件、消息更新与状态变更。它让你能够挂接到智能体运行的各个阶段，并按需修改其行为。
 
 ```typescript
 import { AgentSubscriber } from "@ag-ui/client"
 ```
 
-## Overview
+## 概述
 
-`AgentSubscriber` defines a collection of optional event handlers and lifecycle
-hooks that can respond to different stages of agent execution. All methods in
-the interface are optional, allowing you to implement only the events you need
-to handle.
+`AgentSubscriber` 定义了一组可选的事件处理器与生命周期钩子，可以响应智能体执行的不同阶段。接口中的所有方法都是可选的，你只需实现需要处理的事件即可。
 
-All subscriber methods can be either synchronous or asynchronous - if they
-return a Promise, the agent will await their completion before proceeding.
+所有订阅者方法既可以是同步的，也可以是异步的——如果返回 Promise，智能体会等待其完成后再继续。
 
-## Adding Subscribers to Agents
+## 向智能体添加订阅者
 
-Subscribers can be added to agents in two ways:
+可以通过两种方式向智能体添加订阅者：
 
-### Permanent Subscription
+### 永久订阅
 
-Use the `subscribe()` method to add a subscriber that will persist across
-multiple agent runs:
+使用 `subscribe()` 方法添加一个跨多次智能体运行持续存在的订阅者：
 
 ```typescript
 const agent = new HttpAgent({ url: "https://api.example.com/agent" })
@@ -50,9 +42,9 @@ const subscription = agent.subscribe(subscriber)
 subscription.unsubscribe()
 ```
 
-### Temporary Subscription
+### 临时订阅
 
-Pass a subscriber directly to `runAgent()` for one-time use:
+将订阅者直接传给 `runAgent()`，仅在此次运行中生效：
 
 ```typescript
 const temporarySubscriber: AgentSubscriber = {
@@ -65,18 +57,15 @@ const temporarySubscriber: AgentSubscriber = {
 await agent.runAgent({ tools: [myTool] }, temporarySubscriber)
 ```
 
-## Core Interfaces
+## 核心接口
 
 ### AgentSubscriber
 
-The main interface that defines all available event handlers and lifecycle
-hooks. All methods in the interface are optional, allowing you to implement only
-the events you need to handle.
+定义了所有可用事件处理器与生命周期钩子的主接口。接口中的所有方法都是可选的，你只需实现需要处理的事件即可。
 
 ### AgentStateMutation
 
-Event handlers can return an `AgentStateMutation` object to modify the agent's
-state and control event processing:
+事件处理器可以返回一个 `AgentStateMutation` 对象，用来修改智能体状态并控制事件处理：
 
 ```typescript
 interface AgentStateMutation {
@@ -86,16 +75,15 @@ interface AgentStateMutation {
 }
 ```
 
-When a subscriber returns a mutation:
+当订阅者返回一个变更对象时：
 
-- **messages**: Replaces the current message history
-- **state**: Replaces the current agent state
-- **stopPropagation**: If `true`, prevents subsequent subscribers from handling
-  the event (useful for overriding default behavior)
+- **messages**：替换当前消息历史
+- **state**：替换当前智能体状态
+- **stopPropagation**：为 `true` 时，阻止后续订阅者处理该事件（适用于覆盖默认行为）
 
 ### AgentSubscriberParams
 
-Common parameters passed to most subscriber methods:
+传递给大多数订阅者方法的公共参数：
 
 ```typescript
 interface AgentSubscriberParams {
@@ -106,13 +94,13 @@ interface AgentSubscriberParams {
 }
 ```
 
-## Event Handlers
+## 事件处理器
 
-### Lifecycle Events
+### 生命周期事件
 
 #### onRunInitialized()
 
-Called when the agent run is first initialized, before any processing begins.
+在智能体运行首次初始化时、任何处理开始之前调用。
 
 ```typescript
 onRunInitialized?(params: AgentSubscriberParams): MaybePromise<Omit<AgentStateMutation, "stopPropagation"> | void>
@@ -120,7 +108,7 @@ onRunInitialized?(params: AgentSubscriberParams): MaybePromise<Omit<AgentStateMu
 
 #### onRunFailed()
 
-Called when the agent run encounters an error.
+在智能体运行遇到错误时调用。
 
 ```typescript
 onRunFailed?(params: { error: Error } & AgentSubscriberParams): MaybePromise<Omit<AgentStateMutation, "stopPropagation"> | void>
@@ -128,17 +116,17 @@ onRunFailed?(params: { error: Error } & AgentSubscriberParams): MaybePromise<Omi
 
 #### onRunFinalized()
 
-Called when the agent run completes, regardless of success or failure.
+在智能体运行结束时调用，无论成功或失败。
 
 ```typescript
 onRunFinalized?(params: AgentSubscriberParams): MaybePromise<Omit<AgentStateMutation, "stopPropagation"> | void>
 ```
 
-### Event Handlers
+### 事件处理器
 
 #### onEvent()
 
-General event handler that receives all events during agent execution.
+通用事件处理器，接收智能体执行期间的所有事件。
 
 ```typescript
 onEvent?(params: { event: BaseEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -146,7 +134,7 @@ onEvent?(params: { event: BaseEvent } & AgentSubscriberParams): MaybePromise<Age
 
 #### onRunStartedEvent()
 
-Triggered when an agent run begins execution.
+在智能体运行开始执行时触发。
 
 ```typescript
 onRunStartedEvent?(params: { event: RunStartedEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -154,7 +142,7 @@ onRunStartedEvent?(params: { event: RunStartedEvent } & AgentSubscriberParams): 
 
 #### onRunFinishedEvent()
 
-Called when an agent run completes successfully.
+在智能体运行成功完成时调用。
 
 ```typescript
 onRunFinishedEvent?(params: { event: RunFinishedEvent; result?: any } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -162,7 +150,7 @@ onRunFinishedEvent?(params: { event: RunFinishedEvent; result?: any } & AgentSub
 
 #### onRunErrorEvent()
 
-Triggered when an agent run encounters an error.
+在智能体运行遇到错误时触发。
 
 ```typescript
 onRunErrorEvent?(params: { event: RunErrorEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -170,7 +158,7 @@ onRunErrorEvent?(params: { event: RunErrorEvent } & AgentSubscriberParams): Mayb
 
 #### onStepStartedEvent()
 
-Called when a step within an agent run begins.
+在智能体运行中的某个步骤开始时调用。
 
 ```typescript
 onStepStartedEvent?(params: { event: StepStartedEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -178,17 +166,17 @@ onStepStartedEvent?(params: { event: StepStartedEvent } & AgentSubscriberParams)
 
 #### onStepFinishedEvent()
 
-Triggered when a step within an agent run completes.
+在智能体运行中的某个步骤完成时触发。
 
 ```typescript
 onStepFinishedEvent?(params: { event: StepFinishedEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
 ```
 
-### Message Events
+### 消息事件
 
 #### onTextMessageStartEvent()
 
-Triggered when a text message starts being generated.
+在文本消息开始生成时触发。
 
 ```typescript
 onTextMessageStartEvent?(params: { event: TextMessageStartEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -196,7 +184,7 @@ onTextMessageStartEvent?(params: { event: TextMessageStartEvent } & AgentSubscri
 
 #### onTextMessageContentEvent()
 
-Called for each chunk of text content as it's generated.
+在文本内容的每个 chunk 生成时调用。
 
 ```typescript
 onTextMessageContentEvent?(params: { event: TextMessageContentEvent; textMessageBuffer: string } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -204,17 +192,17 @@ onTextMessageContentEvent?(params: { event: TextMessageContentEvent; textMessage
 
 #### onTextMessageEndEvent()
 
-Called when a text message generation is complete.
+在文本消息生成完成时调用。
 
 ```typescript
 onTextMessageEndEvent?(params: { event: TextMessageEndEvent; textMessageBuffer: string } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
 ```
 
-### Tool Call Events
+### 工具调用事件
 
 #### onToolCallStartEvent()
 
-Triggered when a tool call begins.
+在工具调用开始时触发。
 
 ```typescript
 onToolCallStartEvent?(params: { event: ToolCallStartEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -222,8 +210,7 @@ onToolCallStartEvent?(params: { event: ToolCallStartEvent } & AgentSubscriberPar
 
 #### onToolCallArgsEvent()
 
-Called as tool call arguments are being parsed, providing both raw and parsed
-argument data.
+在工具调用参数解析过程中调用，同时提供原始与解析后的参数数据。
 
 ```typescript
 onToolCallArgsEvent?(params: { event: ToolCallArgsEvent; toolCallBuffer: string; toolCallName: string; partialToolCallArgs: Record<string, any> } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -231,7 +218,7 @@ onToolCallArgsEvent?(params: { event: ToolCallArgsEvent; toolCallBuffer: string;
 
 #### onToolCallEndEvent()
 
-Called when a tool call is complete with final arguments.
+在工具调用连同最终参数一起完成时调用。
 
 ```typescript
 onToolCallEndEvent?(params: { event: ToolCallEndEvent; toolCallName: string; toolCallArgs: Record<string, any> } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -239,17 +226,17 @@ onToolCallEndEvent?(params: { event: ToolCallEndEvent; toolCallName: string; too
 
 #### onToolCallResultEvent()
 
-Triggered when a tool call result is received.
+在收到工具调用结果时触发。
 
 ```typescript
 onToolCallResultEvent?(params: { event: ToolCallResultEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
 ```
 
-### State Events
+### 状态事件
 
 #### onStateSnapshotEvent()
 
-Called when a complete state snapshot is provided.
+在提供完整状态快照时调用。
 
 ```typescript
 onStateSnapshotEvent?(params: { event: StateSnapshotEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -257,7 +244,7 @@ onStateSnapshotEvent?(params: { event: StateSnapshotEvent } & AgentSubscriberPar
 
 #### onStateDeltaEvent()
 
-Triggered when partial state changes are applied.
+在应用部分状态变更时触发。
 
 ```typescript
 onStateDeltaEvent?(params: { event: StateDeltaEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -265,7 +252,7 @@ onStateDeltaEvent?(params: { event: StateDeltaEvent } & AgentSubscriberParams): 
 
 #### onMessagesSnapshotEvent()
 
-Called when a complete message history snapshot is provided.
+在提供完整消息历史快照时调用。
 
 ```typescript
 onMessagesSnapshotEvent?(params: { event: MessagesSnapshotEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -273,9 +260,7 @@ onMessagesSnapshotEvent?(params: { event: MessagesSnapshotEvent } & AgentSubscri
 
 #### onActivitySnapshotEvent()
 
-Called when an activity snapshot is received. The handler receives both the raw
-event and any existing `ActivityMessage` (if present) so you can inspect or
-replace it before the default client logic runs.
+在收到活动快照时调用。处理器会同时收到原始事件与现有的 `ActivityMessage`（如果存在），因此你可以在默认客户端逻辑运行之前检查或替换它。
 
 ```typescript
 onActivitySnapshotEvent?(params: {
@@ -287,8 +272,7 @@ onActivitySnapshotEvent?(params: {
 
 #### onActivityDeltaEvent()
 
-Triggered for each activity delta. Use this hook to transform or debounce the
-incoming JSON Patch operations before they update the conversation transcript.
+在每个活动增量到达时触发。可以使用这个钩子，在 JSON Patch 操作更新会话记录之前对其进行转换或防抖。
 
 ```typescript
 onActivityDeltaEvent?(params: {
@@ -299,7 +283,7 @@ onActivityDeltaEvent?(params: {
 
 #### onRawEvent()
 
-Handler for raw, unprocessed events.
+原始未处理事件的处理器。
 
 ```typescript
 onRawEvent?(params: { event: RawEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
@@ -307,17 +291,17 @@ onRawEvent?(params: { event: RawEvent } & AgentSubscriberParams): MaybePromise<A
 
 #### onCustomEvent()
 
-Handler for custom application-specific events.
+自定义应用专属事件的处理器。
 
 ```typescript
 onCustomEvent?(params: { event: CustomEvent } & AgentSubscriberParams): MaybePromise<AgentStateMutation | void>
 ```
 
-### State Change Handlers
+### 状态变更处理器
 
 #### onMessagesChanged()
 
-Called when the agent's message history is updated.
+在智能体的消息历史更新时调用。
 
 ```typescript
 onMessagesChanged?(params: Omit<AgentSubscriberParams, "input"> & { input?: RunAgentInput }): MaybePromise<void>
@@ -325,7 +309,7 @@ onMessagesChanged?(params: Omit<AgentSubscriberParams, "input"> & { input?: RunA
 
 #### onStateChanged()
 
-Triggered when the agent's state is modified.
+在智能体状态被修改时触发。
 
 ```typescript
 onStateChanged?(params: Omit<AgentSubscriberParams, "input"> & { input?: RunAgentInput }): MaybePromise<void>
@@ -333,7 +317,7 @@ onStateChanged?(params: Omit<AgentSubscriberParams, "input"> & { input?: RunAgen
 
 #### onNewMessage()
 
-Called when a new message is added to the conversation.
+在会话中新增一条消息时调用。
 
 ```typescript
 onNewMessage?(params: { message: Message } & Omit<AgentSubscriberParams, "input"> & { input?: RunAgentInput }): MaybePromise<void>
@@ -341,30 +325,23 @@ onNewMessage?(params: { message: Message } & Omit<AgentSubscriberParams, "input"
 
 #### onNewToolCall()
 
-Triggered when a new tool call is added to a message.
+在消息中新增一个工具调用时触发。
 
 ```typescript
 onNewToolCall?(params: { toolCall: ToolCall } & Omit<AgentSubscriberParams, "input"> & { input?: RunAgentInput }): MaybePromise<void>
 ```
 
-### Messages and state are read-only
+### 消息与状态是只读的
 
-Treat the messages and state that handlers receive, and `agent.messages`, as
-read-only. Copy a value before you change it.
+请把处理器收到的消息与状态，以及 `agent.messages`，都当作只读数据。修改前请先复制。
 
-- A message that did not change keeps the same object from one update to the
-  next, so it can be compared by identity. Editing one in place also changes
-  every earlier update that holds it.
-- A changed message shares its unchanged nested values, such as metadata and
-  multimodal content, with the reducer's working copy. Editing those in place
-  can change what later updates contain.
-- `agent.state` and activity message `content` are copied when emitted, so an
-  edit to them does not reach later updates. An earlier update that holds the
-  same object still sees the edit.
+- 未发生变化的消息在相邻两次更新之间保持同一个对象，因此可以通过对象身份进行比较。就地编辑一条消息，也会同时改动持有它的所有更早的更新。
+- 发生变化的消息会与 reducer 的工作副本共享未变化的嵌套值（例如元数据与多模态内容）。就地编辑这些值可能改变后续更新所包含的内容。
+- `agent.state` 与活动消息的 `content` 在发出时会被复制，因此对它们的编辑不会波及后续更新；但持有同一对象的更早更新仍会看到这次编辑。
 
-## Async Support
+## 异步支持
 
-All subscriber methods support both synchronous and asynchronous execution:
+所有订阅者方法都同时支持同步与异步执行：
 
 ```typescript
 const subscriber: AgentSubscriber = {
@@ -388,10 +365,9 @@ const subscriber: AgentSubscriber = {
 }
 ```
 
-## Multiple Subscribers
+## 多个订阅者
 
-Agents can have multiple subscribers, which are processed in the order they were
-added:
+一个智能体可以有多个订阅者，它们按添加顺序依次处理：
 
 ```typescript
 // First subscriber modifies state
@@ -412,9 +388,9 @@ agent.subscribe(stateEnricher)
 agent.subscribe(logger)
 ```
 
-## Integration with Agents
+## 与智能体集成
 
-Basic usage pattern:
+基本用法：
 
 ```typescript
 const agent = new HttpAgent({ url: "https://api.example.com/agent" })

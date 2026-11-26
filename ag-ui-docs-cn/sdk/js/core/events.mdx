@@ -1,18 +1,16 @@
 ---
-title: "Events"
+title: "事件"
 description:
-  "Documentation for the events used in the Agent User Interaction Protocol SDK"
+  "智能体–用户交互协议 SDK 中所用事件的文档"
 ---
 
-# Events
+# 事件
 
-The Agent User Interaction Protocol SDK uses a streaming event-based
-architecture. Events are the fundamental units of communication between agents
-and the frontend. This section documents the event types and their properties.
+智能体–用户交互协议 SDK 采用基于事件的流式架构。事件是智能体与前端之间通信的基本单位。本节记录事件类型及其属性。
 
-## EventType Enum
+## EventType 枚举
 
-The `EventType` enum defines all possible event types in the system:
+`EventType` 枚举定义了系统中所有可能的事件类型：
 
 ```typescript
 enum EventType {
@@ -50,8 +48,7 @@ enum EventType {
 
 ## BaseEvent
 
-All events inherit from the `BaseEvent` type, which provides common properties
-shared across all event types.
+所有事件都继承自 `BaseEvent` 类型，它提供所有事件类型共享的公共属性。
 
 ```typescript
 type BaseEvent = {
@@ -62,26 +59,22 @@ type BaseEvent = {
 }
 ```
 
-| Property    | Type                | Description                                           |
+| 属性 | 类型 | 描述 |
 | ----------- | ------------------- | ----------------------------------------------------- |
-| `type`      | `EventType`         | The type of event (discriminator field for the union) |
-| `timestamp` | `number` (optional) | Timestamp when the event was created                  |
-| `rawEvent`  | `any` (optional)    | Original event data if this event was transformed     |
-| `metadata`  | `Record<string, any>` (optional) | Extra information attached to the event               |
+| `type` | `EventType` | 事件的类型（联合类型的判别字段） |
+| `timestamp` | `number` (optional) | 事件创建时的时间戳 |
+| `rawEvent` | `any` (optional) | 如果此事件经过转换，则为原始事件数据 |
+| `metadata` | `Record<string, any>` (optional) | 附加到事件上的额外信息 |
 
-`metadata` is open by key: any JSON value is allowed under a key, including
-`null`. The object may be absent, but a present one is never `null` — an
-explicit `null` parses as absent. The `ag-ui` key is reserved for AG-UI's own
-use. Use `mergeMetadata` from `@ag-ui/core` to fold event metadata into a
-message; see [Metadata](/concepts/metadata).
+`metadata` 是按键开放的：任意 key 下允许任何 JSON 值，包括 `null`。对象可以缺失，但存在时绝不会是 `null`——显式的 `null` 会被解析为缺失。`ag-ui` key 为 AG-UI 自用保留。使用 `@ag-ui/core` 中的 `mergeMetadata` 把事件元数据合并进消息；参见 [Metadata（元数据）](/concepts/metadata)。
 
-## Lifecycle Events
+## 生命周期事件
 
-These events represent the lifecycle of an agent run.
+这些事件表示一次智能体运行的生命周期。
 
 ### RunStartedEvent
 
-Signals the start of an agent run.
+表示一次智能体运行的开始。
 
 ```typescript
 type RunStartedEvent = BaseEvent & {
@@ -93,21 +86,16 @@ type RunStartedEvent = BaseEvent & {
 }
 ```
 
-| Property      | Type                       | Description                                                                                                    |
+| 属性 | 类型 | 描述 |
 | ------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `threadId`    | `string`                   | ID of the conversation thread                                                                                  |
-| `runId`       | `string`                   | ID of the agent run                                                                                            |
-| `parentRunId` | `string` (optional)        | (Optional) Lineage pointer for branching/time travel. If present, refers to a prior run within the same thread |
-| `input`       | `RunAgentInput` (optional) | (Optional) The exact agent input payload sent to the agent for this run. May omit messages already in history  |
+| `threadId` | `string` | 会话线程的 ID |
+| `runId` | `string` | 智能体运行的 ID |
+| `parentRunId` | `string` (optional) | （可选）用于分支/时间旅行的血统指针。如果存在，指向同一线程中较早的一次运行 |
+| `input` | `RunAgentInput` (optional) | （可选）本次运行发送给智能体的确切输入负载。可以省略历史中已有的消息 |
 
 ### TokenUsage
 
-A reusable, numeric-only token usage summary carried on terminal run events.
-It intentionally contains **only** provider/model labels and token counts — no
-prompts, completions, messages, or identifiers. The counts follow the
-protocol's [accounting](/spec/1.0/events/lifecycle#token-usage): the input
-and output counts are totals, and the cache and reasoning counts are parts of
-them, never additions.
+附在终止性运行事件上的可复用、纯数值的 token 用量摘要。它有意只包含**提供商/模型标签与 token 计数**——不含提示词、补全结果、消息或标识符。这些计数遵循协议的[记账规则](/spec/1.0/events/lifecycle#token-usage)：输入与输出计数是总量，缓存与推理计数是它们的组成部分，绝不是额外的累加。
 
 ```typescript
 type TokenUsage = {
@@ -122,20 +110,20 @@ type TokenUsage = {
 }
 ```
 
-| Property                | Type                | Description                                                    |
+| 属性 | 类型 | 描述 |
 | ----------------------- | ------------------- | -------------------------------------------------------------- |
-| `provider`              | `string` (optional) | Provider that reported the usage (e.g. `openai`)               |
-| `model`                 | `string` (optional) | Model that produced the usage                                  |
-| `inputTokens`           | `number` (optional) | All input tokens, cache reads and writes included              |
-| `outputTokens`          | `number` (optional) | All output tokens, reasoning included                          |
-| `totalTokens`           | `number` (optional) | `inputTokens` plus `outputTokens`                              |
-| `reasoningTokens`       | `number` (optional) | Output tokens spent on reasoning; part of `outputTokens`       |
-| `cachedInputTokens`     | `number` (optional) | Input tokens read from a prompt cache; part of `inputTokens`   |
-| `cacheWriteInputTokens` | `number` (optional) | Input tokens written to a prompt cache; part of `inputTokens`  |
+| `provider` | `string` (optional) | 上报该用量的提供商（例如 `openai`） |
+| `model` | `string` (optional) | 产生该用量的模型 |
+| `inputTokens` | `number` (optional) | 全部输入 token，包括缓存读与缓存写 |
+| `outputTokens` | `number` (optional) | 全部输出 token，包括推理部分 |
+| `totalTokens` | `number` (optional) | `inputTokens` 加上 `outputTokens` |
+| `reasoningTokens` | `number` (optional) | 花在推理上的输出 token；是 `outputTokens` 的一部分 |
+| `cachedInputTokens` | `number` (optional) | 从提示词缓存读取的输入 token；是 `inputTokens` 的一部分 |
+| `cacheWriteInputTokens` | `number` (optional) | 写入提示词缓存的输入 token；是 `inputTokens` 的一部分 |
 
 ### RunFinishedEvent
 
-Signals the successful completion of an agent run.
+表示一次智能体运行成功完成。
 
 ```typescript
 type RunFinishedEvent = BaseEvent & {
@@ -147,16 +135,16 @@ type RunFinishedEvent = BaseEvent & {
 }
 ```
 
-| Property   | Type                       | Description                                                         |
+| 属性 | 类型 | 描述 |
 | ---------- | -------------------------- | ------------------------------------------------------------------- |
-| `threadId` | `string`                   | ID of the conversation thread                                       |
-| `runId`    | `string`                   | ID of the agent run                                                 |
-| `result`   | `any` (optional)           | Result data from the agent run                                      |
-| `usage`    | `TokenUsage[]` (optional)  | Per-(provider, model) token usage for the run, when reported        |
+| `threadId` | `string` | 会话线程的 ID |
+| `runId` | `string` | 智能体运行的 ID |
+| `result` | `any` (optional) | 智能体运行的结果数据 |
+| `usage` | `TokenUsage[]` (optional) | 本次运行按（提供商，模型）分别统计的 token 用量，在上报时提供 |
 
 ### RunErrorEvent
 
-Signals an error during an agent run.
+表示智能体运行期间发生错误。
 
 ```typescript
 type RunErrorEvent = BaseEvent & {
@@ -167,15 +155,15 @@ type RunErrorEvent = BaseEvent & {
 }
 ```
 
-| Property  | Type                      | Description                                              |
+| 属性 | 类型 | 描述 |
 | --------- | ------------------------- | -------------------------------------------------------- |
-| `message` | `string`                  | Error message                                            |
-| `code`    | `string` (optional)       | Error code                                               |
-| `usage`   | `TokenUsage[]` (optional) | Partial token usage from model calls that completed      |
+| `message` | `string` | 错误消息 |
+| `code` | `string` (optional) | 错误码 |
+| `usage` | `TokenUsage[]` (optional) | 已完成的模型调用所产生的部分 token 用量 |
 
 ### StepStartedEvent
 
-Signals the start of a step within an agent run.
+表示智能体运行中某个步骤的开始。
 
 ```typescript
 type StepStartedEvent = BaseEvent & {
@@ -184,13 +172,13 @@ type StepStartedEvent = BaseEvent & {
 }
 ```
 
-| Property   | Type     | Description      |
+| 属性 | 类型 | 描述 |
 | ---------- | -------- | ---------------- |
-| `stepName` | `string` | Name of the step |
+| `stepName` | `string` | 步骤名称 |
 
 ### StepFinishedEvent
 
-Signals the completion of a step within an agent run.
+表示智能体运行中某个步骤的完成。
 
 ```typescript
 type StepFinishedEvent = BaseEvent & {
@@ -199,17 +187,17 @@ type StepFinishedEvent = BaseEvent & {
 }
 ```
 
-| Property   | Type     | Description      |
+| 属性 | 类型 | 描述 |
 | ---------- | -------- | ---------------- |
-| `stepName` | `string` | Name of the step |
+| `stepName` | `string` | 步骤名称 |
 
-## Text Message Events
+## 文本消息事件
 
-These events represent the lifecycle of text messages in a conversation.
+这些事件表示会话中文本消息的生命周期。
 
 ### TextMessageStartEvent
 
-Signals the start of a text message.
+表示一条文本消息的开始。
 
 ```typescript
 type TextMessageStartEvent = BaseEvent & {
@@ -219,14 +207,14 @@ type TextMessageStartEvent = BaseEvent & {
 }
 ```
 
-| Property    | Type          | Description                       |
+| 属性 | 类型 | 描述 |
 | ----------- | ------------- | --------------------------------- |
-| `messageId` | `string`      | Unique identifier for the message |
-| `role`      | `"assistant"` | Role is always "assistant"        |
+| `messageId` | `string` | 消息的唯一标识符 |
+| `role` | `"assistant"` | 角色始终为 "assistant" |
 
 ### TextMessageContentEvent
 
-Represents a chunk of content in a streaming text message.
+表示流式文本消息中的一个内容 chunk。
 
 ```typescript
 type TextMessageContentEvent = BaseEvent & {
@@ -236,14 +224,14 @@ type TextMessageContentEvent = BaseEvent & {
 }
 ```
 
-| Property    | Type     | Description                               |
+| 属性 | 类型 | 描述 |
 | ----------- | -------- | ----------------------------------------- |
-| `messageId` | `string` | Matches the ID from TextMessageStartEvent |
-| `delta`     | `string` | Text content chunk (non-empty)            |
+| `messageId` | `string` | 与 TextMessageStartEvent 中的 ID 一致 |
+| `delta` | `string` | 文本内容 chunk（非空） |
 
 ### TextMessageEndEvent
 
-Signals the end of a text message.
+表示一条文本消息的结束。
 
 ```typescript
 type TextMessageEndEvent = BaseEvent & {
@@ -252,14 +240,13 @@ type TextMessageEndEvent = BaseEvent & {
 }
 ```
 
-| Property    | Type     | Description                               |
+| 属性 | 类型 | 描述 |
 | ----------- | -------- | ----------------------------------------- |
-| `messageId` | `string` | Matches the ID from TextMessageStartEvent |
+| `messageId` | `string` | 与 TextMessageStartEvent 中的 ID 一致 |
 
 ### TextMessageChunkEvent
 
-Convenience event that expands to `TextMessageStart` → `TextMessageContent` →
-`TextMessageEnd` automatically in the JS/TS client.
+便捷事件，在 JS/TS 客户端中会自动展开为 `TextMessageStart` → `TextMessageContent` → `TextMessageEnd`。
 
 ```typescript
 type TextMessageChunkEvent = BaseEvent & {
@@ -270,23 +257,19 @@ type TextMessageChunkEvent = BaseEvent & {
 }
 ```
 
-Behavior
+行为
 
-- Omit start/end: The client transforms chunk sequences into the standard
-  start/content/end triad, so you don’t need to emit them manually.
-- First chunk requirements: The first chunk for a message must include
-  `messageId`. When `role` is omitted, it defaults to `assistant`.
-- Streaming: Subsequent chunks with the same `messageId` emit
-  `TextMessageContent` events. `TextMessageEnd` is emitted automatically when a
-  different message starts or when the stream completes.
+- 省略 start/end：客户端会把 chunk 序列转换为标准的 start/content/end 三元组，因此你无需手动发出它们。
+- 首个 chunk 的要求：一条消息的首个 chunk 必须包含 `messageId`。省略 `role` 时，默认为 `assistant`。
+- 流式：后续具有相同 `messageId` 的 chunk 会发出 `TextMessageContent` 事件。当另一条消息开始或流结束时，会自动发出 `TextMessageEnd`。
 
-## Tool Call Events
+## 工具调用事件
 
-These events represent the lifecycle of tool calls made by agents.
+这些事件表示智能体所发起工具调用的生命周期。
 
 ### ToolCallStartEvent
 
-Signals the start of a tool call.
+表示一次工具调用的开始。
 
 ```typescript
 type ToolCallStartEvent = BaseEvent & {
@@ -297,15 +280,15 @@ type ToolCallStartEvent = BaseEvent & {
 }
 ```
 
-| Property          | Type                | Description                         |
+| 属性 | 类型 | 描述 |
 | ----------------- | ------------------- | ----------------------------------- |
-| `toolCallId`      | `string`            | Unique identifier for the tool call |
-| `toolCallName`    | `string`            | Name of the tool being called       |
-| `parentMessageId` | `string` (optional) | ID of the parent message            |
+| `toolCallId` | `string` | 工具调用的唯一标识符 |
+| `toolCallName` | `string` | 被调用工具的名称 |
+| `parentMessageId` | `string` (optional) | 父消息的 ID |
 
 ### ToolCallArgsEvent
 
-Represents a chunk of argument data for a tool call.
+表示工具调用的一段参数数据。
 
 ```typescript
 type ToolCallArgsEvent = BaseEvent & {
@@ -315,14 +298,14 @@ type ToolCallArgsEvent = BaseEvent & {
 }
 ```
 
-| Property     | Type     | Description                            |
+| 属性 | 类型 | 描述 |
 | ------------ | -------- | -------------------------------------- |
-| `toolCallId` | `string` | Matches the ID from ToolCallStartEvent |
-| `delta`      | `string` | Argument data chunk                    |
+| `toolCallId` | `string` | 与 ToolCallStartEvent 中的 ID 一致 |
+| `delta` | `string` | 参数数据 chunk |
 
 ### ToolCallEndEvent
 
-Signals the end of a tool call.
+表示一次工具调用的结束。
 
 ```typescript
 type ToolCallEndEvent = BaseEvent & {
@@ -331,13 +314,13 @@ type ToolCallEndEvent = BaseEvent & {
 }
 ```
 
-| Property     | Type     | Description                            |
+| 属性 | 类型 | 描述 |
 | ------------ | -------- | -------------------------------------- |
-| `toolCallId` | `string` | Matches the ID from ToolCallStartEvent |
+| `toolCallId` | `string` | 与 ToolCallStartEvent 中的 ID 一致 |
 
 ### ToolCallResultEvent
 
-Provides the result of a tool call execution.
+提供工具调用执行的结果。
 
 ```typescript
 type ToolCallResultEvent = BaseEvent & {
@@ -349,20 +332,20 @@ type ToolCallResultEvent = BaseEvent & {
 }
 ```
 
-| Property     | Type                | Description                                                 |
+| 属性 | 类型 | 描述 |
 | ------------ | ------------------- | ----------------------------------------------------------- |
-| `messageId`  | `string`            | ID of the conversation message this result belongs to       |
-| `toolCallId` | `string`            | Matches the ID from the corresponding ToolCallStartEvent    |
-| `content`    | `string`            | The actual result/output content from the tool execution    |
-| `role`       | `"tool"` (optional) | Optional role identifier, typically "tool" for tool results |
+| `messageId` | `string` | 此结果所属会话消息的 ID |
+| `toolCallId` | `string` | 与对应的 ToolCallStartEvent 中的 ID 一致 |
+| `content` | `string` | 工具执行产生的实际结果/输出内容 |
+| `role` | `"tool"` (optional) | 可选的角色标识，工具调用结果通常为 "tool" |
 
-## State Management Events
+## 状态管理事件
 
-These events are used to manage agent state.
+这些事件用于管理智能体状态。
 
 ### StateSnapshotEvent
 
-Provides a complete snapshot of an agent's state.
+提供智能体状态的完整快照。
 
 ```typescript
 type StateSnapshotEvent = BaseEvent & {
@@ -371,13 +354,13 @@ type StateSnapshotEvent = BaseEvent & {
 }
 ```
 
-| Property   | Type  | Description             |
+| 属性 | 类型 | 描述 |
 | ---------- | ----- | ----------------------- |
-| `snapshot` | `any` | Complete state snapshot |
+| `snapshot` | `any` | 完整的状态快照 |
 
 ### StateDeltaEvent
 
-Provides a partial update to an agent's state using JSON Patch.
+使用 JSON Patch 提供智能体状态的增量更新。
 
 ```typescript
 type StateDeltaEvent = BaseEvent & {
@@ -386,13 +369,13 @@ type StateDeltaEvent = BaseEvent & {
 }
 ```
 
-| Property | Type    | Description                    |
+| 属性 | 类型 | 描述 |
 | -------- | ------- | ------------------------------ |
-| `delta`  | `any[]` | Array of JSON Patch operations |
+| `delta` | `any[]` | JSON Patch 操作数组 |
 
 ### MessagesSnapshotEvent
 
-Provides a snapshot of all messages in a conversation.
+提供会话中所有消息的快照。
 
 ```typescript
 type MessagesSnapshotEvent = BaseEvent & {
@@ -401,13 +384,13 @@ type MessagesSnapshotEvent = BaseEvent & {
 }
 ```
 
-| Property   | Type        | Description              |
+| 属性 | 类型 | 描述 |
 | ---------- | ----------- | ------------------------ |
-| `messages` | `Message[]` | Array of message objects |
+| `messages` | `Message[]` | 消息对象数组 |
 
 ### ActivitySnapshotEvent
 
-Delivers a complete snapshot of an activity message.
+交付一条活动消息的完整快照。
 
 ```typescript
 type ActivitySnapshotEvent = BaseEvent & {
@@ -419,16 +402,16 @@ type ActivitySnapshotEvent = BaseEvent & {
 }
 ```
 
-| Property       | Type                  | Description                                                                                           |
+| 属性 | 类型 | 描述 |
 | -------------- | --------------------- | ----------------------------------------------------------------------------------------------------- |
-| `messageId`    | `string`              | Identifier for the target `ActivityMessage`                                                           |
-| `activityType` | `string`              | Activity discriminator such as `"PLAN"` or `"SEARCH"`                                                 |
-| `content`      | `Record<string, any>` | Structured payload describing the full activity state                                                 |
-| `replace`      | `boolean` (optional)  | Defaults to `true`; when `false` the snapshot is ignored if a message with the same ID already exists |
+| `messageId` | `string` | 目标 `ActivityMessage` 的标识符 |
+| `activityType` | `string` | 活动判别值，例如 `"PLAN"` 或 `"SEARCH"` |
+| `content` | `Record<string, any>` | 描述完整活动状态的结构化负载 |
+| `replace` | `boolean` (optional) | 默认为 `true`；为 `false` 时，如果已存在相同 ID 的消息，则忽略该快照 |
 
 ### ActivityDeltaEvent
 
-Provides incremental updates to an activity snapshot using JSON Patch.
+使用 JSON Patch 提供活动快照的增量更新。
 
 ```typescript
 type ActivityDeltaEvent = BaseEvent & {
@@ -439,23 +422,19 @@ type ActivityDeltaEvent = BaseEvent & {
 }
 ```
 
-| Property       | Type     | Description                                                      |
+| 属性 | 类型 | 描述 |
 | -------------- | -------- | ---------------------------------------------------------------- |
-| `messageId`    | `string` | Identifier for the target `ActivityMessage`                      |
-| `activityType` | `string` | Activity discriminator mirroring the most recent snapshot        |
-| `patch`        | `any[]`  | JSON Patch operations applied to the structured activity payload |
+| `messageId` | `string` | 目标 `ActivityMessage` 的标识符 |
+| `activityType` | `string` | 与最近一次快照一致的活动判别值 |
+| `patch` | `any[]` | 应用到结构化活动负载上的 JSON Patch 操作 |
 
-## Reasoning Events
+## 推理事件
 
-These events represent the lifecycle of reasoning/thinking processes within an
-agent. Reasoning events allow agents to expose their internal thought process to
-the frontend, creating `ReasoningMessage` objects that persist in the message
-history with the role `"reasoning"`.
+这些事件表示智能体内部推理/思考过程的生命周期。推理事件让智能体能够把内部思考过程暴露给前端，创建以 `"reasoning"` 角色保留在消息历史中的 `ReasoningMessage` 对象。
 
 ### ReasoningStartEvent
 
-Signals the start of a reasoning phase. This is a pass-through event that
-notifies subscribers but does not create messages.
+表示一个推理阶段的开始。这是一个透传事件，只通知订阅者，不会创建消息。
 
 ```typescript
 type ReasoningStartEvent = BaseEvent & {
@@ -464,14 +443,13 @@ type ReasoningStartEvent = BaseEvent & {
 }
 ```
 
-| Property    | Type     | Description                        |
+| 属性 | 类型 | 描述 |
 | ----------- | -------- | ---------------------------------- |
-| `messageId` | `string` | Identifier for the reasoning phase |
+| `messageId` | `string` | 推理阶段的标识符 |
 
 ### ReasoningMessageStartEvent
 
-Signals the start of a reasoning message. Creates a new `ReasoningMessage` in
-the message history.
+表示一条推理消息的开始。会在消息历史中创建一条新的 `ReasoningMessage`。
 
 ```typescript
 type ReasoningMessageStartEvent = BaseEvent & {
@@ -481,14 +459,14 @@ type ReasoningMessageStartEvent = BaseEvent & {
 }
 ```
 
-| Property    | Type          | Description                        |
+| 属性 | 类型 | 描述 |
 | ----------- | ------------- | ---------------------------------- |
-| `messageId` | `string`      | Unique identifier for the message  |
-| `role`      | `"reasoning"` | Role is always "reasoning"         |
+| `messageId` | `string` | 消息的唯一标识符 |
+| `role` | `"reasoning"` | 角色始终为 "reasoning" |
 
 ### ReasoningMessageContentEvent
 
-Represents a chunk of content in a streaming reasoning message.
+表示流式推理消息中的一个内容 chunk。
 
 ```typescript
 type ReasoningMessageContentEvent = BaseEvent & {
@@ -498,14 +476,14 @@ type ReasoningMessageContentEvent = BaseEvent & {
 }
 ```
 
-| Property    | Type     | Description                                    |
+| 属性 | 类型 | 描述 |
 | ----------- | -------- | ---------------------------------------------- |
-| `messageId` | `string` | Matches the ID from ReasoningMessageStartEvent |
-| `delta`     | `string` | Reasoning content chunk                        |
+| `messageId` | `string` | 与 ReasoningMessageStartEvent 中的 ID 一致 |
+| `delta` | `string` | 推理内容 chunk |
 
 ### ReasoningMessageEndEvent
 
-Signals the end of a reasoning message.
+表示一条推理消息的结束。
 
 ```typescript
 type ReasoningMessageEndEvent = BaseEvent & {
@@ -514,15 +492,13 @@ type ReasoningMessageEndEvent = BaseEvent & {
 }
 ```
 
-| Property    | Type     | Description                                    |
+| 属性 | 类型 | 描述 |
 | ----------- | -------- | ---------------------------------------------- |
-| `messageId` | `string` | Matches the ID from ReasoningMessageStartEvent |
+| `messageId` | `string` | 与 ReasoningMessageStartEvent 中的 ID 一致 |
 
 ### ReasoningMessageChunkEvent
 
-Convenience event that expands to `ReasoningMessageStart` →
-`ReasoningMessageContent` → `ReasoningMessageEnd` automatically in the JS/TS
-client.
+便捷事件，在 JS/TS 客户端中会自动展开为 `ReasoningMessageStart` → `ReasoningMessageContent` → `ReasoningMessageEnd`。
 
 ```typescript
 type ReasoningMessageChunkEvent = BaseEvent & {
@@ -532,20 +508,15 @@ type ReasoningMessageChunkEvent = BaseEvent & {
 }
 ```
 
-Behavior
+行为
 
-- Omit start/end: The client transforms chunk sequences into the standard
-  start/content/end triad.
-- First chunk requirements: The first chunk for a message must include
-  `messageId`.
-- Streaming: Subsequent chunks with the same `messageId` emit
-  `ReasoningMessageContent` events. `ReasoningMessageEnd` is emitted
-  automatically when a different message starts or when the stream completes.
+- 省略 start/end：客户端会把 chunk 序列转换为标准的 start/content/end 三元组。
+- 首个 chunk 的要求：一条消息的首个 chunk 必须包含 `messageId`。
+- 流式：后续具有相同 `messageId` 的 chunk 会发出 `ReasoningMessageContent` 事件。当另一条消息开始或流结束时，会自动发出 `ReasoningMessageEnd`。
 
 ### ReasoningEndEvent
 
-Signals the end of a reasoning phase. This is a pass-through event that notifies
-subscribers but does not modify messages.
+表示一个推理阶段的结束。这是一个透传事件，只通知订阅者，不会修改消息。
 
 ```typescript
 type ReasoningEndEvent = BaseEvent & {
@@ -554,15 +525,13 @@ type ReasoningEndEvent = BaseEvent & {
 }
 ```
 
-| Property    | Type     | Description                        |
+| 属性 | 类型 | 描述 |
 | ----------- | -------- | ---------------------------------- |
-| `messageId` | `string` | Identifier for the reasoning phase |
+| `messageId` | `string` | 推理阶段的标识符 |
 
 ### ReasoningEncryptedValueEvent
 
-Attaches an encrypted value to a message or tool call. When this event is
-emitted, it finds the referenced entity by `entityId` and sets its
-`encryptedValue` field.
+把一个加密值附加到消息或工具调用上。该事件发出时，会通过 `entityId` 找到被引用的实体，并设置其 `encryptedValue` 字段。
 
 ```typescript
 type ReasoningEncryptedValueEvent = BaseEvent & {
@@ -573,25 +542,21 @@ type ReasoningEncryptedValueEvent = BaseEvent & {
 }
 ```
 
-| Property         | Type                       | Description                                        |
+| 属性 | 类型 | 描述 |
 | ---------------- | -------------------------- | -------------------------------------------------- |
-| `subtype`        | `"tool-call" \| "message"` | The type of entity this value belongs to           |
-| `entityId`       | `string`                   | ID of the tool call or message to attach the value |
-| `encryptedValue` | `string`                   | The encrypted value to attach to the entity        |
+| `subtype` | `"tool-call" \| "message"` | 此加密值所属实体的类型 |
+| `entityId` | `string` | 要附加加密值的工具调用或消息的 ID |
+| `encryptedValue` | `string` | 要附加到实体上的加密值 |
 
-## Subagent Events
+## 子智能体事件
 
-These events report that the agent delegated work to a child agent, so a frontend
-can attribute output to the subagent that produced it. Attribution itself travels
-as an optional `subagentRunId` on most other event types.
+这些事件表明智能体把工作委托给了子智能体，前端因此可以把输出归因（attribution）到产生它的那个子智能体。归因本身以可选的 `subagentRunId` 字段随大多数其他事件类型传递。
 
-`subagentRunId` identifies **one invocation**, not a reusable subagent
-definition — the same subagent run twice yields two different values. See
-[Subagents](/concepts/subagents) for the full model.
+`subagentRunId` 标识的是**一次调用**，而不是可复用的子智能体定义——同一个子智能体运行两次会得到两个不同的值。完整模型参见 [Subagents（子智能体）](/concepts/subagents)。
 
 ### SubagentStartedEvent
 
-Announces a new subagent invocation and names it for display.
+宣告一次新的子智能体调用，并给出用于展示的名称。
 
 ```typescript
 type SubagentStartedEvent = BaseEvent & {
@@ -605,18 +570,18 @@ type SubagentStartedEvent = BaseEvent & {
 }
 ```
 
-| Property              | Type     | Description                                    |
+| 属性 | 类型 | 描述 |
 | --------------------- | -------- | ---------------------------------------------- |
-| `subagentRunId`       | `string` | Opaque identifier for this invocation          |
-| `name`                | `string` | Declared subagent name or type, for display    |
-| `description`         | `string` | Optional description                           |
-| `parentSubagentRunId` | `string` | Optional enclosing subagent, when nesting      |
-| `parentToolCallId`    | `string` | Optional tool call that spawned this subagent  |
-| `parentMessageId`     | `string` | Optional message holding that tool call        |
+| `subagentRunId` | `string` | 本次调用的不透明标识符 |
+| `name` | `string` | 声明的子智能体名称或类型，用于展示 |
+| `description` | `string` | 可选描述 |
+| `parentSubagentRunId` | `string` | 可选的外层子智能体，嵌套时存在 |
+| `parentToolCallId` | `string` | 可选的、生成此子智能体的工具调用 |
+| `parentMessageId` | `string` | 可选的、持有该工具调用的消息 |
 
 ### SubagentFinishedEvent
 
-Marks a subagent invocation as complete.
+把一次子智能体调用标记为已完成。
 
 ```typescript
 type SubagentFinishedEvent = BaseEvent & {
@@ -627,15 +592,15 @@ type SubagentFinishedEvent = BaseEvent & {
 }
 ```
 
-| Property        | Type     | Description                                        |
+| 属性 | 类型 | 描述 |
 | --------------- | -------- | -------------------------------------------------- |
-| `subagentRunId` | `string` | Matches the id from `SubagentStartedEvent`          |
-| `result`        | `any`    | Optional payload, mirroring `RunFinishedEvent.result` |
-| `outcome`       | `SubagentFinishedOutcome` | Optional discriminated union; omitted means success (the legacy reading). `{ type: "suspended", interruptIds?: string[] }` says the subagent is checkpointed awaiting outside input; `interruptIds` names the run-level interrupts whose answers resume it. |
+| `subagentRunId` | `string` | 与 `SubagentStartedEvent` 中的 id 一致 |
+| `result` | `any` | 可选负载，对应 `RunFinishedEvent.result` |
+| `outcome` | `SubagentFinishedOutcome` | 可选的可辨识联合；省略表示成功（沿用旧语义）。`{ type: "suspended", interruptIds?: string[] }` 表示子智能体已建立检查点、正在等待外部输入；`interruptIds` 指出恢复它所需应答的那些运行级中断。 |
 
 ### SubagentErrorEvent
 
-Marks a subagent invocation as failed.
+把一次子智能体调用标记为已失败。
 
 ```typescript
 type SubagentErrorEvent = BaseEvent & {
@@ -646,36 +611,27 @@ type SubagentErrorEvent = BaseEvent & {
 }
 ```
 
-| Property        | Type     | Description                               |
+| 属性 | 类型 | 描述 |
 | --------------- | -------- | ----------------------------------------- |
-| `subagentRunId` | `string` | Matches the id from `SubagentStartedEvent` |
-| `message`       | `string` | Human-readable error message              |
-| `code`          | `string` | Optional error code                       |
+| `subagentRunId` | `string` | 与 `SubagentStartedEvent` 中的 id 一致 |
+| `message` | `string` | 人类可读的错误消息 |
+| `code` | `string` | 可选的错误码 |
 
-### Attribution on other events
+### 其他事件上的归因
 
-Most event types accept an optional `subagentRunId`. An event without it belongs
-to the parent agent, so a stream that never sets the field behaves exactly as it
-did before subagents existed.
+大多数事件类型都接受可选的 `subagentRunId`。不带该字段的事件归属于父智能体，因此从不设置该字段的事件流，其行为与子智能体出现之前完全一致。
 
-`RunStartedEvent`, `RunFinishedEvent` and `RunErrorEvent` are not attributable —
-they describe the run as a whole. `MessagesSnapshotEvent` carries attribution
-per-message instead, since one snapshot mixes messages from several producers.
+`RunStartedEvent`、`RunFinishedEvent` 与 `RunErrorEvent` 是不可归因的——它们描述的是整个运行。`MessagesSnapshotEvent` 则按消息携带归因，因为一份快照会混合来自多个生产者的消息。
 
-`StateSnapshotEvent` and `StateDeltaEvent` are attributable, but attribution on
-them is provenance rather than ownership — it records which subagent produced the
-update. State stays run-scoped, so an attributed snapshot or delta is applied to
-the run's one state document just as an unattributed one is. There is no
-per-subagent state.
+`StateSnapshotEvent` 与 `StateDeltaEvent` 是可归因的，但其上的归因表示来源（provenance）而非所有权——它记录的是哪个子智能体产生了这次更新。状态始终以运行为作用域，因此带归因的快照或增量与不带归因的一样，都会应用到该运行唯一的状态文档上。不存在按子智能体划分的状态。
 
-Subscribers can react to the lifecycle directly via `onSubagentStartedEvent`,
-`onSubagentFinishedEvent` and `onSubagentErrorEvent`.
+订阅者可以通过 `onSubagentStartedEvent`、`onSubagentFinishedEvent` 与 `onSubagentErrorEvent` 直接响应这一生命周期。
 
-## Special Events
+## 特殊事件
 
 ### RawEvent
 
-Used to pass through events from external systems.
+用于透传来自外部系统的事件。
 
 ```typescript
 type RawEvent = BaseEvent & {
@@ -685,14 +641,14 @@ type RawEvent = BaseEvent & {
 }
 ```
 
-| Property | Type                | Description         |
+| 属性 | 类型 | 描述 |
 | -------- | ------------------- | ------------------- |
-| `event`  | `any`               | Original event data |
-| `source` | `string` (optional) | Source of the event |
+| `event` | `any` | 原始事件数据 |
+| `source` | `string` (optional) | 事件的来源 |
 
 ### CustomEvent
 
-Used for application-specific custom events.
+用于应用专属的自定义事件。
 
 ```typescript
 type CustomEvent = BaseEvent & {
@@ -702,36 +658,35 @@ type CustomEvent = BaseEvent & {
 }
 ```
 
-| Property | Type     | Description                     |
+| 属性 | 类型 | 描述 |
 | -------- | -------- | ------------------------------- |
-| `name`   | `string` | Name of the custom event        |
-| `value`  | `any`    | Value associated with the event |
+| `name` | `string` | 自定义事件的名称 |
+| `value` | `any` | 与该事件关联的值 |
 
-## Deprecated Events
+## 已废弃事件
 
 <Warning>
-  The `THINKING_*` events are deprecated and will be removed in version 1.0.0.
-  New implementations should use `REASONING_*` events instead.
+  `THINKING_*` 事件已废弃，将在 1.0.0 版本中移除。
+  新的实现应改用 `REASONING_*` 事件。
 </Warning>
 
-### Thinking Events (Deprecated)
+### Thinking 事件（已废弃）
 
-The following event types are deprecated:
+以下事件类型已废弃：
 
-| Deprecated Event                | Replacement                 |
+| 已废弃事件 | 替代事件 |
 | ------------------------------- | --------------------------- |
-| `THINKING_START`                | `REASONING_START`           |
-| `THINKING_END`                  | `REASONING_END`             |
-| `THINKING_TEXT_MESSAGE_START`   | `REASONING_MESSAGE_START`   |
+| `THINKING_START` | `REASONING_START` |
+| `THINKING_END` | `REASONING_END` |
+| `THINKING_TEXT_MESSAGE_START` | `REASONING_MESSAGE_START` |
 | `THINKING_TEXT_MESSAGE_CONTENT` | `REASONING_MESSAGE_CONTENT` |
-| `THINKING_TEXT_MESSAGE_END`     | `REASONING_MESSAGE_END`     |
+| `THINKING_TEXT_MESSAGE_END` | `REASONING_MESSAGE_END` |
 
-See [Reasoning Migration](/concepts/reasoning#migration-from-thinking-events)
-for detailed migration guidance.
+详细的迁移指引参见 [Reasoning Migration（推理迁移）](/concepts/reasoning#migration-from-thinking-events)。
 
-## Event Schemas
+## 事件 schema
 
-The SDK uses Zod schemas to validate events:
+SDK 使用 Zod schema 来校验事件：
 
 ```typescript
 const EventSchemas = z.discriminatedUnion("type", [
@@ -764,13 +719,11 @@ const EventSchemas = z.discriminatedUnion("type", [
 ])
 ```
 
-This allows for runtime validation of events and provides TypeScript type
-inference.
+这样既能对事件进行运行时校验，也提供了 TypeScript 类型推断。
 
 ### ToolCallChunkEvent
 
-Convenience event that expands to `ToolCallStart` → `ToolCallArgs` →
-`ToolCallEnd` automatically in the JS/TS client.
+便捷事件，在 JS/TS 客户端中会自动展开为 `ToolCallStart` → `ToolCallArgs` → `ToolCallEnd`。
 
 ```typescript
 type ToolCallChunkEvent = BaseEvent & {
@@ -782,12 +735,8 @@ type ToolCallChunkEvent = BaseEvent & {
 }
 ```
 
-Behavior
+行为
 
-- Omit start/end: The client transforms chunk sequences into the standard
-  start/args/end triad.
-- First chunk requirements: The first chunk must include both `toolCallId` and
-  `toolCallName`; `parentMessageId` is propagated to `ToolCallStart` if given.
-- Streaming: Subsequent chunks with the same `toolCallId` emit `ToolCallArgs`.
-  `ToolCallEnd` is emitted automatically when the tool call changes or when the
-  stream completes.
+- 省略 start/end：客户端会把 chunk 序列转换为标准的 start/args/end 三元组。
+- 首个 chunk 的要求：首个 chunk 必须同时包含 `toolCallId` 与 `toolCallName`；如果给出 `parentMessageId`，它会传递给 `ToolCallStart`。
+- 流式：后续具有相同 `toolCallId` 的 chunk 会发出 `ToolCallArgs`。当工具调用变化或流结束时，会自动发出 `ToolCallEnd`。

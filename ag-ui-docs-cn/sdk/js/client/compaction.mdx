@@ -1,13 +1,11 @@
 ---
-title: "Stream Compaction"
-description: "compactEvents utility for reducing verbose streaming sequences"
+title: "流式压缩"
+description: "compactEvents 工具：精简冗长的流式序列"
 ---
 
 # compactEvents
 
-`compactEvents` reduces verbose streaming sequences in an event array while
-preserving semantics. Use it to shrink logs before persistence or to simplify
-post‑processing of Server‑Sent Events (SSE) streams.
+`compactEvents` 在保留语义的前提下，精简事件数组中冗长的流式序列。可以在持久化之前用它压缩日志，或简化服务器推送事件（SSE）流的后续处理。
 
 ```ts
 import { compactEvents, EventType, type BaseEvent } from "@ag-ui/client"
@@ -21,29 +19,17 @@ const compacted: BaseEvent[] = compactEvents(events)
 function compactEvents(events: BaseEvent[]): BaseEvent[]
 ```
 
-## What it does
+## 功能说明
 
-- Text messages: Groups `TEXT_MESSAGE_START` → `TEXT_MESSAGE_CONTENT*` →
-  `TEXT_MESSAGE_END` for the same `messageId`, concatenating all `delta`
-  chunks into a single `TEXT_MESSAGE_CONTENT` event.
-- Reasoning messages: Groups `REASONING_MESSAGE_START` →
-  `REASONING_MESSAGE_CONTENT*` → `REASONING_MESSAGE_END` for the same
-  `messageId` the same way, into a single `REASONING_MESSAGE_CONTENT` event.
-  `REASONING_START`, `REASONING_END` and `REASONING_ENCRYPTED_VALUE` pass
-  through unchanged.
-- Tool calls: Groups `TOOL_CALL_START` → `TOOL_CALL_ARGS*` → `TOOL_CALL_END`
-  for the same `toolCallId`, concatenating all `delta` chunks into a single
-  `TOOL_CALL_ARGS` event.
-- Interleaved events: Any events that occur between a start/end pair are moved
-  after that sequence so the streaming block remains contiguous. Each block
-  stays where its stream started, so overlapping streams keep the order they
-  opened in. Deltas are not combined across a `MESSAGES_SNAPSHOT`, which stays
-  where it arrived.
-- Pass‑through: All other events (state, custom, etc.) are preserved unchanged.
+- 文本消息：将同一 `messageId` 的 `TEXT_MESSAGE_START` → `TEXT_MESSAGE_CONTENT*` → `TEXT_MESSAGE_END` 归为一组，把所有 `delta` chunk 拼接成单个 `TEXT_MESSAGE_CONTENT` 事件。
+- 推理消息：以相同方式把同一 `messageId` 的 `REASONING_MESSAGE_START` → `REASONING_MESSAGE_CONTENT*` → `REASONING_MESSAGE_END` 归组为单个 `REASONING_MESSAGE_CONTENT` 事件。`REASONING_START`、`REASONING_END` 与 `REASONING_ENCRYPTED_VALUE` 原样透传。
+- 工具调用：将同一 `toolCallId` 的 `TOOL_CALL_START` → `TOOL_CALL_ARGS*` → `TOOL_CALL_END` 归为一组，把所有 `delta` chunk 拼接成单个 `TOOL_CALL_ARGS` 事件。
+- 交错事件：出现在某一对 start/end 之间的任何事件，都会被移到该序列之后，使流式块保持连续。每个块都停留在其流开始的位置，因此相互重叠的流会保持它们开启时的先后顺序。增量不会跨越 `MESSAGES_SNAPSHOT` 合并，快照本身停留在它到达的位置。
+- 透传：所有其他事件（状态、自定义等）原样保留。
 
-## Example
+## 示例
 
-Before:
+压缩前：
 
 ```ts
 [
@@ -56,7 +42,7 @@ Before:
 ]
 ```
 
-After:
+压缩后：
 
 ```ts
 [
@@ -67,37 +53,22 @@ After:
 ]
 ```
 
-Reasoning message and tool call compaction work analogously for
-`REASONING_MESSAGE_CONTENT` and `TOOL_CALL_ARGS` chunks.
+推理消息与工具调用的压缩方式与之类似，分别作用于 `REASONING_MESSAGE_CONTENT` 与 `TOOL_CALL_ARGS` chunk。
 
-## When to use
+## 适用场景
 
-- Persisting event history (store fewer frames with the same meaning)
-- Preparing snapshots for analytics or export
-- Reducing noise in tests or debugging output
+- 持久化事件历史（用更少的帧表达同样的含义）
+- 为分析或导出准备快照
+- 减少测试或调试输出中的噪音
 
-## Metadata
+## 元数据
 
-Collapsing a run of delta events also folds their
-[metadata](/concepts/metadata), key by key with the last write winning, so a
-compacted stream produces the same metadata as the original. Metadata that
-arrives after the first delta — from later deltas and from a replayed start
-alike — rides the collapsed event in arrival order, because compaction emits
-the start ahead of it.
+把一连串增量事件折叠起来时，它们的[元数据](/concepts/metadata)也会逐个 key 合并、后写者胜，因此压缩后的流会产生与原始流相同的元数据。在首个增量之后到达的元数据——无论来自后续增量，还是来自重放过的 start——都会按到达顺序随折叠后的事件一起输出，因为压缩会把 start 放在它前面发出。
 
-Compaction moves events so each stream's events stay together, at the point
-where the stream started, so a replay creates messages in the original order.
-Two parallel tool calls whose ends arrive in the opposite order to their starts
-keep their order in the assistant message's `toolCalls` array, each carrying its
-own metadata. An event that interrupts a stream is emitted after it, except a
-`MESSAGES_SNAPSHOT`: it restates the messages, so what each open stream
-delivered before it is emitted ahead of it and the rest after it, and no delta
-is combined across it.
+压缩会移动事件，使每条流的事件聚在一起并停留在该流开始的位置，因此重放时会按原始顺序创建消息。两个并行工具调用即使 end 的到达顺序与 start 相反，它们在助手消息 `toolCalls` 数组中的顺序也保持不变，并各自携带自己的元数据。打断某条流的事件会在这条流之后发出，但 `MESSAGES_SNAPSHOT` 例外：它会重述消息，因此各条开启中的流在其之前交付的内容会先于它发出、其余内容在其后发出，并且任何增量都不会跨越它合并。
 
-## Notes & limitations
+## 注意事项与限制
 
-- This utility focuses on message and tool‑call streams. It does not modify
-  state events (`STATE_SNAPSHOT`/`STATE_DELTA`) or generate message snapshots.
-- For background and broader patterns (branching, normalization), see
-  [Serialization](/concepts/serialization).
+- 该工具只关注消息流与工具调用流。它不会修改状态事件（`STATE_SNAPSHOT`/`STATE_DELTA`），也不会生成消息快照。
+- 背景知识与更宏观的模式（分支、规范化）参见 [Serialization（序列化）](/concepts/serialization)。
 

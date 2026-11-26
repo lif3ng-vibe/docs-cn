@@ -1,14 +1,12 @@
 ---
-title: "Multimodal Inputs"
+title: "多模态输入"
 description:
-  "Use modality-specific user input parts with typed data/url sources in
-  @ag-ui/core"
+  "在 @ag-ui/core 中使用带类型化 data/url 来源的模态专属用户输入部分"
 ---
 
-# Multimodal Inputs
+# 多模态输入
 
-`UserMessage.content` accepts either plain text or an ordered array of
-multimodal content parts.
+`UserMessage.content` 既接受纯文本，也接受多模态内容部分（content part）组成的有序数组。
 
 ```typescript
 import { UserMessage } from "@ag-ui/core"
@@ -38,16 +36,16 @@ const message: UserMessage = {
 }
 ```
 
-## Source Types
+## 来源类型
 
-Use `source.type` to describe payload delivery:
+使用 `source.type` 描述负载的交付方式：
 
-- `data`: Inline base64 payload with required `mimeType`
-- `url`: HTTP(S) or data URL, optional `mimeType`
+- `data`：内联 base64 负载，必须提供 `mimeType`
+- `url`：HTTP(S) 或 data URL，`mimeType` 可选
 
-## Common Use Cases
+## 常见用例
 
-### Visual QA
+### 视觉问答
 
 ```typescript
 {
@@ -64,7 +62,7 @@ Use `source.type` to describe payload delivery:
 }
 ```
 
-### Audio transcription
+### 音频转写
 
 ```typescript
 {
@@ -80,7 +78,7 @@ Use `source.type` to describe payload delivery:
 }
 ```
 
-### Mixed media comparison
+### 混合媒体对比
 
 ```typescript
 {

@@ -23,7 +23,7 @@
 | B3 | 规范 spec/1.0×27（含 schema.mdx——不在导航但被 12+ 处 `#anchor` 深链，必须译） | ✅（页内锚点 9 处，映射 27 份；`mintlify validate` 全绿仅 49 条良性 duplicate-h1 警告=上游风格） |
 | B4 | 规范 spec/draft×27（与 B3 同构；开工先读 .anchor-maps/B3/ 沿用同标题译文） | ⬜ |
 | B5a | SDK dotnet×10 + python×5（磁盘实为 15 文件） | ✅（映射 15 份） |
-| B5b | SDK js×13 + development×3 + drafts×3 + tutorials×2 + **support.mdx + integrations/google-adk-js.mdx（B1 清单漏项，此处补）** | ⬜ |
+| B5b | SDK js×13 + development×3 + drafts×3 + tutorials×2 + support + integrations/google-adk-js | ✅（实译 22 文件；sdk/js/encoder.mdx、sdk/js/proto.mdx 为空页未动；页内锚点约 120 处，映射 22 份） |
 | B6 | snippets×3 + docs.json anchors 改站内 + 跨页锚点回修 + 终检（残留/锚点/字面**）+ README + 阶段 C 五处同步 | ⬜ |
 
 ## 已译文件清单
@@ -53,6 +53,7 @@
 - B5a 站内待回修（要点，完整清单见 .anchor-maps/B5a/ 各映射文件的旧→新登记）：dotnet/python 的 types/events 页标题锚点已变（#context→#上下文、#tool→#工具、#state→#状态、#message-types、#runagentinput、#agentcapabilities、events#lifecycle-events、#text-message-events、#tool-call-events、#state-management-events、#special-events、chat-client#construction/#streaming-responses/#statelessness-and-conversationid/#thread-continuity/#interrupts-and-approvals、transport#iaguitransport/#http-transport/#custom-transports 等）——引用这些页的内链在 B6 用映射回修；B5a 页自身出站锚点：/concepts/interrupts#resuming-a-run、/concepts/metadata#resume-entries、/concepts/reasoning#migration-from-thinking-events、/spec/1.0/events/lifecycle#token-usage
 - B3 站内待回修：spec/1.0 内部跨页锚点约 35 处 + 入链 1 处（sdk/python/core/events.mdx:109→lifecycle#token-usage）——目标标题本批已改中文锚点（cancelled-runs、token-usage、several-runs-on-one-stream、absent-means-absent、provider-file-handles、retired-shapes、version-negotiation、the-binding-contract、truncation、chunk-metadata、closing-a-chunk-stream、the-chunked-form、frontend-tools、result-content、messages_snapshot、when-a-patch-does-not-apply、text_message_end 等），完整逐条清单在 B3 汇报，B6 以 verify-anchors-cn.mjs 实测 + .anchor-maps/B3/ 映射回修为准
 - B3 特记：schema.mdx 的 96 个定义标题保持英文（深链锚点不变，只有页内 #mixins→#混入 一处）
+- B5b 站内待回修（要点，完整见 .anchor-maps/B5b/）：sdk/js 两个 overview 页出站锚点指向 client/{abstract-agent,http-agent,middleware,subscriber} 与 core/{types,events} 的新中文标题锚点（约 30 个 slug）；另 4 处跨批（concepts/interrupts#resuming-a-run、concepts/metadata#resume-entries、spec/1.0/events/lifecycle#token-usage、concepts/reasoning#migration-from-thinking-events）。注意 subscriber/middleware 各有同名标题重名（slug 带 -1 后缀），回修以新 dist 实测 id 为准
 
 ## 范围补充（本轮发现）
 

@@ -184,3 +184,22 @@ AG-UI、CopilotKit、LangGraph、LangChain、CrewAI、Mastra、AG2、Pydantic AI
 | binding contract | 绑定契约 |
 | resumption | 续传 |
 | Schema Reference | Schema 参考 |
+
+### B5b 批次补充（SDK js / 开发 / 草案 / 教程）
+
+| 英文 | 中文 |
+|---|---|
+| stream compaction | 流式压缩 |
+| accumulator helpers | 累加辅助方法 |
+| rate limiting | 速率限制 |
+| accounting（TokenUsage 语境） | 记账规则 |
+| checkpoint（outcome 语境） | 检查点 |
+| debounce | 防抖 |
+| surface（Dojo 语境） | 载体 |
+| side-band annotations | 带外注解 |
+| toolset | 工具集 |
+| working copy | 工作副本 |
+| Visual QA | 视觉问答 |
+| audio transcription | 音频转写 |
+| todo list | 待办清单 |
+| Event Schemas | 事件 schema |
