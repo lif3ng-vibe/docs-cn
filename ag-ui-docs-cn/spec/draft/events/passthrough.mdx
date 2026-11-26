@@ -1,25 +1,17 @@
 ---
-title: "Raw and Custom Events"
-description: "The two escape hatches, and the limits that keep them from becoming a second protocol — Draft"
+title: "Raw 与自定义事件"
+description: "两个逃生舱，以及防止它们悄悄变成第二套协议的边界——草案（Draft）"
 ---
 
 import DraftNotice from "/snippets/draft-notice.mdx";
 
 <DraftNotice />
 
-Two event types carry what the protocol does not model: `RAW`, a
-provider-native event passed through untranslated, and `CUSTOM`, an
-application's own event. Both are standalone — they open and close no items of
-their own and MAY appear anywhere within an open run, though `CUSTOM`, unlike
-`RAW`, does end an open [chunk stream](/spec/draft/basic/patterns/streaming#closing-a-chunk-stream)
-in its lane. Their limits are the
-point: everything on this page exists so the escape hatches cannot quietly
-become a second protocol.
+有两种事件类型承载协议未建模的东西：`RAW`，原样透传、不作翻译的提供方原生事件；`CUSTOM`，应用自己的事件。两者都是独立的——它们不开启也不关闭自己的任何条目，MAY 出现在一次开启的运行内的任何位置；不过 `CUSTOM` 与 `RAW` 不同，它会结束其泳道中开启的 [chunk 流](/spec/draft/basic/patterns/streaming#closing-a-chunk-stream)。边界才是重点：本页的一切，都是为了让逃生舱无法悄悄变成第二套协议。
 
 ## `RAW`
 
-Passes a provider-native event through untranslated, for consumers that need
-detail the protocol does not model.
+原样透传提供方原生事件、不作翻译，供需要协议未建模细节的消费者使用。
 
 ```json
 {
@@ -29,21 +21,15 @@ detail the protocol does not model.
 }
 ```
 
-- `event` is REQUIRED and is any JSON value; `source` is OPTIONAL and names the
-  provider or framework it came from.
-- A consumer MUST NOT derive protocol behaviour from a `RAW` event: nothing in
-  it opens, closes, or amends anything this specification tracks.
-- A producer SHOULD emit `RAW` alongside the standard events, never instead of
-  them. A producer that expresses something *only* as `RAW` has not put it in
-  the protocol.
+- `event` 是 REQUIRED 的，可为任意 JSON 值；`source` 是 OPTIONAL 的，指名它来自哪个提供方或框架。
+- 消费者 MUST NOT 从 `RAW` 事件推导协议行为：它其中的任何东西都不开启、不关闭、不修订本规范跟踪的任何对象。
+- 生产者 SHOULD 在标准事件之外附带发出 `RAW`，绝不取而代之。只用 `RAW` 表达某件事的生产者，等于没有把它放进协议。
 
-The same payload also travels as the `rawEvent` field on ordinary events —
-that spelling attaches provenance to one translated event, where `RAW` carries
-material no translated event exists for.
+同样的负载也作为普通事件上的 `rawEvent` 字段传输——那种写法把来源附着到某一个已翻译事件上，而 `RAW` 承载的是不存在对应已翻译事件的材料。
 
 ## `CUSTOM`
 
-The protocol's extension point for an application's own events.
+协议为应用自有事件提供的扩展点。
 
 ```json
 {
@@ -53,30 +39,15 @@ The protocol's extension point for an application's own events.
 }
 ```
 
-- `name` and `value` are REQUIRED — without a name a consumer cannot route the
-  value, and an event with no payload says nothing.
-- A consumer that does not recognise a `name` MUST ignore the event. This is
-  protocol-legal traffic, not
-  [unrecognised material](/spec/draft/basic/processing): nothing is stripped
-  and nothing warns.
-- Names are application space. Producers SHOULD prefix names they invent with
-  a vendor or application identifier, so two parties extending the same stream
-  do not collide; names without a prefix are reserved for the protocol's own
-  future use.
-- Anything a consumer does with a recognised `CUSTOM` event is outside the
-  protocol. A producer MUST NOT rely on a `CUSTOM` event to carry semantics
-  this specification assigns to a standard event — a custom "message" that a
-  conforming consumer legally ignores is not a message.
+- `name` 与 `value` 都是 REQUIRED 的——没有名字，消费者无法路由该值；没有负载的事件什么也没说。
+- 不认识某个 `name` 的消费者 MUST 忽略该事件。这是协议上合法的流量，不是[无法识别的内容](/spec/draft/basic/processing)：什么都不剥离，也什么都不警告。
+- 名字是应用空间。生产者 SHOULD 给自创的名字加上厂商或应用标识符前缀，这样两个扩展同一条流的各方才不会相撞；不带前缀的名字保留给协议未来自用。
+- 消费者对已认识的 `CUSTOM` 事件所做的一切，都在协议之外。生产者 MUST NOT 指望 `CUSTOM` 事件承载本规范指派给标准事件的语义——一个符合规范的消费者可以合法忽略的自定义"消息"，就不是消息。
 
-## Data Types
+## 数据类型
 
-[`RawEvent`](/spec/draft/schema#rawevent) and [`CustomEvent`](/spec/draft/schema#customevent) are defined by the
-[schema reference](/spec/draft/schema).
+[`RawEvent`](/spec/draft/schema#rawevent) 与 [`CustomEvent`](/spec/draft/schema#customevent) 由 [schema 参考](/spec/draft/schema)定义。
 
-## Security Considerations
+## 安全考量
 
-Passthrough content is unvalidated by definition: no schema constrains
-`event` or `value`, and `RAW` payloads originate wherever the provider got
-them. A consumer MUST treat both as untrusted input — never rendered as
-markup, executed, or granted authority — and SHOULD treat a `RAW` payload with
-the same suspicion as the network traffic it summarises.
+透传内容按定义就不经验证：没有任何 schema 约束 `event` 或 `value`，而 `RAW` 负载的源头是提供方拿到数据的任何地方。消费者 MUST 把两者都当作不可信输入——绝不渲染为标记、绝不执行、绝不授予授权——并 SHOULD 以与其所概括的网络流量同等的怀疑态度对待 `RAW` 负载。

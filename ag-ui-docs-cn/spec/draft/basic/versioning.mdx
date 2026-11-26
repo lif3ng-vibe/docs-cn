@@ -1,140 +1,72 @@
 ---
-title: "Versioning and Compatibility"
-description: "Talking to an older peer, what may be dropped, and when losing content obliges a warning — Draft"
+title: "版本管理与兼容性"
+description: "与更旧的对端通信、什么可以被丢弃，以及丢失内容何时需要给出警告——草案（Draft）"
 ---
 
 import DraftNotice from "/snippets/draft-notice.mdx";
 
 <DraftNotice />
 
-Two parties on one stream are rarely the same age. This page states what each
-owes the other when they are not.
+同一条流上的两方很少同代。本页说明它们不同代时彼此欠对方什么。
 
-## The default: additions are safe
+## 默认情形：新增是安全的
 
-The protocol grows by adding — new event types, new optional fields, new members
-of an open union. Every such addition MUST be safe for an older party to meet,
-because [unrecognised material survives rather than aborting the
-run](/spec/draft/basic/processing).
+协议靠新增生长——新事件类型、新可选字段、开放联合的新成员。每一项这样的新增，对较旧的一方来说 MUST 是安全的，因为[无法识别的内容会存活下来，而不是中止运行](/spec/draft/basic/processing)。
 
-It follows that a producer MUST NOT place in an addition alone anything the
-protocol already has a described place for. Concretely: the run's outcome, the
-content of a message, the identity of a tool call and the result of one MUST
-travel in the fields the schema describes for them, never only in a new event
-type or a new property that an older consumer will drop.
+由此可知，生产者 MUST NOT 把协议已有描述位置的东西只放进一项新增里。具体而言：运行的结果、消息的内容、工具调用的身份与结果，MUST 经由 schema 为它们描述的字段传输，绝不能只出现在旧消费者会丢弃的新事件类型或新属性里。
 
-## Downgrading
+## 降级
 
-A party that knows its peer is older MAY translate the stream into a shape the
-peer understands. A downgrade removes or reshapes what is there; it MUST NOT
-invent meaning. Supplying an empty value for a field the older schema requires —
-an empty string where content is now absent — is reshaping and is permitted.
-Supplying a non-empty value the producer never sent is inventing meaning and is
-forbidden.
+知道对端更旧的一方 MAY 把流翻译成对端理解的形态。降级移除或重塑既有的东西；它 MUST NOT 凭空捏造含义。为旧 schema 要求的字段补一个空值——在如今没有内容之处给一个空字符串——属于重塑，是允许的。给出生产者从未发送过的非空值，则是捏造含义，是被禁止的。
 
-A downgrade MUST NOT repair a malformed value on the way past. A known field
-carrying a value the schema rejects is fatal, and a shim that turns it into
-something acceptable hides a defect that would otherwise have been reported.
+降级 MUST NOT 顺手修复格式错误的值。携带 schema 所拒值的已知字段是致命的，把它变成可接受东西的垫片（shim），掩盖了一个本会被报告的缺陷。
 
-Downgrades fall into two kinds, and the difference decides whether anyone has to
-be told.
+降级分两类，这个区别决定了是否必须有人被告知。
 
-**Lossless.** The removed material adds nothing the older party could act on.
-Stripping `subagentRunId` for a peer with no concept of subagents is lossless in
-this sense: the events still arrive, they simply flatten into one thread. A
-lossless downgrade MAY be silent.
+**无损**。被移除的材料不给较旧的一方任何可据以行动的东西。为没有子智能体概念的对端剥离 `subagentRunId`，在这个意义上是无损的：事件照样到达，只是被摊平成一条线程。无损降级 MAY 悄然进行。
 
-**Lossy.** Content that carries meaning is dropped or degraded. Removing a
-lifecycle event, dropping a content part a peer cannot represent, or collapsing
-a structured value into a lesser one all lose something a reader would have seen.
-A lossy downgrade MUST emit a warning that names what was lost and why.
+**有损**。承载含义的内容被丢弃或降格。移除一个生命周期事件、丢弃对端无法表示的内容部分、把结构化的值压扁成低一档的东西，都会丢掉读者本可见的信息。有损降级 MUST 发出指名丢了什么、为何而丢的警告。
 
-The warning is for the developer, not the end user. It MUST identify the shape
-that was dropped, and SHOULD say what to upgrade to remove it. An implementation
-MAY offer a way to silence these warnings, and MUST NOT silence them by default.
+警告是给开发者看的，不是给最终用户。它 MUST 指明被丢弃的形态，并 SHOULD 说明升级到什么就能消除它。实现 MAY 提供静默这些警告的途径，且 MUST NOT 默认静默。
 
-## Retired shapes
+## 已退役的形态
 
-A shape the protocol once described and no longer does is *retired*. Retirement
-is not deletion: an older producer still sends it, and a consumer that simply
-dropped it would break a working integration.
+协议曾经描述、如今不再描述的形态是*已退役*的。退役不是删除：更旧的生产者仍在发送它，直接丢弃它的消费者会弄坏一条本在正常工作的集成。
 
-- A retired shape MUST be recorded in the deprecation registry, together with
-  what replaces it, where the translation lives, and when the translation itself
-  expires.
-- A consumer SHOULD translate a retired shape into its replacement rather than
-  drop it.
-- That translation MUST run as middleware — before enforcement — because
-  enforcement judges against the current protocol, in which the retired shape is
-  simply unrecognised.
-- A translation that loses content in the process MUST warn, by the rule above.
+- 已退役形态 MUST 记入废弃登记表，连同它的替代者、翻译代码所在之处、以及翻译本身的过期时间。
+- 消费者 SHOULD 把已退役形态翻译成它的替代者，而不是丢弃。
+- 该翻译 MUST 以中间件的方式运行——在强制执行之前——因为强制执行是对照当前协议裁决的，而在当前协议里退役形态只是无法识别。
+- 翻译过程中丢失内容的，MUST 按上述规则发出警告。
 
-Once a retired shape's expiry has passed, an implementation MAY remove the
-translation, after which the shape is unrecognised like anything else.
+一旦退役形态的过期时间已过，实现 MAY 移除翻译，此后该形态与其他任何未知东西一样无法识别。
 
-## Version negotiation
+## 版本协商
 
-The version travels in-band, on the two messages that open each side of the
-exchange, so a recorded exchange stays self-describing and no transport has to
-carry it:
+版本随带内数据传输，写在这两个开启交换双方的消息上，这样记录下来的交换保持自描述，也不需要任何传输层额外携带：
 
-- A consumer declares the protocol version it speaks on
-  [`RunAgentInput.protocolVersion`](/spec/draft/basic/run-input#protocolversion).
-- A producer declares the version *it* speaks on
-  `RUN_STARTED.protocolVersion` — its own, never an echo of the input's. The
-  pair is the whole negotiation: each side states itself once, and a consumer
-  sees a downgrade the moment it happens.
-- Both fields are optional in the schema because absence means something: a
-  peer from before the protocol carried a version. An implementation of this
-  version MUST send its declaration, except where the consumer knows its peer
-  predates the field and omits it rather than hand an unknown input member to
-  an old parser.
-- The value is a version identifier this specification publishes — the
-  segment a frozen version lives under, `MAJOR.MINOR`, compared numerically
-  component by component (so `1.10` is newer than `1.9`). A declaration a
-  party cannot interpret is handled like a newer one: proceed, and SHOULD
-  warn.
-- A producer meeting a **newer minor of a line it implements** MUST serve the
-  run — additions are safe, by the rules above — answer with its own version,
-  and SHOULD warn. It MAY reject, before `RUN_STARTED`, only a declaration
-  from a major line it does not implement; a newer minor of its own line is
-  serveable by construction and MUST NOT be rejected for its version. A
-  consumer meeting a newer producer declaration proceeds under the
-  [processing model](/spec/draft/basic/processing) and SHOULD warn.
-- The declaration names what the run's stream *speaks*, not who is relaying
-  it: a proxy that forwards a run untranslated declares what the original
-  producer spoke, and one that translates declares what it emits. On a
-  [stream carrying several runs](/spec/draft/events/lifecycle#several-runs-on-one-stream)
-  each run's `RUN_STARTED` declares its own run, which is how a replay of
-  mixed-age history stays truthful; a producer generating runs live does not
-  change what it speaks mid-stream.
-- A transport MAY mirror the declaration into its own envelope — a media-type
-  parameter, say — for intermediaries that cannot read the body. The in-band
-  field is authoritative; a binding that mirrors defines how a mismatch is
-  treated.
+- 消费者在 [`RunAgentInput.protocolVersion`](/spec/draft/basic/run-input#protocolversion) 上声明自己所讲的协议版本。
+- 生产者在 `RUN_STARTED.protocolVersion` 上声明*它自己*所讲的版本——是它自己的，绝不是输入版本的回显。这一对声明就是全部协商：各方只声明自己一次，消费者在降级发生的那一刻就能看到。
+- 两个字段在 schema 中都是可选的，因为缺省本身有含义：对端来自协议还没有版本号的年代。实现本版本的实现 MUST 发送自己的声明，除非消费者确知对端早于该字段存在而省略它，免得把未知的输入成员塞给旧解析器。
+- 取值是本规范发布的版本标识——冻结版本所处的段，`MAJOR.MINOR`，按组件逐个数值比较（所以 `1.10` 比 `1.9` 新）。一方无法解读的声明按更新的声明处理：继续进行，并 SHOULD 发出警告。
+- 生产者遇到**自己所在系列的更新次要版本**时，MUST 服务这次运行——按上述规则，新增是安全的——以自己的版本作答，并 SHOULD 发出警告。它 MAY 在 `RUN_STARTED` 之前拒绝的，只有来自自己未实现的 major 系列的声明；自己系列的更新次要版本在构造上就是可服务的，MUST NOT 因版本而被拒绝。消费者遇到更新的生产者声明时，按[处理模型](/spec/draft/basic/processing)继续，并 SHOULD 发出警告。
+- 声明指名的是这次运行的流*所说的*版本，而不是谁在转发它：原样转发运行而不翻译的代理，声明的是原始生产者所讲的版本；做了翻译的代理，声明的是自己发出的版本。在[一条流携带多次运行](/spec/draft/events/lifecycle#several-runs-on-one-stream)时，每次运行的 `RUN_STARTED` 声明自己那次运行，这正是混合年代的历史回放保持如实的方式；实时生成运行的生产者不会在流中途改变自己所讲的版本。
+- 传输层 MAY 把声明镜像进自己的信封——比如一个媒体类型参数——供无法读正文的中间方使用。带内字段是权威；做镜像的绑定自行定义不匹配时如何处理。
 
-Where a party knows the other's version — declared in-band, or configured — it
-MAY select a downgrade on that basis. Where it does not, it MUST behave as
-though the peer were current: guessing downward would degrade streams for no
-reason.
+一方知道对方版本时——经带内声明或配置得知——MAY 据此选择降级。不知道时，它 MUST 假定对端是当前版本行事：瞎猜降级会无缘无故劣化流。
 
-A downgrade selected by version MUST be a pure transformation of the stream. It
-MUST NOT change the run's outcome, alter identifiers, or reorder events.
+按版本选择的降级 MUST 是对流的纯变换。它 MUST NOT 改变运行的结果、改动标识符或重排事件。
 
-## What a producer owes
+## 生产者欠什么
 
-- Declare the protocol version it speaks on `RUN_STARTED`.
-- Emit only shapes the current protocol describes.
-- Omit optional fields that have no value rather than sending `null`.
-- Never depend on the consumer understanding an addition.
+- 在 `RUN_STARTED` 上声明自己所讲的协议版本。
+- 只发出当前协议描述过的形态。
+- 没有取值的可选字段直接省略，而不是发送 `null`。
+- 绝不指望消费者能理解某项新增。
 
-## What a consumer owes
+## 消费者欠什么
 
-- Declare the protocol version it speaks on the run input, except toward a
-  peer it knows predates the field.
-- Survive unrecognised events, properties and union members; fail on malformed
-  known values.
-- Run middleware before enforcement, and enforcement before application code.
-- Warn when a translation loses content.
-- Never present material to application code that enforcement would have
-  removed.
+- 在运行输入上声明自己所讲的协议版本，除非对往自己确知早于该字段的对端。
+- 在无法识别的事件、属性与联合成员上存活；在格式错误的已知值上失败。
+- 中间件先于强制执行运行，强制执行先于应用代码运行。
+- 翻译丢失内容时发出警告。
+- 绝不把强制执行会移除的内容呈现给应用代码。

@@ -1,6 +1,6 @@
 ---
-title: "Reasoning"
-description: "Streaming what the model is thinking, and round-tripping what it must not reveal — Draft"
+title: "推理"
+description: "流式传输模型的思考，并往返携带它不该透露的部分——草案（Draft）"
 ---
 
 import DraftNotice from "/snippets/draft-notice.mdx";
@@ -8,118 +8,59 @@ import { Since } from "/snippets/since.mdx";
 
 <DraftNotice />
 
-Reasoning is what the model thinks before it answers. A producer streams it so
-a UI can show work in progress, and — where a provider keeps the real chain of
-thought private — carries an encrypted artefact the consumer stores and
-returns without being able to read.
+推理是模型在给出答案之前的思考。生产者把它流式传输出来，让 UI 能展示正在进行的工作；而当提供方把真实的思维链保持私密时，协议则携带一份加密产物，由消费者存储并返回，自己无法读取。
 
-## User Interaction Model
+## 用户交互模型
 
-Reasoning is typically rendered apart from the conversation — collapsed by
-default, styled as thinking. The protocol does not mandate any presentation; a
-consumer MAY hide reasoning entirely.
+推理通常渲染在对话之外——默认折叠、以思考的样式呈现。协议不强制任何呈现方式；消费者 MAY 完全隐藏推理。
 
-## Events
+## 事件
 
-### Spans: `REASONING_START` and `REASONING_END`
+### 区段：`REASONING_START` 与 `REASONING_END`
 
-A reasoning span brackets one stretch of thinking, opened by `REASONING_START`
-and closed by `REASONING_END`, matched by `messageId`. A span MAY contain
-several reasoning messages.
+推理区段（span）括起一段思考，由 `REASONING_START` 开启、`REASONING_END` 关闭，以 `messageId` 配对。一个区段 MAY 包含多条推理消息。
 
-- A producer MUST NOT open a span whose `messageId` is already open, MUST
-  close every span it opens before the run finishes, and MUST NOT close a
-  span it did not open.
-- The span's identifier namespaces nothing: the reasoning messages inside a
-  span carry their own `messageId`s.
+- 生产者 MUST NOT 开启 `messageId` 已然开启的区段，MUST 在运行结束前关闭自己开启的每个区段，且 MUST NOT 关闭自己未曾开启的区段。
+- 区段的标识符不划分任何命名空间：区段内的推理消息携带自己的 `messageId`。
 
-### Reasoning messages
+### 推理消息
 
-Reasoning messages follow the
-[streaming pattern](/spec/draft/basic/patterns/streaming):
-`REASONING_MESSAGE_START` opens one (its `role` is fixed, `reasoning`),
-`REASONING_MESSAGE_CONTENT` extends it, `REASONING_MESSAGE_END` closes it, all
-matched by `messageId` — and `REASONING_MESSAGE_CHUNK` is the compact spelling,
-whose first chunk MUST carry `messageId`. The pattern's rules apply exactly as
-for text messages.
+推理消息遵循[流式模式](/spec/draft/basic/patterns/streaming)：`REASONING_MESSAGE_START` 开启一条（其 `role` 固定为 `reasoning`），`REASONING_MESSAGE_CONTENT` 延展它，`REASONING_MESSAGE_END` 关闭它，全部以 `messageId` 配对——`REASONING_MESSAGE_CHUNK` 则是紧凑写法，其首个 chunk MUST 携带 `messageId`。该模式的规则与文本消息完全一致。
 
-A consumer MUST detect a violation of that discipline and fail the run, on
-spans and on reasoning messages alike:
+消费者 MUST 检测对这套纪律的违例并让运行失败，区段与推理消息一视同仁：
 
-- A `REASONING_MESSAGE_CONTENT` or `REASONING_MESSAGE_END` naming a message
-  nothing opened has no referent, and a consumer MUST NOT invent the message
-  an orphaned fragment names. The same shape is rejected for a text message;
-  reasoning is not the exception.
-- A `REASONING_END` naming a span nothing opened is rejected the same way, as
-  is a `REASONING_START` reopening a span already open.
-- A `REASONING_MESSAGE_START` naming a reasoning message that is already open
-  is rejected too — the message must be closed with `REASONING_MESSAGE_END`
-  before its `messageId` is used again. A span and the message inside it MAY
-  share an identifier, so each is checked against its own open set.
-- A span or a reasoning message still open when the run finishes fails the
-  run.
+- 指名一条无人开启的消息的 `REASONING_MESSAGE_CONTENT` 或 `REASONING_MESSAGE_END` 没有所指，消费者 MUST NOT 替孤儿片段捏造出它指名的那条消息。文本消息拒绝同样的形态；推理不是例外。
+- 指名一个无人开启的区段的 `REASONING_END` 同样被拒绝，重开已开启区段的 `REASONING_START` 亦然。
+- 指名一条已然开启的推理消息的 `REASONING_MESSAGE_START` 同样被拒绝——该消息必须先以 `REASONING_MESSAGE_END` 关闭，其 `messageId` 才能再次使用。区段与其中的消息 MAY 共享标识符，因此各自对照自己的开启集合检查。
+- 运行结束时仍开启的区段或推理消息会让运行失败。
 
-Spans and reasoning messages are separate namespaces: a `REASONING_START` opens
-a span and no message, so a fragment naming a span's `messageId` is orphaned
-like any other.
+区段与推理消息是两个独立的命名空间：`REASONING_START` 开启的是一个区段而不是消息，因此指名区段 `messageId` 的片段与其他孤儿一样是孤儿。
 
 ### `REASONING_ENCRYPTED_VALUE`
 
-Carries a provider's opaque, encrypted reasoning artefact. `subtype` says what
-kind of thing `entityId` names — a message or a tool call — which decides where
-the value is stored.
+携带提供方不透明、加密的推理产物。`subtype` 说明 `entityId` 指名的是哪类东西——消息还是工具调用——这决定了值存储在哪里。
 
-- A consumer MUST treat `encryptedValue` as opaque: never parsed, never
-  interpreted, never assumed to be any particular format.
-- A consumer MUST store the value with the message or tool call it names and
-  return it unmodified in later run input, so the producer can restore the
-  reasoning context it stands for. The rule presumes a target that can hold
-  it: activity messages carry no encrypted value by schema, so an event
-  naming one is treated as naming nothing the consumer knows — the
-  unknown-`entityId` case below.
-- A consumer that cannot preserve it — a downgrade path, a store that cannot
-  carry it — is losing content and MUST warn
-  ([Versioning](/spec/draft/basic/versioning)).
-- The artefact rides its message. A [`MESSAGES_SNAPSHOT`](/spec/draft/events/state)
-  restating the message replaces it wholesale, `encryptedValue` included — so
-  a producer that still needs the artefact MUST restate it in the snapshot's
-  copy, and one that omits it has withdrawn its own artefact. The consumer's
-  duty is to return what it holds once all events have applied, not to
-  resurrect what a snapshot removed.
+- 消费者 MUST 把 `encryptedValue` 视为不透明：绝不解析、绝不解读、绝不假定它是任何特定格式。
+- 消费者 MUST 把该值与其指名的消息或工具调用一起存储，并在后续运行输入中原样返回，让生产者能恢复它所代表的推理上下文。这条规则预设了一个装得下它的目标：按 schema，活动消息不携带加密值，因此指名活动消息的事件被视为指名了消费者一无所知的东西——即下文的未知 `entityId` 情形。
+- 无法保全它的消费者——降级路径、装不下它的存储——是在丢失内容，MUST 给出警告（[版本管理](/spec/draft/basic/versioning)）。
+- 产物随其消息走。重述该消息的 [`MESSAGES_SNAPSHOT`](/spec/draft/events/state) 会整体替换它，`encryptedValue` 也在内——因此仍需要这份产物的生产者 MUST 在快照的副本里重述它，省略它就是收回自己的产物。消费者的义务是在所有事件应用完之后返回自己手中持有的东西，而不是复活被快照移除的东西。
 
 #### `encryptedValueType`
 
 <Since version="1.1" pr="2888" />
 
-One provider can issue more than one kind of artefact, and the bytes do not
-say which kind they are. Anthropic, for example, returns a signature over
-visible thinking and also a redacted thinking block, and each must go back as
-its own block type. `encryptedValueType` names the kind. It sits next to
-`encryptedValue` on this event, on every message that carries a value, and on
-a tool call. It is new in 1.1.
+一个提供方可以发出不止一种产物，而字节本身说不出自己是哪一种。比如 Anthropic 既返回对可见思考的签名，也返回已脱敏的思考块，两者都必须以各自的块类型送回。`encryptedValueType` 指名种类。它位于本事件的 `encryptedValue` 旁边，也出现在每种携带值的消息上，以及工具调用上。它是 1.1 新增的。
 
-- The producer defines the values. The protocol defines none. A producer
-  SHOULD prefix its values with the provider or framework that gives them
-  their meaning — `anthropic.redacted_thinking`, `openai.encrypted_content` —
-  so that values from different producers do not collide.
-- A consumer MUST treat `encryptedValueType` as it treats `encryptedValue`:
-  opaque, stored with the value, and returned unmodified.
-- The type describes one value and is replaced with it. A consumer that
-  stores a new `encryptedValue` MUST store the event's `encryptedValueType`
-  with it, and MUST remove the stored type when the event carries none. An
-  old type left on new bytes would mislabel them.
-- A producer MUST NOT send `encryptedValueType` without `encryptedValue`.
-- A value without a type is valid: it is what every producer sent before the
-  field existed, and what a 1.0 consumer returns after it strips the type. A
-  producer MUST accept one in later run input.
-- A producer that finds a type it does not recognise MAY drop the value
-  rather than send its provider bytes it did not issue.
+- 取值由生产者定义，协议不定义任何取值。生产者 SHOULD 给自己的取值加上赋予其含义的提供方或框架前缀——`anthropic.redacted_thinking`、`openai.encrypted_content`——让不同生产者的取值不会相撞。
+- 消费者 MUST 像 `encryptedValue` 一样对待 `encryptedValueType`：不透明，与值一起存储，原样返回。
+- 类型描述的是某一个值，并随该值一起被替换。存储了新 `encryptedValue` 的消费者 MUST 把事件的 `encryptedValueType` 与之一同存储；事件未携带类型时，MUST 移除已存的类型。旧类型留在新字节上会贴错标签。
+- 生产者 MUST NOT 在没有 `encryptedValue` 的情况下发送 `encryptedValueType`。
+- 没有类型的值是合法的：它是字段出现之前每个生产者发送的东西，也是 1.0 消费者剥离类型之后返回的东西。生产者 MUST 在后续运行输入中接受它。
+- 发现自己不认识的类型的生产者 MAY 丢弃该值，而不必向自己的提供方发送并非由它签发的字节。
 
-The event is standalone: it opens nothing, closes nothing, and MAY appear
-anywhere within an open run, though it conventionally arrives inside the span
-whose thinking it captures.
+该事件是独立的：它什么都不开启、什么都不关闭，MAY 出现在一次开启的运行内的任何位置，不过按惯例它到达于捕捉其思考的那个区段之内。
 
-## Message Flow
+## 消息流
 
 ```mermaid
 sequenceDiagram
@@ -135,31 +76,16 @@ sequenceDiagram
     Note over Client: stores msg-9 with its encrypted value,<br/>returns both in the next run's input
 ```
 
-## Data Types
+## 数据类型
 
-The event shapes are defined by the [schema reference](/spec/draft/schema):
-[`ReasoningStartEvent`](/spec/draft/schema#reasoningstartevent), [`ReasoningEndEvent`](/spec/draft/schema#reasoningendevent), [`ReasoningMessageStartEvent`](/spec/draft/schema#reasoningmessagestartevent),
-[`ReasoningMessageContentEvent`](/spec/draft/schema#reasoningmessagecontentevent), [`ReasoningMessageEndEvent`](/spec/draft/schema#reasoningmessageendevent),
-[`ReasoningMessageChunkEvent`](/spec/draft/schema#reasoningmessagechunkevent), [`ReasoningEncryptedValueEvent`](/spec/draft/schema#reasoningencryptedvalueevent). In conversation
-history a reasoning message is a [`ReasoningMessage`](/spec/draft/schema#reasoningmessage).
+事件形态由 [schema 参考](/spec/draft/schema)定义：[`ReasoningStartEvent`](/spec/draft/schema#reasoningstartevent)、[`ReasoningEndEvent`](/spec/draft/schema#reasoningendevent)、[`ReasoningMessageStartEvent`](/spec/draft/schema#reasoningmessagestartevent)、[`ReasoningMessageContentEvent`](/spec/draft/schema#reasoningmessagecontentevent)、[`ReasoningMessageEndEvent`](/spec/draft/schema#reasoningmessageendevent)、[`ReasoningMessageChunkEvent`](/spec/draft/schema#reasoningmessagechunkevent) 与 [`ReasoningEncryptedValueEvent`](/spec/draft/schema#reasoningencryptedvalueevent)。在对话历史中，一条推理消息是一个 [`ReasoningMessage`](/spec/draft/schema#reasoningmessage)。
 
-## Error Handling
+## 错误处理
 
-A `REASONING_ENCRYPTED_VALUE` whose `entityId` names nothing the consumer
-knows cannot be stored where it belongs; a consumer SHOULD warn and MAY drop
-it, and MUST NOT fail the run over it.
+`entityId` 指名了消费者一无所知之物的 `REASONING_ENCRYPTED_VALUE`，无法存到它该在的地方；消费者 SHOULD 给出警告并 MAY 丢弃它，但 MUST NOT 因此让运行失败。
 
-A malformed reasoning event — a missing required field, a `subtype` that is
-not a string — is a malformed known value and fatal like any other. A
-`subtype` that is a string the schema does not name is different: it is
-unrecognised material — a member added after this consumer shipped — and the
-[processing model](/spec/draft/basic/processing) strips it with a warning,
-which in a required position removes the event that carried it.
+格式错误的推理事件——缺失必填字段、`subtype` 不是字符串——是格式错误的已知值，与其他一样致命。而 `subtype` 是 schema 未指名的字符串则不同：它是无法识别的内容——本消费者发布之后才加入的成员——[处理模型](/spec/draft/basic/processing)会剥离它并给出警告；由于它处于必填位置，承载它的事件会被移除。
 
-## Security Considerations
+## 安全考量
 
-Reasoning content routinely contains material the producer chose not to say in
-the answer. A consumer SHOULD treat it with the same confidentiality as the
-conversation, and MUST NOT feed an `encryptedValue` to anything but the
-producer that issued it — it is a capability for restoring context, not data
-for the application.
+推理内容里时常出现生产者选择不写进答案的材料。消费者 SHOULD 以与对话同等的保密级别对待它，并且 MUST NOT 把 `encryptedValue` 喂给签发它的那个生产者之外的任何东西——它是恢复上下文的能力凭据，不是给应用用的数据。

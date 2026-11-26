@@ -1,6 +1,6 @@
 ---
-title: "Schema Reference"
-description: "Every definition of the draft schema, one anchor each — generated, do not edit"
+title: "Schema 参考"
+description: "草案 schema 的每一个定义，各配一个锚点——由工具生成，请勿手改"
 ---
 
 {/* @generated from https://ag-ui.com/spec/draft/schema.json — DO NOT EDIT. Change the schema and regenerate. */}
@@ -9,598 +9,595 @@ import DraftNotice from "/snippets/draft-notice.mdx";
 
 <DraftNotice />
 
-This page is generated from the machine-readable schema at
-[`/spec/draft/schema.json`](/spec/draft/schema.json) — the source of truth for
-structure — so the prose specification can link a definition instead of
-restating it. Do not edit it by hand: change the schema and regenerate.
+本页由 [`/spec/draft/schema.json`](/spec/draft/schema.json) 处的机器可读 schema 生成——它是结构的事实来源——因此散文规范可以链接某个定义，而不必复述它。请勿手改本页：修改 schema 后重新生成即可。
 
-Each definition's anchor is its name, lowercased.
+每个定义的锚点就是其名称的小写形式。
 
-## Events
+## 事件
 
-The event union, its discriminator, and every event. The mixins their fields come from are listed under [Mixins](#mixins).
+事件联合类型、它的判别字段，以及每一个事件。各字段所来自的混入（mixin）列于[混入](#混入)一节。
 
 ### `EventType`
 
-The discriminator carried by every event.
+每个事件都携带的判别字段。
 
-**Values:**
+**取值：**
 
 `TEXT_MESSAGE_START` · `TEXT_MESSAGE_CONTENT` · `TEXT_MESSAGE_END` · `TEXT_MESSAGE_CHUNK` · `TOOL_CALL_START` · `TOOL_CALL_ARGS` · `TOOL_CALL_END` · `TOOL_CALL_CHUNK` · `TOOL_CALL_RESULT` · `STATE_SNAPSHOT` · `STATE_DELTA` · `MESSAGES_SNAPSHOT` · `ACTIVITY_SNAPSHOT` · `ACTIVITY_DELTA` · `RAW` · `CUSTOM` · `RUN_STARTED` · `RUN_FINISHED` · `RUN_ERROR` · `STEP_STARTED` · `STEP_FINISHED` · `REASONING_START` · `REASONING_MESSAGE_START` · `REASONING_MESSAGE_CONTENT` · `REASONING_MESSAGE_END` · `REASONING_MESSAGE_CHUNK` · `REASONING_END` · `REASONING_ENCRYPTED_VALUE` · `SUBAGENT_STARTED` · `SUBAGENT_FINISHED` · `SUBAGENT_ERROR`
 
 ### `TextMessageStartEvent`
 
-Opens a streamed text message. The content arrives as TEXT_MESSAGE_CONTENT events and the message closes with TEXT_MESSAGE_END.
+开启一条流式文本消息。内容以 TEXT_MESSAGE_CONTENT 事件到达，消息以 TEXT_MESSAGE_END 关闭。
 
-**Fields:**
+**字段：**
 
-- `type` — `"TEXT_MESSAGE_START"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. Identifies the message this stream builds, and ties the later content and end events to it.
-- `role` — [`TextMessageRole`](#textmessagerole), optional. Who the message is from. An absent role means assistant; that meaning is normative and stated in the prose, because a validator treats a default as documentation rather than as behaviour. Default: `"assistant"`.
-- `name` — `string`, optional. An optional display name for the author, for providers that distinguish several participants in one role.
+- `type` — `"TEXT_MESSAGE_START"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 标识这条流要构建的消息，并把后续的内容与结束事件绑定到它上。
+- `role` — [`TextMessageRole`](#textmessagerole), optional. 消息来自谁。角色缺省即表示 assistant；这一含义是规范性的，写明在散文规范中，因为校验器把默认值当作文档而非行为。默认值：`"assistant"`。
+- `name` — `string`, optional. 作者的可选显示名，供在同一角色下区分多个参与者的提供方使用。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `TextMessageContentEvent`
 
-Appends a fragment to a streamed text message.
+向流式文本消息追加一个片段。
 
-**Fields:**
+**字段：**
 
-- `type` — `"TEXT_MESSAGE_CONTENT"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. The message this fragment belongs to.
-- `delta` — `string`, **required**. The fragment to append. May be the empty string: providers emit empty deltas as keep-alives and while a tool call is being decided, and rejecting them would kill runs that are working correctly.
+- `type` — `"TEXT_MESSAGE_CONTENT"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 本片段所属的消息。
+- `delta` — `string`, **required**. 要追加的片段。可以为空字符串：提供方会发出空 delta 作为保活信号，也会在决定是否发起工具调用期间发出空 delta；拒绝它们会杀掉本在正常工作的运行。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `TextMessageEndEvent`
 
-Closes a streamed text message.
+关闭一条流式文本消息。
 
-**Fields:**
+**字段：**
 
-- `type` — `"TEXT_MESSAGE_END"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. The message being closed.
+- `type` — `"TEXT_MESSAGE_END"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 被关闭的消息。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `TextMessageChunkEvent`
 
-A shorthand that stands in for a start, content and end sequence, for producers that cannot know in advance where a message begins. Every field is optional because a continuation chunk omits what has not changed; which message a field-less chunk continues is a sequence question the prose specification answers.
+一种简写形式，用来代替 start、content、end 三连事件，供无法预知消息从何处开始的生产者使用。每个字段都可选，因为延续 chunk 会省略未变化的字段；不带任何字段的 chunk 延续的是哪条消息，属于顺序问题，由散文规范回答。
 
-**Fields:**
+**字段：**
 
-- `type` — `"TEXT_MESSAGE_CHUNK"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, optional. The message this chunk belongs to. Absent continues the message already open.
-- `role` — [`TextMessageRole`](#textmessagerole), optional. Who the message is from, on the chunk that opens it.
-- `delta` — `string`, optional. The fragment to append. May be the empty string.
-- `name` — `string`, optional. An optional display name for the author.
+- `type` — `"TEXT_MESSAGE_CHUNK"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, optional. 本 chunk 所属的消息。缺省表示延续已开启的消息。
+- `role` — [`TextMessageRole`](#textmessagerole), optional. 消息来自谁，只在开启它的 chunk 上给出。
+- `delta` — `string`, optional. 要追加的片段。可以为空字符串。
+- `name` — `string`, optional. 作者的可选显示名。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ToolCallStartEvent`
 
-Opens a tool call. The arguments arrive as TOOL_CALL_ARGS events and the call closes with TOOL_CALL_END.
+开启一次工具调用。参数以 TOOL_CALL_ARGS 事件到达，调用以 TOOL_CALL_END 关闭。
 
-**Fields:**
+**字段：**
 
-- `type` — `"TOOL_CALL_START"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `toolCallId` — `string`, **required**. Identifies the call, and ties the later args, end and result events to it.
-- `toolCallName` — `string`, **required**. Which tool is being called.
-- `parentMessageId` — `string`, optional. The assistant message that holds this call. Absent means the producer did not attribute it to one.
+- `type` — `"TOOL_CALL_START"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `toolCallId` — `string`, **required**. 标识本次调用，并把后续的 args、end 与 result 事件绑定到它。
+- `toolCallName` — `string`, **required**. 正在调用哪个工具。
+- `parentMessageId` — `string`, optional. 承载本次调用的助手消息。缺省表示生产者未将其归到某条消息。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ToolCallArgsEvent`
 
-Appends a fragment of a tool call's arguments.
+追加工具调用参数的一个片段。
 
-**Fields:**
+**字段：**
 
-- `type` — `"TOOL_CALL_ARGS"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `toolCallId` — `string`, **required**. The call these arguments belong to.
-- `delta` — `string`, **required**. A fragment of the arguments, which concatenate into the call's argument text — conventionally a JSON document, though the protocol does not validate it (see FunctionCall.arguments). Deliberately a string rather than parsed JSON: a fragment is not itself a document. May be the empty string.
+- `type` — `"TOOL_CALL_ARGS"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `toolCallId` — `string`, **required**. 这些参数所属的调用。
+- `delta` — `string`, **required**. 参数的一个片段，各片段拼接成调用的参数文本——按惯例是一份 JSON 文档，但协议不校验它（见 FunctionCall.arguments）。有意用字符串而非解析后的 JSON：片段本身不是一份文档。可以为空字符串。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ToolCallEndEvent`
 
-Closes a tool call, meaning its arguments are complete.
+关闭一次工具调用，意味着其参数已完整。
 
-**Fields:**
+**字段：**
 
-- `type` — `"TOOL_CALL_END"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `toolCallId` — `string`, **required**. The call being closed.
+- `type` — `"TOOL_CALL_END"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `toolCallId` — `string`, **required**. 被关闭的调用。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ToolCallChunkEvent`
 
-A shorthand that stands in for a tool call's start, args and end sequence. Every field is optional for the same reason as TEXT_MESSAGE_CHUNK.
+一种简写形式，用来代替工具调用的 start、args、end 三连事件。每个字段都可选，理由与 TEXT_MESSAGE_CHUNK 相同。
 
-**Fields:**
+**字段：**
 
-- `type` — `"TOOL_CALL_CHUNK"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `toolCallId` — `string`, optional. The call this chunk belongs to. Absent continues the call already open.
-- `toolCallName` — `string`, optional. Which tool is being called, on the chunk that opens it.
-- `parentMessageId` — `string`, optional. The assistant message that holds this call.
-- `delta` — `string`, optional. A fragment of the arguments. May be the empty string.
+- `type` — `"TOOL_CALL_CHUNK"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `toolCallId` — `string`, optional. 本 chunk 所属的调用。缺省表示延续已开启的调用。
+- `toolCallName` — `string`, optional. 正在调用哪个工具，只在开启它的 chunk 上给出。
+- `parentMessageId` — `string`, optional. 承载本次调用的助手消息。
+- `delta` — `string`, optional. 参数的一个片段。可以为空字符串。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ToolCallResultEvent`
 
-Carries what a tool returned. Mints a tool message rather than appending to an existing one, which is why it has its own messageId.
+携带工具返回的内容。它会生成一条新的工具消息，而不是追加到已有消息上，这正是它有自己的 messageId 的原因。
 
-**Fields:**
+**字段：**
 
-- `type` — `"TOOL_CALL_RESULT"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. The tool message this result becomes.
-- `toolCallId` — `string`, **required**. The call being answered.
-- `content` — `string` | array of [`ContentPart`](#contentpart), **required**. What the tool returned: either plain text, or an ordered list of parts, exactly as on the tool message this event mints. A tool returning structured data serialises it into text; media travel as parts of their own.
-- `role` — `"tool"`, optional. Present only for symmetry with the message it mints; the value is fixed, so a producer may leave it out.
-- `error` — `string`, optional. Why the tool failed, when it did. A string marks the tool call as failed, not the run. A producer MUST NOT send an empty one; a consumer that receives one anyway still reads a failure, which is why the schema accepts it. The tool message this event mints carries the same value as its own error. Absent means the producer reported no failure on this event, not that the call succeeded. Present alongside content rather than instead of it, so a partial result survives a failure.
+- `type` — `"TOOL_CALL_RESULT"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 本结果将生成的工具消息。
+- `toolCallId` — `string`, **required**. 被应答的调用。
+- `content` — `string` | array of [`ContentPart`](#contentpart), **required**. 工具返回的内容：要么是纯文本，要么是内容部分的有序列表，与本事件生成的工具消息上的形式完全一致。返回结构化数据的工具会把它序列化为文本；媒体则以自己的部分传输。
+- `role` — `"tool"`, optional. 仅为与它生成的消息保持对称而存在；取值固定，生产者可以省略。
+- `error` — `string`, optional. 工具失败的原因（如果失败）。字符串标记的是工具调用失败，而不是运行失败。生产者 MUST NOT 发送空字符串；即便收到空字符串，消费者仍会把它读作失败——schema 之所以接受它，正是出于这个原因。本事件生成的工具消息在自己的 error 上携带相同的值。缺省表示生产者在本事件上未报告失败，并不表示调用成功。它与 content 并存而非取而代之，因此部分结果可以在失败中保留下来。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `StateSnapshotEvent`
 
-Replaces the agent state wholesale. Sent when a delta cannot express the change, or to resynchronise a consumer.
+整体替换智能体状态。当增量无法表达该变化时发送，或用于让消费者重新同步。
 
-**Fields:**
+**字段：**
 
-- `type` — `"STATE_SNAPSHOT"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `snapshot` — [`State`](#state), **required**. The complete new state.
+- `type` — `"STATE_SNAPSHOT"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `snapshot` — [`State`](#state), **required**. 完整的新状态。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `StateDeltaEvent`
 
-Changes the agent state incrementally.
+以增量方式修改智能体状态。
 
-**Fields:**
+**字段：**
 
-- `type` — `"STATE_DELTA"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `delta` — [`JsonPatch`](#jsonpatch), **required**. The change, as an RFC 6902 patch against the current state. Structural validity here does not mean the patch applies: a well-formed operation may point at a path that does not exist, which RFC 6902 leaves to the applier.
+- `type` — `"STATE_DELTA"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `delta` — [`JsonPatch`](#jsonpatch), **required**. 该变更，形式为针对当前状态的 RFC 6902 补丁。结构上有效不代表补丁能实际应用：一个格式良好的操作可能指向并不存在的路径，RFC 6902 把这一点留给应用方处理。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `MessagesSnapshotEvent`
 
-The complete set of messages the producer owns, in order. Conversation-wide rather than a plain overwrite: a consumer may keep messages of its own that no producer tracks, so exactly how a snapshot reconciles with those is behavioural and belongs in the prose. Being conversation-wide it cannot belong to a single subagent, so it carries no attribution; it does establish which subagent owns each message it contains, through the messages themselves.
+生产者所拥有的全部消息，按顺序排列。它覆盖整个对话，而非简单覆写：消费者可能保留着任何生产者都不跟踪的消息，因此快照究竟如何与这些消息调和，属于行为范畴，写明在散文规范中。正因覆盖整个对话，它不能归属于单个子智能体，所以不携带归因；但它会通过消息本身表明其中每条消息归属于哪个子智能体。
 
-**Fields:**
+**字段：**
 
-- `type` — `"MESSAGES_SNAPSHOT"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `messages` — array of [`Message`](#message), **required**. The messages the producer is declaring, in order.
+- `type` — `"MESSAGES_SNAPSHOT"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `messages` — array of [`Message`](#message), **required**. 生产者声明拥有的消息，按顺序排列。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)；组合而来的字段已在上方列出。
 
 ### `ActivitySnapshotEvent`
 
-Reports structured progress that is not conversation content, such as a step a UI renders as its own widget.
+报告不属于对话内容的结构化进度，例如 UI 会渲染为独立组件的某个步骤。
 
-**Fields:**
+**字段：**
 
-- `type` — `"ACTIVITY_SNAPSHOT"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. The activity message this describes.
-- `activityType` — `string`, **required**. What kind of activity this is. An open string: the set is the producer's, not the protocol's.
-- `content` — `object`, open by key, **required**. The activity's payload, open by key.
-- `replace` — `boolean`, optional. Whether this snapshot overwrites the activity's existing content. Absent means it does, and that meaning is normative; only an explicit false asks a consumer to leave what is already there. It does not ask for a merge — ACTIVITY_DELTA is how content is changed incrementally. What a consumer does with a non-overwriting snapshot is behavioural and belongs in the prose. Default: `true`.
+- `type` — `"ACTIVITY_SNAPSHOT"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 所描述的活动消息。
+- `activityType` — `string`, **required**. 这是哪类活动。开放字符串：集合由生产者决定，而非协议决定。
+- `content` — `object`，按 key 开放, **required**. 活动的负载（payload），按 key 开放。
+- `replace` — `boolean`, optional. 本快照是否覆盖活动的既有内容。缺省表示覆盖，这一含义是规范性的；只有显式的 false 才要求消费者保留已有内容。它并不要求合并——ACTIVITY_DELTA 才是增量修改内容的方式。消费者如何处理不覆盖的快照属于行为范畴，写明在散文规范中。默认值：`true`。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ActivityDeltaEvent`
 
-Changes an activity message's content incrementally.
+以增量方式修改活动消息的内容。
 
-**Fields:**
+**字段：**
 
-- `type` — `"ACTIVITY_DELTA"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. The activity message being changed.
-- `activityType` — `string`, **required**. What kind of activity this is.
-- `patch` — [`JsonPatch`](#jsonpatch), **required**. The change, as an RFC 6902 patch against the activity's content.
+- `type` — `"ACTIVITY_DELTA"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 被修改的活动消息。
+- `activityType` — `string`, **required**. 这是哪类活动。
+- `patch` — [`JsonPatch`](#jsonpatch), **required**. 该变更，形式为针对活动内容的 RFC 6902 补丁。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `RawEvent`
 
-Passes a provider-native event through untranslated, for consumers that need detail the protocol does not model.
+原样透传提供方原生事件、不作翻译，供需要协议未建模细节的消费者使用。
 
-**Fields:**
+**字段：**
 
-- `type` — `"RAW"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `event` — any JSON value, **required**. The provider's own event. Any JSON value, and required: an event whose only purpose is to carry this would say nothing without it.
-- `source` — `string`, optional. Which provider or framework the event came from.
+- `type` — `"RAW"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `event` — any JSON value, **required**. 提供方自己的事件。可以是任意 JSON 值，且为必填：一个只为承载它而存在的事件，缺了它便什么都没有。
+- `source` — `string`, optional. 事件来自哪个提供方或框架。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `CustomEvent`
 
-The protocol's extension point for an application's own events. Anything a consumer does with one is outside the protocol.
+协议为应用自有事件提供的扩展点。消费者对它做的任何处理都在协议之外。
 
-**Fields:**
+**字段：**
 
-- `type` — `"CUSTOM"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `name` — `string`, **required**. What this custom event is. Required: without it a consumer cannot route the value.
-- `value` — any JSON value, **required**. The payload. Any JSON value, and required.
+- `type` — `"CUSTOM"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `name` — `string`, **required**. 这个自定义事件是什么。为必填：没有它，消费者无法路由该值。
+- `value` — any JSON value, **required**. 负载。可以是任意 JSON 值，且为必填。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `RunStartedEvent`
 
-Opens a run. Run-scoped, so it carries no subagent attribution.
+开启一次运行。 作用于运行整体，因此不携带子智能体归因。
 
-**Fields:**
+**字段：**
 
-- `type` — `"RUN_STARTED"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `threadId` — `string`, **required**. The conversation this run belongs to.
-- `runId` — `string`, **required**. Identifies this run.
-- `protocolVersion` — `string`, optional. The protocol version this producer speaks, such as "1.0" — the producer's own version, not an echo of the input's, which is what makes the pair a negotiation: each side declares itself and the consumer sees a downgrade the moment it happens. Absent means a producer from before the protocol carried a version.
-- `parentRunId` — `string`, optional. The run that spawned this one, when an agent invokes another agent as a separate run rather than as a subagent within one.
-- `input` — [`RunAgentInput`](#runagentinput), optional. The request this run was started from, echoed back so a consumer that did not make the request can still see what the agent was asked.
+- `type` — `"RUN_STARTED"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `threadId` — `string`, **required**. 本次运行所属的对话。
+- `runId` — `string`, **required**. 标识本次运行。
+- `protocolVersion` — `string`, optional. 本生产者所讲的协议版本，如 "1.0"——这是生产者自己的版本，而非回显输入中的版本；正是这一点使这一对版本号构成协商：双方各自声明自己，消费者在降级发生的那一刻就能看到。缺省表示生产者来自协议还没有版本号的年代。
+- `parentRunId` — `string`, optional. 派生本次运行的那次运行——当一个智能体把另一个智能体作为独立运行、而非一次运行内的子智能体来调用时出现。
+- `input` — [`RunAgentInput`](#runagentinput), optional. 启动本次运行的那次请求，回显于此，让未发起该请求的消费者也能看到智能体被要求做什么。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)；组合而来的字段已在上方列出。
 
 ### `RunFinishedEvent`
 
-Closes a run that did not fail. Run-scoped, so it carries no subagent attribution.
+关闭一次未失败的运行。 作用于运行整体，因此不携带子智能体归因。
 
-**Fields:**
+**字段：**
 
-- `type` — `"RUN_FINISHED"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `threadId` — `string`, **required**. The conversation this run belongs to.
-- `runId` — `string`, **required**. The run being closed.
-- `result` — any JSON value except `null`, optional. The run's return value, if it has one. Any JSON value.
-- `outcome` — [`RunFinishedOutcome`](#runfinishedoutcome), optional. Why the run ended. Absent means success, so every producer written before outcomes existed is already conformant.
-- `usage` — array of [`TokenUsage`](#tokenusage), optional. Token usage for the run, one entry per provider and model, so a run that invoked several models keeps them separate. A consumer that only wants totals sums across the entries. The run is the accounting boundary: usage covers every model call made within the run, calls made by its subagents included; an agent invoked as a separate run under parentRunId reports its own usage on its own terminal event; and a run that resumes an interrupted one reports only the calls it made itself, not the interrupted run's.
+- `type` — `"RUN_FINISHED"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `threadId` — `string`, **required**. 本次运行所属的对话。
+- `runId` — `string`, **required**. 被关闭的运行。
+- `result` — any JSON value except `null`, optional. 运行的返回值（如果有）。可以是任意 JSON 值。
+- `outcome` — [`RunFinishedOutcome`](#runfinishedoutcome), optional. 运行为何结束。缺省表示成功，因此在 outcome 出现之前编写的每个生产者都已符合规范。
+- `usage` — array of [`TokenUsage`](#tokenusage), optional. 本次运行的 token 用量，每个提供方与模型各一条记录，因此调用过多个模型的运行能把它们分开。只想要总量的消费者把各条相加即可。运行是记账边界：用量覆盖运行内发生的每一次模型调用，包括其子智能体发起的调用；以独立运行（在 parentRunId 下）方式被调用的智能体在自己的终止事件上报告自己的用量；恢复某次被中断运行的运行只报告它自己发起的调用，不含被中断运行的调用。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)；组合而来的字段已在上方列出。
 
 ### `RunErrorEvent`
 
-Ends a run that failed. Run-scoped, so it carries no subagent attribution; a subagent that fails without ending the run reports SUBAGENT_ERROR instead.
+结束一次失败的运行。作用于运行整体，因此不携带子智能体归因；未结束运行就失败的子智能体改为报告 SUBAGENT_ERROR。
 
-**Fields:**
+**字段：**
 
-- `type` — `"RUN_ERROR"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `message` — `string`, **required**. What went wrong, for a person to read.
-- `code` — `string`, optional. A machine-readable error code. An open string: the protocol defines no vocabulary.
-- `usage` — array of [`TokenUsage`](#tokenusage), optional. Token usage accrued before the failure, for a run that completed one or more model calls before dying. Scoped as on RUN_FINISHED: the run's own calls, subagents included.
+- `type` — `"RUN_ERROR"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `message` — `string`, **required**. 出了什么问题，供人阅读。
+- `code` — `string`, optional. 机器可读的错误码。开放字符串：协议没有定义词表。
+- `usage` — array of [`TokenUsage`](#tokenusage), optional. 失败发生前累积的 token 用量，供在终止前已完成一次或多次模型调用的运行使用。范围与 RUN_FINISHED 相同：运行自身的调用，包括子智能体的调用。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)；组合而来的字段已在上方列出。
 
 ### `StepStartedEvent`
 
-Opens a named step within a run, for producers whose frameworks have a step concept worth surfacing.
+在运行内开启一个具名步骤，供框架具有值得呈现的步骤概念的生产者使用。
 
-**Fields:**
+**字段：**
 
-- `type` — `"STEP_STARTED"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `stepName` — `string`, **required**. The step's name. Identifies it: the matching STEP_FINISHED carries the same name.
+- `type` — `"STEP_STARTED"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `stepName` — `string`, **required**. 步骤名称。用于标识：配对的 STEP_FINISHED 携带同名。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `StepFinishedEvent`
 
-Closes a named step.
+关闭一个具名步骤。
 
-**Fields:**
+**字段：**
 
-- `type` — `"STEP_FINISHED"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `stepName` — `string`, **required**. The step being closed.
+- `type` — `"STEP_FINISHED"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `stepName` — `string`, **required**. 被关闭的步骤。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ReasoningStartEvent`
 
-Opens a span of reasoning. A span may contain several reasoning messages.
+开启一个推理区段（span）。一个区段可以包含多条推理消息。
 
-**Fields:**
+**字段：**
 
-- `type` — `"REASONING_START"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. The span being opened.
+- `type` — `"REASONING_START"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 被开启的区段。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ReasoningMessageStartEvent`
 
-Opens a streamed reasoning message.
+开启一条流式推理消息。
 
-**Fields:**
+**字段：**
 
-- `type` — `"REASONING_MESSAGE_START"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. The reasoning message this stream builds.
-- `role` — `"reasoning"`, **required**. Fixed, and required rather than defaulted. The requirement is inherited from the SDKs rather than chosen.
+- `type` — `"REASONING_MESSAGE_START"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 这条流要构建的推理消息。
+- `role` — `"reasoning"`, **required**. 固定取值，且为必填而非默认。这一要求继承自各 SDK，并非有意选择。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ReasoningMessageContentEvent`
 
-Appends a fragment to a streamed reasoning message.
+向流式推理消息追加一个片段。
 
-**Fields:**
+**字段：**
 
-- `type` — `"REASONING_MESSAGE_CONTENT"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. The reasoning message this fragment belongs to.
-- `delta` — `string`, **required**. The fragment to append. May be the empty string.
+- `type` — `"REASONING_MESSAGE_CONTENT"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 本片段所属的推理消息。
+- `delta` — `string`, **required**. 要追加的片段。可以为空字符串。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ReasoningMessageEndEvent`
 
-Closes a streamed reasoning message.
+关闭一条流式推理消息。
 
-**Fields:**
+**字段：**
 
-- `type` — `"REASONING_MESSAGE_END"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. The reasoning message being closed.
+- `type` — `"REASONING_MESSAGE_END"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 被关闭的推理消息。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ReasoningMessageChunkEvent`
 
-A shorthand that stands in for a reasoning message's start, content and end sequence.
+一种简写形式，用来代替推理消息的 start、content、end 三连事件。
 
-**Fields:**
+**字段：**
 
-- `type` — `"REASONING_MESSAGE_CHUNK"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, optional. The reasoning message this chunk belongs to. Absent continues the one already open.
-- `delta` — `string`, optional. The fragment to append. May be the empty string.
+- `type` — `"REASONING_MESSAGE_CHUNK"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, optional. 本 chunk 所属的推理消息。缺省表示延续已开启的那条。
+- `delta` — `string`, optional. 要追加的片段。可以为空字符串。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ReasoningEndEvent`
 
-Closes a span of reasoning.
+关闭一个推理区段。
 
-**Fields:**
+**字段：**
 
-- `type` — `"REASONING_END"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `messageId` — `string`, **required**. The span being closed.
+- `type` — `"REASONING_END"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `messageId` — `string`, **required**. 被关闭的区段。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ReasoningEncryptedValueEvent`
 
-Carries a provider's opaque, encrypted reasoning artefact, which a consumer stores and returns on a later turn without being able to read it.
+携带提供方不透明、加密的推理产物，消费者将其存储并在后续轮次返回，而无法读取其内容。
 
-**Fields:**
+**字段：**
 
-- `type` — `"REASONING_ENCRYPTED_VALUE"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `subtype` — [`ReasoningEncryptedValueSubtype`](#reasoningencryptedvaluesubtype), **required**. What kind of thing entityId names, which decides where the value is stored.
-- `entityId` — `string`, **required**. What the value belongs to: a message id or a tool call id, according to subtype.
-- `encryptedValue` — `string`, **required**. The provider's opaque artefact.
-- `encryptedValueType` — `string`, optional. The producer's own name for what kind of artefact encryptedValue is, so the producer can restore it as the right provider block. An open string: the producer defines the values, and a consumer stores and returns it with the value without interpreting it.
+- `type` — `"REASONING_ENCRYPTED_VALUE"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `subtype` — [`ReasoningEncryptedValueSubtype`](#reasoningencryptedvaluesubtype), **required**. entityId 指向的是什么类型的东西，这决定了值存储在哪里。
+- `entityId` — `string`, **required**. 值属于哪个实体：按 subtype 而定，是消息 id 或工具调用 id。
+- `encryptedValue` — `string`, **required**. 提供方的不透明产物。
+- `encryptedValueType` — `string`, optional. 生产者自己为 encryptedValue 这类产物取的名称，以便生产者能把它恢复为正确的提供方块。开放字符串：取值由生产者定义，消费者把它与值一起存储并原样返回，不作解读。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `SubagentStartedEvent`
 
-Announces that a subagent invocation has begun. Everything the subagent produces afterwards is attributed by carrying its subagentRunId, so a consumer can group the work without replaying the stream. Composed from BaseEvent alone rather than Attributable, because here subagentRunId identifies the subagent rather than attributing the event to one; attribution to an enclosing subagent is parentSubagentRunId.
+宣告一次子智能体调用已经开始。此后该子智能体产生的一切都通过携带其 subagentRunId 来归因，消费者无需回放事件流即可把这些工作归组。它只组合 BaseEvent 而不组合 Attributable，因为这里的 subagentRunId 标识的是子智能体本身，而不是把事件归因于某个子智能体；归因于外层子智能体由 parentSubagentRunId 承担。
 
-**Fields:**
+**字段：**
 
-- `type` — `"SUBAGENT_STARTED"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), **required**. The invocation being announced.
-- `name` — `string`, **required**. The subagent's name, which is reusable across invocations, unlike subagentRunId.
-- `description` — `string`, optional. What this subagent is for, for a consumer to display.
-- `parentSubagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation that spawned this one, for nested delegation. Absent means the parent agent spawned it directly.
-- `parentToolCallId` — `string`, optional. The tool call that spawned this subagent, for the pattern where agents are exposed to a model as tools. Lets a consumer tie the subagent to the call without reading rawEvent.
-- `parentMessageId` — `string`, optional. The message that held the spawning tool call.
+- `type` — `"SUBAGENT_STARTED"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), **required**. 被宣告的调用。
+- `name` — `string`, **required**. 子智能体的名称，可在多次调用间复用，这一点与 subagentRunId 不同。
+- `description` — `string`, optional. 该子智能体的用途，供消费者展示。
+- `parentSubagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 派生本调用的那次子智能体调用，用于嵌套委派。缺省表示由父智能体直接派生。
+- `parentToolCallId` — `string`, optional. 派生该子智能体的工具调用，对应把智能体作为工具暴露给模型的模式。让消费者无需读取 rawEvent 就能把子智能体与该调用关联起来。
+- `parentMessageId` — `string`, optional. 承载派生用工具调用的那条消息。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)；组合而来的字段已在上方列出。
 
 ### `SubagentFinishedEvent`
 
-Ends a subagent invocation's segment of this run, either because the work completed or because it is suspended awaiting outside input.
+结束该子智能体调用在本次运行中的区段，原因可能是工作已完成，也可能是它被挂起等待外部输入。
 
-**Fields:**
+**字段：**
 
-- `type` — `"SUBAGENT_FINISHED"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), **required**. The invocation being closed.
-- `result` — any JSON value except `null`, optional. The subagent's return value, if it has one. Any JSON value, mirroring RUN_FINISHED.result.
-- `outcome` — [`SubagentFinishedOutcome`](#subagentfinishedoutcome), optional. Why the segment ended. Absent means success. A suspended subagent is neither a success nor a failure, which is why saying so needs its own value rather than being inferred from a later interrupt.
+- `type` — `"SUBAGENT_FINISHED"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), **required**. 被关闭的调用。
+- `result` — any JSON value except `null`, optional. 子智能体的返回值（如果有）。可以是任意 JSON 值，与 RUN_FINISHED.result 对应。
+- `outcome` — [`SubagentFinishedOutcome`](#subagentfinishedoutcome), optional. 该区段为何结束。缺省表示成功。被挂起的子智能体既不是成功也不是失败，因此这一点需要专门的取值来表达，而不能从后续的 interrupt 推断出来。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)；组合而来的字段已在上方列出。
 
 ### `SubagentErrorEvent`
 
-Reports that a subagent invocation failed. The run may continue: a parent agent is free to handle a failed subagent, which is why this is not RUN_ERROR.
+报告一次子智能体调用失败。运行可以继续：父智能体可以自行处理失败的子智能体，这正是它不是 RUN_ERROR 的原因。
 
-**Fields:**
+**字段：**
 
-- `type` — `"SUBAGENT_ERROR"` ([`EventType`](#eventtype)), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), **required**. The invocation that failed.
-- `message` — `string`, **required**. What went wrong, for a person to read.
-- `code` — `string`, optional. A machine-readable error code. An open string.
+- `type` — `"SUBAGENT_ERROR"` ([`EventType`](#eventtype)), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), **required**. 失败的调用。
+- `message` — `string`, **required**. 出了什么问题，供人阅读。
+- `code` — `string`, optional. 机器可读的错误码。开放字符串。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseEvent`](#baseevent); the composed fields are listed above.
+组合自 [`BaseEvent`](#baseevent)；组合而来的字段已在上方列出。
 
 ### `Event`
 
-Any AG-UI event. Every member is normative: there is no optional tier and no event a consumer may decline to implement. Discriminated by the type property.
+任意 AG-UI 事件。每个成员都是规范性的：没有可选层级，也没有消费者可以拒绝实现的事件。以 type 属性判别。
 
-**Members:**
+**成员：**
 
 - [`TextMessageStartEvent`](#textmessagestartevent)
 - [`TextMessageContentEvent`](#textmessagecontentevent)
@@ -634,157 +631,157 @@ Any AG-UI event. Every member is normative: there is no optional tier and no eve
 - [`SubagentFinishedEvent`](#subagentfinishedevent)
 - [`SubagentErrorEvent`](#subagenterrorevent)
 
-Discriminated by `type`.
+以 `type` 判别。
 
-## Messages
+## 消息
 
-The message union and the message types conversation history holds.
+消息联合类型，以及对话历史所能容纳的各消息类型。
 
 ### `TextMessageRole`
 
-The roles a streamed text message may take. Excludes tool, which is carried by TOOL_CALL_RESULT rather than streamed as text.
+流式文本消息可以采用的角色。不包括 tool——它由 TOOL_CALL_RESULT 承载，而非以文本流式传输。
 
-**Values:**
+**取值：**
 
 `developer` · `system` · `assistant` · `user`
 
 ### `DeveloperMessage`
 
-Instructions from the application developer.
+来自应用开发者的指令。
 
-**Fields:**
+**字段：**
 
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `id` — `string`, **required**. Identifies the message within the conversation.
-- `role` — `"developer"`, **required**. Who the message is from. Each message definition narrows this to a single value.
-- `name` — `string`, optional. An optional display name for the author.
-- `encryptedValue` — `string`, optional. A provider's opaque artefact belonging to this message, stored by a consumer and returned on a later turn.
-- `encryptedValueType` — `string`, optional. The producer's own name for what kind of artefact encryptedValue is. Stored and returned with it, never interpreted by a consumer.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this message.
-- `content` — `string`, **required**. The instructions. Required: a developer message with nothing in it says nothing.
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `id` — `string`, **required**. 在对话内标识该消息。
+- `role` — `"developer"`, **required**. 消息来自谁。每个消息定义都把它收窄为单一取值。
+- `name` — `string`, optional. 作者的可选显示名。
+- `encryptedValue` — `string`, optional. 属于该消息的提供方不透明产物，由消费者存储并在后续轮次返回。
+- `encryptedValueType` — `string`, optional. 生产者自己为 encryptedValue 这类产物取的名称。与值一起存储并原样返回，消费者绝不解读。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此消息上的额外信息。
+- `content` — `string`, **required**. 指令内容。为必填：一条空无一物的开发者消息什么也没说。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseMessage`](#basemessage), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseMessage`](#basemessage)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `SystemMessage`
 
-Instructions from the system.
+来自系统的指令。
 
-**Fields:**
+**字段：**
 
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `id` — `string`, **required**. Identifies the message within the conversation.
-- `role` — `"system"`, **required**. Who the message is from. Each message definition narrows this to a single value.
-- `name` — `string`, optional. An optional display name for the author.
-- `encryptedValue` — `string`, optional. A provider's opaque artefact belonging to this message, stored by a consumer and returned on a later turn.
-- `encryptedValueType` — `string`, optional. The producer's own name for what kind of artefact encryptedValue is. Stored and returned with it, never interpreted by a consumer.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this message.
-- `content` — `string`, **required**. The instructions. Required.
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `id` — `string`, **required**. 在对话内标识该消息。
+- `role` — `"system"`, **required**. 消息来自谁。每个消息定义都把它收窄为单一取值。
+- `name` — `string`, optional. 作者的可选显示名。
+- `encryptedValue` — `string`, optional. 属于该消息的提供方不透明产物，由消费者存储并在后续轮次返回。
+- `encryptedValueType` — `string`, optional. 生产者自己为 encryptedValue 这类产物取的名称。与值一起存储并原样返回，消费者绝不解读。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此消息上的额外信息。
+- `content` — `string`, **required**. 指令内容。必填。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseMessage`](#basemessage), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseMessage`](#basemessage)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `AssistantMessage`
 
-A message from the agent. Content is optional because a turn may consist only of tool calls.
+来自智能体的消息。content 可选，因为一轮可能只包含工具调用。
 
-**Fields:**
+**字段：**
 
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `id` — `string`, **required**. Identifies the message within the conversation.
-- `role` — `"assistant"`, **required**. Who the message is from. Each message definition narrows this to a single value.
-- `name` — `string`, optional. An optional display name for the author.
-- `encryptedValue` — `string`, optional. A provider's opaque artefact belonging to this message, stored by a consumer and returned on a later turn.
-- `encryptedValueType` — `string`, optional. The producer's own name for what kind of artefact encryptedValue is. Stored and returned with it, never interpreted by a consumer.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this message.
-- `content` — `string`, optional. What the agent said, if it said anything.
-- `toolCalls` — array of [`ToolCall`](#toolcall), optional. The tool calls this turn made.
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `id` — `string`, **required**. 在对话内标识该消息。
+- `role` — `"assistant"`, **required**. 消息来自谁。每个消息定义都把它收窄为单一取值。
+- `name` — `string`, optional. 作者的可选显示名。
+- `encryptedValue` — `string`, optional. 属于该消息的提供方不透明产物，由消费者存储并在后续轮次返回。
+- `encryptedValueType` — `string`, optional. 生产者自己为 encryptedValue 这类产物取的名称。与值一起存储并原样返回，消费者绝不解读。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此消息上的额外信息。
+- `content` — `string`, optional. 智能体说的话（如果它说了什么）。
+- `toolCalls` — array of [`ToolCall`](#toolcall), optional. 这一轮发起的工具调用。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseMessage`](#basemessage), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseMessage`](#basemessage)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `UserMessage`
 
-A message from the person using the application.
+来自应用使用者的消息。
 
-**Fields:**
+**字段：**
 
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `id` — `string`, **required**. Identifies the message within the conversation.
-- `role` — `"user"`, **required**. Who the message is from. Each message definition narrows this to a single value.
-- `name` — `string`, optional. An optional display name for the author.
-- `encryptedValue` — `string`, optional. A provider's opaque artefact belonging to this message, stored by a consumer and returned on a later turn.
-- `encryptedValueType` — `string`, optional. The producer's own name for what kind of artefact encryptedValue is. Stored and returned with it, never interpreted by a consumer.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this message.
-- `content` — `string` | array of [`ContentPart`](#contentpart), **required**. What the person sent: either plain text, or an ordered list of parts for a multimodal message.
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `id` — `string`, **required**. 在对话内标识该消息。
+- `role` — `"user"`, **required**. 消息来自谁。每个消息定义都把它收窄为单一取值。
+- `name` — `string`, optional. 作者的可选显示名。
+- `encryptedValue` — `string`, optional. 属于该消息的提供方不透明产物，由消费者存储并在后续轮次返回。
+- `encryptedValueType` — `string`, optional. 生产者自己为 encryptedValue 这类产物取的名称。与值一起存储并原样返回，消费者绝不解读。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此消息上的额外信息。
+- `content` — `string` | array of [`ContentPart`](#contentpart), **required**. 用户发送的内容：要么是纯文本，要么是多模态消息的内容部分有序列表。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`BaseMessage`](#basemessage), [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`BaseMessage`](#basemessage)、[`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ToolMessage`
 
-What a tool returned, as a message in the conversation. Stands alone rather than composing BaseMessage, because it carries no name.
+工具返回的内容，作为对话中的一条消息存在。它独立定义而不组合 BaseMessage，因为它不携带 name 字段。
 
-**Fields:**
+**字段：**
 
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `id` — `string`, **required**. Identifies the message.
-- `role` — `"tool"`, **required**. Fixed. Declared here rather than inherited, because this message does not compose BaseMessage.
-- `content` — `string` | array of [`ContentPart`](#contentpart), **required**. What the tool returned: either plain text, or an ordered list of parts. A tool returning structured data serialises it into text; media travel as parts of their own.
-- `toolCallId` — `string`, **required**. The call this answers.
-- `error` — `string`, optional. Why the tool failed, when it did. Present alongside content rather than instead of it, so a partial result survives a failure.
-- `encryptedValue` — `string`, optional. A provider's opaque artefact belonging to this message.
-- `encryptedValueType` — `string`, optional. The producer's own name for what kind of artefact encryptedValue is. Stored and returned with it, never interpreted by a consumer.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this message.
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `id` — `string`, **required**. 标识该消息。
+- `role` — `"tool"`, **required**. 固定取值。在此处声明而非继承，因为该消息不组合 BaseMessage。
+- `content` — `string` | array of [`ContentPart`](#contentpart), **required**. 工具返回的内容：要么是纯文本，要么是内容部分的有序列表。返回结构化数据的工具会把它序列化为文本；媒体则以自己的部分传输。
+- `toolCallId` — `string`, **required**. 本消息所应答的调用。
+- `error` — `string`, optional. 工具失败的原因（如果失败）。与 content 并存而非取而代之，因此部分结果可以在失败中保留下来。
+- `encryptedValue` — `string`, optional. 属于该消息的提供方不透明产物。
+- `encryptedValueType` — `string`, optional. 生产者自己为 encryptedValue 这类产物取的名称。与值一起存储并原样返回，消费者绝不解读。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此消息上的额外信息。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ActivityMessage`
 
-Structured progress that is not conversation content, materialised as a message so it keeps its place in the sequence. Stands alone rather than composing BaseMessage, because its content is an object rather than a string.
+不属于对话内容的结构化进度，物化为一条消息，从而在序列中保有自己的位置。它独立定义而不组合 BaseMessage，因为它的 content 是对象而非字符串。
 
-**Fields:**
+**字段：**
 
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `id` — `string`, **required**. Identifies the message.
-- `role` — `"activity"`, **required**. Fixed. Declared here rather than inherited, because this message does not compose BaseMessage.
-- `activityType` — `string`, **required**. What kind of activity this is. An open string: the set is the producer's.
-- `content` — `object`, open by key, **required**. The activity's payload, open by key.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this message.
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `id` — `string`, **required**. 标识该消息。
+- `role` — `"activity"`, **required**. 固定取值。在此处声明而非继承，因为该消息不组合 BaseMessage。
+- `activityType` — `string`, **required**. 这是哪类活动。开放字符串：集合由生产者决定。
+- `content` — `object`，按 key 开放, **required**. 活动的负载（payload），按 key 开放。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此消息上的额外信息。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `ReasoningMessage`
 
-A span of the agent's reasoning, materialised as a message. Stands alone rather than composing BaseMessage, because it carries no name.
+智能体推理的一个区段，物化为一条消息。它独立定义而不组合 BaseMessage，因为它不携带 name 字段。
 
-**Fields:**
+**字段：**
 
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `id` — `string`, **required**. Identifies the message.
-- `role` — `"reasoning"`, **required**. Fixed. Declared here rather than inherited, because this message does not compose BaseMessage.
-- `content` — `string`, **required**. The reasoning text.
-- `encryptedValue` — `string`, optional. A provider's opaque reasoning artefact belonging to this message.
-- `encryptedValueType` — `string`, optional. The producer's own name for what kind of artefact encryptedValue is — redacted reasoning, or a signature over content, say. Stored and returned with it, never interpreted by a consumer.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this message.
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `id` — `string`, **required**. 标识该消息。
+- `role` — `"reasoning"`, **required**. 固定取值。在此处声明而非继承，因为该消息不组合 BaseMessage。
+- `content` — `string`, **required**. 推理文本。
+- `encryptedValue` — `string`, optional. 属于该消息的提供方不透明推理产物。
+- `encryptedValueType` — `string`, optional. 生产者自己为 encryptedValue 这类产物取的名称——比如已脱敏的推理（redacted reasoning），或对内容的签名。与值一起存储并原样返回，消费者绝不解读。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此消息上的额外信息。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `Message`
 
-Any message in a conversation. Discriminated by role.
+对话中的任意一条消息。以 role 判别。
 
-**Members:**
+**成员：**
 
 - [`DeveloperMessage`](#developermessage)
 - [`SystemMessage`](#systemmessage)
@@ -794,139 +791,139 @@ Any message in a conversation. Discriminated by role.
 - [`ActivityMessage`](#activitymessage)
 - [`ReasoningMessage`](#reasoningmessage)
 
-Discriminated by `role`.
+以 `role` 判别。
 
 ### `Role`
 
-Every role a materialised message may have.
+物化消息可以具有的所有角色。
 
-**Values:**
+**取值：**
 
 `developer` · `system` · `assistant` · `user` · `tool` · `activity` · `reasoning`
 
-## Run Input
+## 运行输入
 
-The request that starts a run, and the types only it carries. Behaviour: [Run Input](/spec/draft/basic/run-input).
+启动运行的那次请求，以及只有它才携带的类型。行为规范：[运行输入](/spec/draft/basic/run-input)。
 
 ### `TextPart`
 
-A text part.
+一个文本部分。
 
-**Fields:**
+**字段：**
 
-- `type` — `"text"`, **required**. Discriminator.
-- `id` — `string`, optional. Identifies this part within its message. Optional, and nothing reads it yet: reserved so that a streamed part can be matched to its entry in history once assistant messages carry parts too.
-- `text` — `string`, **required**. The text.
-- `metadata` — any JSON value except `null`, optional. Extra information about this part. Unconstrained, as on the media parts. This is where a text search hit carries its source and title, rather than the protocol modelling a search-result part of its own.
+- `type` — `"text"`, **required**. 判别字段。
+- `id` — `string`, optional. 在所属消息内标识本部分。可选，且目前没有任何逻辑读取它：作为保留字段，以便将来助手消息也开始携带部分时，流式部分能与历史中的条目配对。
+- `text` — `string`, **required**. 文本内容。
+- `metadata` — any JSON value except `null`, optional. 关于本部分的额外信息。不作约束，与媒体部分相同。文本搜索命中的来源与标题就携带在这里，而协议不为搜索结果单独建模一种部分。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `DataSource`
 
-Bytes carried inline.
+以内联方式携带的字节。
 
-**Fields:**
+**字段：**
 
-- `type` — `"data"`, **required**. Discriminator.
-- `value` — `string`, **required**. The bytes, base64-encoded. contentEncoding is an annotation rather than a constraint in 2020-12, so a malformed string still validates here; rejecting one is the decoder's job. Encoding: `base64`.
-- `mimeType` — `string`, **required**. What the bytes are. Required here, unlike on a URL source, because nothing else can tell a consumer how to read them.
+- `type` — `"data"`, **required**. 判别字段。
+- `value` — `string`, **required**. 字节内容，base64 编码。在 2020-12 中 contentEncoding 是注解而非约束，因此格式错误的字符串在此仍能通过校验；拒绝它是解码器的职责。编码：`base64`。
+- `mimeType` — `string`, **required**. 这些字节是什么。此处必填，与 URL 来源不同，因为没有别的信息能告诉消费者如何解读它们。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `UrlSource`
 
-Bytes referenced by URL, fetched by whoever needs them.
+以 URL 引用的字节，由需要的人自行获取。
 
-**Fields:**
+**字段：**
 
-- `type` — `"url"`, **required**. Discriminator.
-- `value` — `string`, **required**. The URL. Deliberately not constrained to a URI format, so a scheme a producer already uses is not rejected here.
-- `mimeType` — `string`, optional. What the resource is, when the producer knows. Optional, because the response can say.
+- `type` — `"url"`, **required**. 判别字段。
+- `value` — `string`, **required**. URL。有意不约束为 URI 格式，这样生产者已在使用的协议方案（scheme）不会在此被拒绝。
+- `mimeType` — `string`, optional. 资源是什么（在生产者知道的情况下）。可选，因为响应本身可以说明。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `FileSource`
 
-Bytes already at the provider, named by a handle the provider issued: an OpenAI or Anthropic file id, a Gemini file URI, a storage URL only that provider can read. No bytes travel and nothing is fetched. Only the provider that minted the handle can resolve it; a peer that cannot drops the part as it drops any part it cannot use.
+已经在提供方那里的字节，以提供方签发的句柄（handle）指称：OpenAI 或 Anthropic 的文件 id、Gemini 的文件 URI、只有该提供方能读取的存储 URL。不传输任何字节，也不获取任何东西。只有签发该句柄的提供方能解析它；无法解析的对端会丢弃该部分，正如丢弃任何自己用不上的部分一样。
 
-**Fields:**
+**字段：**
 
-- `type` — `"file"`, **required**. Discriminator.
-- `value` — `string`, **required**. The handle, exactly as the provider issued it. Opaque: a consumer MUST NOT fetch it, parse it or read a scheme out of it.
-- `provider` — `string`, optional. Who issued the handle, when the producer knows. Optional: an agent already knows which provider it talks to. When present, SHOULD be the lowercase vendor id (openai, anthropic, google) that TokenUsage.provider uses, so a peer can tell before sending whether a handle is one it can use.
-- `mimeType` — `string`, optional. What the file is, when the producer knows. Optional, because the provider that holds the bytes knows.
+- `type` — `"file"`, **required**. 判别字段。
+- `value` — `string`, **required**. 句柄，与提供方签发时完全一致。不透明：消费者 MUST NOT 获取它、解析它，或从中读出 scheme。
+- `provider` — `string`, optional. 谁签发了句柄（在生产者知道的情况下）。可选：智能体本来就知道自己在和哪个提供方通信。若给出，SHOULD 是 TokenUsage.provider 所用的小写厂商 id（openai、anthropic、google），让对端在发送前就能判断该句柄是否为自己可用的。
+- `mimeType` — `string`, optional. 文件是什么（在生产者知道的情况下）。可选，因为持有字节的提供方知道。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `PartSource`
 
-Where a media part's bytes come from: carried inline, referenced by URL, or already at the provider under a handle it issued.
+媒体部分的字节来自哪里：内联携带、以 URL 引用，或已经在提供方那里、以它签发的句柄指称。
 
-**Members:**
+**成员：**
 
 - [`DataSource`](#datasource)
 - [`UrlSource`](#urlsource)
 - [`FileSource`](#filesource)
 
-Discriminated by `type`.
+以 `type` 判别。
 
 ### `ImagePart`
 
-An image part.
+一个图像部分。
 
-**Fields:**
+**字段：**
 
-- `type` — `"image"`, **required**. Discriminator.
-- `id` — `string`, optional. Identifies this part within its message. Optional, and nothing reads it yet: reserved as on the text part.
-- `source` — [`PartSource`](#partsource), **required**. Where the image comes from.
-- `metadata` — any JSON value except `null`, optional. Extra information about this part. Unconstrained rather than an object: inherited from the SDKs, which declare it unknown rather than a record; listed under known divergences in the README rather than resolved here.
+- `type` — `"image"`, **required**. 判别字段。
+- `id` — `string`, optional. 在所属消息内标识本部分。可选，且目前没有任何逻辑读取它：作为保留字段，同文本部分。
+- `source` — [`PartSource`](#partsource), **required**. 图像来自哪里。
+- `metadata` — any JSON value except `null`, optional. 关于本部分的额外信息。有意不作约束、不限定为对象：继承自各 SDK——它们把它声明为 unknown 而非 record；在 README 中列为已知分歧，此处不作裁定。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `AudioPart`
 
-An audio part.
+一个音频部分。
 
-**Fields:**
+**字段：**
 
-- `type` — `"audio"`, **required**. Discriminator.
-- `id` — `string`, optional. Identifies this part within its message. Optional, and nothing reads it yet: reserved as on the text part.
-- `source` — [`PartSource`](#partsource), **required**. Where the audio comes from.
-- `metadata` — any JSON value except `null`, optional. Extra information about this part. Unconstrained, as on the other media parts.
+- `type` — `"audio"`, **required**. 判别字段。
+- `id` — `string`, optional. 在所属消息内标识本部分。可选，且目前没有任何逻辑读取它：作为保留字段，同文本部分。
+- `source` — [`PartSource`](#partsource), **required**. 音频来自哪里。
+- `metadata` — any JSON value except `null`, optional. 关于本部分的额外信息。不作约束，与其他媒体部分相同。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `VideoPart`
 
-A video part.
+一个视频部分。
 
-**Fields:**
+**字段：**
 
-- `type` — `"video"`, **required**. Discriminator.
-- `id` — `string`, optional. Identifies this part within its message. Optional, and nothing reads it yet: reserved as on the text part.
-- `source` — [`PartSource`](#partsource), **required**. Where the video comes from.
-- `metadata` — any JSON value except `null`, optional. Extra information about this part. Unconstrained, as on the other media parts.
+- `type` — `"video"`, **required**. 判别字段。
+- `id` — `string`, optional. 在所属消息内标识本部分。可选，且目前没有任何逻辑读取它：作为保留字段，同文本部分。
+- `source` — [`PartSource`](#partsource), **required**. 视频来自哪里。
+- `metadata` — any JSON value except `null`, optional. 关于本部分的额外信息。不作约束，与其他媒体部分相同。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `DocumentPart`
 
-A document part.
+一个文档部分。
 
-**Fields:**
+**字段：**
 
-- `type` — `"document"`, **required**. Discriminator.
-- `id` — `string`, optional. Identifies this part within its message. Optional, and nothing reads it yet: reserved as on the text part.
-- `source` — [`PartSource`](#partsource), **required**. Where the document comes from.
-- `metadata` — any JSON value except `null`, optional. Extra information about this part. Unconstrained, as on the other media parts.
+- `type` — `"document"`, **required**. 判别字段。
+- `id` — `string`, optional. 在所属消息内标识本部分。可选，且目前没有任何逻辑读取它：作为保留字段，同文本部分。
+- `source` — [`PartSource`](#partsource), **required**. 文档来自哪里。
+- `metadata` — any JSON value except `null`, optional. 关于本部分的额外信息。不作约束，与其他媒体部分相同。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `ContentPart`
 
-One part of a message body: what a person sends in a user message, or what a tool returns in a tool message. Discriminated by type. Named by what the part is rather than by direction, because the same part travels into the model inside a user message and back out of the stream inside a tool result.
+消息主体的一部分：用户消息里用户发送的内容，或工具消息里工具返回的内容。以 type 判别。按"部分是什么"而非按方向命名，因为同一个部分会随用户消息进入模型，又随工具结果从事件流中返回。
 
-**Members:**
+**成员：**
 
 - [`TextPart`](#textpart)
 - [`ImagePart`](#imagepart)
@@ -934,267 +931,267 @@ One part of a message body: what a person sends in a user message, or what a too
 - [`VideoPart`](#videopart)
 - [`DocumentPart`](#documentpart)
 
-Discriminated by `type`.
+以 `type` 判别。
 
 ### `Tool`
 
-A tool the agent may call.
+智能体可以调用的工具。
 
-**Fields:**
+**字段：**
 
-- `name` — `string`, **required**. The tool's name, as the agent will call it.
-- `description` — `string`, **required**. What the tool does, for the agent to decide when to use it.
-- `parameters` — any JSON value except `null`, optional. A JSON Schema describing the tool's arguments. Carried opaquely: the protocol does not constrain or validate it. Optional, because all three SDKs already treat it that way and a tool that takes no arguments has nothing to declare; an absent schema and an empty one mean the same thing to an agent.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information about the tool, for consumers that attach their own rendering or routing information to it.
+- `name` — `string`, **required**. 工具名称，即智能体调用时使用的名字。
+- `description` — `string`, **required**. 工具的用途，供智能体决定何时使用它。
+- `parameters` — any JSON value except `null`, optional. 描述工具参数的 JSON Schema。以不透明方式承载：协议不约束也不校验它。可选，因为三个 SDK 本来都这样处理，而且不接受参数的工具无话可声明；对智能体而言，schema 缺省与为空含义相同。
+- `metadata` — [`Metadata`](#metadata), optional. 关于该工具的额外信息，供把自定义渲染或路由信息附着其上的消费者使用。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `Context`
 
-A named piece of ambient information given to the agent for the run, distinct from the conversation.
+为本次运行提供给智能体的一段环境信息，与对话相互独立。
 
-**Fields:**
+**字段：**
 
-- `description` — `string`, **required**. What this context is, for the agent to interpret.
-- `value` — `string`, **required**. The context itself.
+- `description` — `string`, **required**. 这段上下文是什么，供智能体解读。
+- `value` — `string`, **required**. 上下文本身。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `ResumeEntry`
 
-An answer to one interrupt, sent on the run that continues from it.
+对一个中断的应答，随延续该中断的运行一起发送。
 
-**Fields:**
+**字段：**
 
-- `interruptId` — `string`, **required**. The interrupt being answered.
-- `status` — `"resolved"` | `"cancelled"`, **required**. Whether the interrupt was answered or abandoned.
-- `payload` — any JSON value except `null`, optional. The answer the agent asked for and will act on. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Envelope information about the response, such as signatures or routing keys, as opposed to payload, which is the answer itself.
+- `interruptId` — `string`, **required**. 被应答的中断。
+- `status` — `"resolved"` | `"cancelled"`, **required**. 该中断是被应答还是被放弃。
+- `payload` — any JSON value except `null`, optional. 智能体请求并将据以行动的答案。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 关于该响应的信封信息，如签名或路由 key；payload 才是答案本身。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `RunAgentInput`
 
-A request to run an agent. Also echoed back as RUN_STARTED.input. Only threadId, runId and messages are required: those are the three the SDKs already agree on, and for tools and context an absent key and an empty array mean the same thing, so requiring them would catch nothing a producer could get wrong.
+运行智能体的请求。也会作为 RUN_STARTED.input 回显。只有 threadId、runId 与 messages 是必填：这是三个 SDK 早已达成一致的三项；而对 tools 与 context 而言，key 缺省与空数组含义相同，把它们设为必填也拦不住生产者可能犯的任何错。
 
-**Fields:**
+**字段：**
 
-- `threadId` — `string`, **required**. The conversation this run belongs to.
-- `runId` — `string`, **required**. Identifies this run.
-- `protocolVersion` — `string`, optional. The protocol version this consumer speaks, such as "1.0". Absent means the input was produced before the protocol carried a version — the versioning rules in the prose govern what each side does with that. Sent in-band rather than by the transport, so a recorded exchange stays self-describing.
-- `parentRunId` — `string`, optional. The run that spawned this one.
-- `state` — [`State`](#state) except `null`, optional. The state the run starts from.
-- `messages` — array of [`Message`](#message), **required**. The conversation so far, in order.
-- `tools` — array of [`Tool`](#tool), optional. The tools the agent may call. Absent means none.
-- `context` — array of [`Context`](#context), optional. Ambient information for the run. Absent means none.
-- `forwardedProps` — any JSON value except `null`, optional. Application-specific values passed through to the agent untouched. Any JSON value.
-- `resume` — array of [`ResumeEntry`](#resumeentry), optional. Answers to the interrupts that ended a previous run, when this run continues from one.
+- `threadId` — `string`, **required**. 本次运行所属的对话。
+- `runId` — `string`, **required**. 标识本次运行。
+- `protocolVersion` — `string`, optional. 本消费者所讲的协议版本，如 "1.0"。缺省表示该输入产生于协议还没有版本号的年代——双方如何处理由散文中的版本管理规则规定。它随带内数据传输而非由传输层携带，这样记录下来的交换保持自描述性。
+- `parentRunId` — `string`, optional. 派生本次运行的那次运行。
+- `state` — [`State`](#state) except `null`, optional. 本次运行起始的状态。
+- `messages` — array of [`Message`](#message), **required**. 迄今为止的对话，按顺序排列。
+- `tools` — array of [`Tool`](#tool), optional. 智能体可以调用的工具。缺省表示没有。
+- `context` — array of [`Context`](#context), optional. 本次运行的环境信息。缺省表示没有。
+- `forwardedProps` — any JSON value except `null`, optional. 透传给智能体、不作改动的应用专属值。可以是任意 JSON 值。
+- `resume` — array of [`ResumeEntry`](#resumeentry), optional. 对结束上一次运行的那些中断的应答，用于本次运行从中断处延续的情形。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-## Outcomes and Interrupts
+## 结果与中断
 
-How runs and subagents report ending, and what an interrupted run is waiting for. Behaviour: [Interrupts and Resume](/spec/draft/basic/patterns/interrupt-resume).
+运行与子智能体如何报告结束，以及被中断的运行在等待什么。行为规范：[中断与恢复](/spec/draft/basic/patterns/interrupt-resume)。
 
 ### `RunFinishedSuccessOutcome`
 
-The run completed. Equivalent to an absent outcome. Closed like every other object, which is also what keeps it from carrying the suspended sibling's interrupts — a success with an interrupt still pending would be a contradiction, not an extension. A completed run may still have left frontend tool calls for the application to answer; pendingToolCallIds names them.
+运行已完成。等价于缺省的 outcome。像所有其他对象一样封闭，这也使它无法携带 suspended 兄弟取值的中断——一个带着未决中断的 success 是自相矛盾，而非扩展。已完成的运行仍可能给应用留下了待应答的前端工具调用；pendingToolCallIds 列出它们。
 
-**Fields:**
+**字段：**
 
-- `type` — `"success"`, **required**. Discriminator.
-- `pendingToolCallIds` — array of `string`, optional. The tool calls this run started and left unanswered — no TOOL_CALL_RESULT in the run — for the application to answer in the next input's messages, in the order they were made. Absent or empty means the producer named none, and a consumer derives the list from the stream; otherwise it is the list, and it agrees with the stream. On the success outcome rather than the event because a run that stopped on a frontend tool call is a completed run: whether the application continues the thread is its own decision, so the producer reports what it knows and no more. Each entry: A tool call id, as carried by TOOL_CALL_START.
+- `type` — `"success"`, **required**. 判别字段。
+- `pendingToolCallIds` — array of `string`, optional. 本次运行发起且未获应答的工具调用——运行中没有对应的 TOOL_CALL_RESULT——按发起顺序列出，供应用在下一次输入的消息中应答。缺省或为空表示生产者未指名任何调用，消费者从事件流推导该列表；否则它就是那份列表，且与事件流一致。它放在 success outcome 上而非事件本身，因为因前端工具调用而停止的运行就是一次已完成的运行：应用是否延续该线程是它自己的决定，所以生产者只报告自己知道的，不多不少。每个条目：一个工具调用 id，与 TOOL_CALL_START 所携带的一致。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `Interrupt`
 
-Something a run needs from outside before it can continue, such as an approval or a missing value.
+运行在继续之前需要从外部获得的东西，例如一项批准或一个缺失的值。
 
-**Fields:**
+**字段：**
 
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `id` — `string`, **required**. Identifies the interrupt. A resume entry answers it by this id.
-- `reason` — `string`, **required**. Why the run stopped. An open string rather than an enumeration: the protocol does not attempt to classify every reason an agent might need input.
-- `message` — `string`, optional. A human-readable prompt for whoever answers.
-- `toolCallId` — `string`, optional. The tool call this interrupt concerns, when it is a tool approval.
-- `responseSchema` — `object`, open by key, optional. A JSON Schema describing the answer this interrupt expects, so a consumer can build a form for it. Carried opaquely: the protocol does not constrain or validate it. Restricted to an object because TypeScript and Python both declare it that way; .NET holds it as any JSON, and the ticket that commissioned this schema lists it among the arbitrary-JSON fields. Following the two that constrain it keeps the schema from accepting documents the reference client rejects, at the cost of rejecting the boolean schemas JSON Schema also permits — a bare true for "any answer". Recorded as a known divergence rather than settled.
-- `expiresAt` — `string`, optional. When the interrupt stops being answerable. Deliberately unconstrained rather than a date-time format, because producers already disagree about the representation and tightening it here would reject streams that work today. The documented convention is ISO 8601, and a consumer comparing this value will parse it as a date, so a value that is not one leaves the interrupt looking permanently unexpired.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this interrupt.
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `id` — `string`, **required**. 标识该中断。resume 条目以这个 id 应答它。
+- `reason` — `string`, **required**. 运行为何停止。用开放字符串而非枚举：协议不打算对智能体需要输入的每一种原因都做分类。
+- `message` — `string`, optional. 给应答者看的人类可读提示词。
+- `toolCallId` — `string`, optional. 本中断所涉及的工具调用（当它是工具批准时）。
+- `responseSchema` — `object`，按 key 开放, optional. 描述本中断所期待答案的 JSON Schema，消费者可以据此为它构建表单。以不透明方式承载：协议不约束也不校验它。限定为对象，是因为 TypeScript 与 Python 都这样声明；.NET 把它保存为任意 JSON，而提出这份 schema 的工单也把它列在任意 JSON 字段之中。跟随约束它的那两方，可以让 schema 不接受参考客户端会拒绝的文档，代价是连 JSON Schema 同样允许的布尔 schema——表示"任何答案"的裸 true——也一并拒绝。记录为已知分歧，未作定论。
+- `expiresAt` — `string`, optional. 中断在何时之后不再可应答。有意不作约束、不用日期时间格式，因为生产者对表示方式本就各执一词，在这里收紧会拒绝今天本可正常工作的事件流。成文的约定是 ISO 8601，消费者在比较该值时会把它当日期解析，因此不是日期的值会让中断看起来永远不过期。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此中断上的额外信息。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-Composes [`Attributable`](#attributable); the composed fields are listed above.
+组合自 [`Attributable`](#attributable)；组合而来的字段已在上方列出。
 
 ### `RunFinishedInterruptOutcome`
 
-The run is paused, waiting for something outside it. Resuming means starting a new run whose resume entries answer these interrupts.
+运行已暂停，在等待来自外部的某个东西。恢复意味着启动一次新运行，用它的 resume 条目应答这些中断。
 
-**Fields:**
+**字段：**
 
-- `type` — `"interrupt"`, **required**. Discriminator.
-- `interrupts` — array of [`Interrupt`](#interrupt) (min 1), **required**. What the run is waiting for. At least one: an interrupt outcome with nothing to answer would leave a consumer with nothing to do.
+- `type` — `"interrupt"`, **required**. 判别字段。
+- `interrupts` — array of [`Interrupt`](#interrupt) (min 1), **required**. 运行在等待的内容。至少一条：没有任何东西可应答的 interrupt outcome 会让消费者无事可做。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `RunFinishedCancelledOutcome`
 
-The run was stopped before it completed, by whoever was running it, and did not fail. Neither success nor interrupt: nothing was produced as a result, and nothing is waited for, so the next run on the thread is an ordinary new run rather than a resume. Closed like its siblings: a cancelled run has no interrupts to carry. Named in the schema before 1.0 because an outcome a consumer does not recognise is stripped and read as success — a cancellation added later would reach every 1.0 consumer as a completed run.
+运行在完成之前被运行它的那一方停止，且并未失败。既非 success 也非 interrupt：没有产生任何 result，也没有在等待任何东西，因此该线程上的下一次运行是一次普通的新运行，而非恢复。与其兄弟取值一样封闭：被取消的运行没有可携带的中断。在 1.0 之前就写入 schema，是因为消费者无法识别的 outcome 会被剥离并当作 success 读取——若事后才加入取消取值，它会以"已完成的运行"的面目到达每一个 1.0 消费者。
 
-**Fields:**
+**字段：**
 
-- `type` — `"cancelled"`, **required**. Discriminator.
+- `type` — `"cancelled"`, **required**. 判别字段。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `RunFinishedOutcome`
 
-Why a run ended.
+运行为何结束。
 
-**Members:**
+**成员：**
 
 - [`RunFinishedSuccessOutcome`](#runfinishedsuccessoutcome)
 - [`RunFinishedInterruptOutcome`](#runfinishedinterruptoutcome)
 - [`RunFinishedCancelledOutcome`](#runfinishedcancelledoutcome)
 
-Discriminated by `type`.
+以 `type` 判别。
 
 ### `SubagentFinishedSuccessOutcome`
 
-The subagent completed its work. Equivalent to an absent outcome.
+子智能体完成了它的工作。等价于缺省的 outcome。
 
-**Fields:**
+**字段：**
 
-- `type` — `"success"`, **required**. Discriminator.
+- `type` — `"success"`, **required**. 判别字段。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `SubagentFinishedSuspendedOutcome`
 
-The subagent is paused awaiting outside input. Terminal for this stream, not for the subagent: a later run may continue the same invocation once the interrupts are answered.
+子智能体已暂停，等待外部输入。对这个事件流而言是终点，对子智能体本身则不是：一旦中断得到应答，后续运行可以延续同一次调用。
 
-**Fields:**
+**字段：**
 
-- `type` — `"suspended"`, **required**. Discriminator.
-- `interruptIds` — array of `string`, optional. The run-level interrupts this subagent raised itself. May be empty or absent: a subagent suspended because a descendant interrupted owns no interrupt of its own. Each entry: An Interrupt.id.
+- `type` — `"suspended"`, **required**. 判别字段。
+- `interruptIds` — array of `string`, optional. 该子智能体自己引发的运行级中断。可以为空或缺省：因后代中断而被挂起的子智能体并不拥有自己的中断。每个条目：一个 Interrupt.id。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `SubagentFinishedOutcome`
 
-Why a subagent's segment of a run ended. Mirrors RunFinishedOutcome one level down.
+子智能体在运行中的区段为何结束。比 RunFinishedOutcome 低一层，与之对应。
 
-**Members:**
+**成员：**
 
 - [`SubagentFinishedSuccessOutcome`](#subagentfinishedsuccessoutcome)
 - [`SubagentFinishedSuspendedOutcome`](#subagentfinishedsuspendedoutcome)
 
-Discriminated by `type`.
+以 `type` 判别。
 
-## Common Types
+## 通用类型
 
-Everything the sections above share.
+以上各节共用的内容。
 
 ### `Metadata`
 
-Extra information attached to an event, a message, a tool call, a tool, an interrupt or a resume entry. Open by key: any JSON value is allowed under a key, including null, because a null there is meaningful data. The object itself may be absent but is never null when present. The key ag-ui is reserved for the protocol's own use; reservation is by convention, since validating the shape of a key's value would contradict being open by key.
+附加到事件、消息、工具调用、工具、中断或 resume 条目上的额外信息。按 key 开放：key 下允许任意 JSON 值，包括 null，因为这里的 null 是有意义的数据。对象本身可以缺省，但一旦存在就绝不是 null。key ag-ui 为协议自用而保留；这种保留只是约定，因为校验某个 key 的值形态就与"按 key 开放"相矛盾。
 
-**Type:** `object`, open by key
+**类型：** `object`，按 key 开放
 
 ### `SubagentRunId`
 
-An opaque handle for one subagent invocation, not a reusable name for a subagent definition: two invocations of the same subagent carry two different values. Named to mirror runId one level down, the way the subagent's name mirrors agentId.
+一次子智能体调用的不透明句柄（handle），不是子智能体定义的可复用名称：对同一子智能体的两次调用携带两个不同的值。命名与低一层的 runId 对应，正如子智能体的名称与 agentId 对应。
 
-**Type:** `string`
+**类型：** `string`
 
 ### `State`
 
-Agent state. Any JSON value: the protocol carries state without interpreting it, so an object, an array, a string and a number are all valid.
+智能体状态。任意 JSON 值：协议承载状态而不解读它，因此对象、数组、字符串与数字都有效。
 
-**Type:** any JSON value
+**类型：** any JSON value
 
 ### `JsonPointer`
 
-A JSON Pointer as defined by RFC 6901. Either the empty string, meaning the whole document, or a sequence of slash-prefixed reference tokens in which a tilde is escaped as ~0 and a slash as ~1. A value with no leading slash, or a tilde followed by anything other than 0 or 1, is not a JSON Pointer.
+RFC 6901 定义的 JSON Pointer。要么是空字符串（表示整个文档），要么是以斜杠开头的一系列引用 token，其中波浪号转义为 ~0，斜杠转义为 ~1。不以斜杠开头的值，或波浪号后跟 0、1 以外字符的值，都不是 JSON Pointer。
 
-**Type:** `string` matching `^(/([^/~]|~[01])*)*$`
+**类型：** `string`，须匹配 `^(/([^/~]|~[01])*)*$`
 
 ### `AddOperation`
 
-Inserts value at path. RFC 6902 section 4.1.
+在 path 处插入 value。RFC 6902 第 4.1 节。
 
-**Fields:**
+**字段：**
 
-- `op` — `"add"`, **required**. Discriminator for the add operation.
-- `path` — [`JsonPointer`](#jsonpointer), **required**. Where to insert the value.
-- `value` — any JSON value, **required**. The value to insert. Any JSON value, including null, which is a legitimate thing to add.
+- `op` — `"add"`, **required**. add 操作的判别字段。
+- `path` — [`JsonPointer`](#jsonpointer), **required**. 值插入到哪里。
+- `value` — any JSON value, **required**. 要插入的值。任意 JSON 值，包括 null——null 是可以合法添加的东西。
 
-Open object: members beyond these are protocol-legal and are never stripped.
+开放对象：超出这些成员之外的内容协议上合法，且永远不会被剥离。
 
 ### `RemoveOperation`
 
-Removes the value at path. RFC 6902 section 4.2.
+移除 path 处的值。RFC 6902 第 4.2 节。
 
-**Fields:**
+**字段：**
 
-- `op` — `"remove"`, **required**. Discriminator for the remove operation.
-- `path` — [`JsonPointer`](#jsonpointer), **required**. What to remove.
+- `op` — `"remove"`, **required**. remove 操作的判别字段。
+- `path` — [`JsonPointer`](#jsonpointer), **required**. 要移除什么。
 
-Open object: members beyond these are protocol-legal and are never stripped.
+开放对象：超出这些成员之外的内容协议上合法，且永远不会被剥离。
 
 ### `ReplaceOperation`
 
-Replaces the value at path. RFC 6902 section 4.3.
+替换 path 处的值。RFC 6902 第 4.3 节。
 
-**Fields:**
+**字段：**
 
-- `op` — `"replace"`, **required**. Discriminator for the replace operation.
-- `path` — [`JsonPointer`](#jsonpointer), **required**. What to replace.
-- `value` — any JSON value, **required**. The replacement. Any JSON value, including null.
+- `op` — `"replace"`, **required**. replace 操作的判别字段。
+- `path` — [`JsonPointer`](#jsonpointer), **required**. 要替换什么。
+- `value` — any JSON value, **required**. 替换后的值。任意 JSON 值，包括 null。
 
-Open object: members beyond these are protocol-legal and are never stripped.
+开放对象：超出这些成员之外的内容协议上合法，且永远不会被剥离。
 
 ### `MoveOperation`
 
-Moves the value at from to path. RFC 6902 section 4.4.
+把 from 处的值移动到 path。RFC 6902 第 4.4 节。
 
-**Fields:**
+**字段：**
 
-- `op` — `"move"`, **required**. Discriminator for the move operation.
-- `from` — [`JsonPointer`](#jsonpointer), **required**. Where the value is moved from.
-- `path` — [`JsonPointer`](#jsonpointer), **required**. Where the value is moved to.
+- `op` — `"move"`, **required**. move 操作的判别字段。
+- `from` — [`JsonPointer`](#jsonpointer), **required**. 值从哪里移出。
+- `path` — [`JsonPointer`](#jsonpointer), **required**. 值移动到哪里。
 
-Open object: members beyond these are protocol-legal and are never stripped.
+开放对象：超出这些成员之外的内容协议上合法，且永远不会被剥离。
 
 ### `CopyOperation`
 
-Copies the value at from to path. RFC 6902 section 4.5.
+把 from 处的值复制到 path。RFC 6902 第 4.5 节。
 
-**Fields:**
+**字段：**
 
-- `op` — `"copy"`, **required**. Discriminator for the copy operation.
-- `from` — [`JsonPointer`](#jsonpointer), **required**. Where the value is copied from.
-- `path` — [`JsonPointer`](#jsonpointer), **required**. Where the value is copied to.
+- `op` — `"copy"`, **required**. copy 操作的判别字段。
+- `from` — [`JsonPointer`](#jsonpointer), **required**. 值从哪里复制。
+- `path` — [`JsonPointer`](#jsonpointer), **required**. 值复制到哪里。
 
-Open object: members beyond these are protocol-legal and are never stripped.
+开放对象：超出这些成员之外的内容协议上合法，且永远不会被剥离。
 
 ### `TestOperation`
 
-Asserts that the value at path equals value. RFC 6902 section 4.6.
+断言 path 处的值等于 value。RFC 6902 第 4.6 节。
 
-**Fields:**
+**字段：**
 
-- `op` — `"test"`, **required**. Discriminator for the test operation.
-- `path` — [`JsonPointer`](#jsonpointer), **required**. What to compare.
-- `value` — any JSON value, **required**. The value the target must equal. Any JSON value, including null.
+- `op` — `"test"`, **required**. test 操作的判别字段。
+- `path` — [`JsonPointer`](#jsonpointer), **required**. 比较的对象。
+- `value` — any JSON value, **required**. 目标必须等于的值。任意 JSON 值，包括 null。
 
-Open object: members beyond these are protocol-legal and are never stripped.
+开放对象：超出这些成员之外的内容协议上合法，且永远不会被剥离。
 
 ### `JsonPatchOperation`
 
-A single RFC 6902 operation. Exactly one of the operation shapes must match, discriminated by op. Unlike the protocol's own objects, the operations are open: RFC 6902 section 4 requires members an operation does not define to be ignored rather than rejected, so a remove carrying a leftover value is a valid patch. Two of the RFC's rules are relations between values rather than shapes, so no static schema can express them and neither is checked here: a move whose from is a proper prefix of its path (section 4.4), and any operation whose pointer does not resolve in the target document. Both are the applier's to reject.
+单个 RFC 6902 操作。必须恰好匹配其中一种操作形态，以 op 判别。与协议自己的对象不同，这些操作是开放的：RFC 6902 第 4 节要求忽略而非拒绝操作未定义的成员，因此带着多余 value 的 remove 也是合法补丁。RFC 有两条规则是值与值之间的关系而非形态，任何静态 schema 都无法表达，这里也不检查：from 是 path 真前缀的 move（第 4.4 节），以及指针在目标文档中无法解析的任何操作。两者都由应用方拒绝。
 
-**Members:**
+**成员：**
 
 - [`AddOperation`](#addoperation)
 - [`RemoveOperation`](#removeoperation)
@@ -1203,290 +1200,288 @@ A single RFC 6902 operation. Exactly one of the operation shapes must match, dis
 - [`CopyOperation`](#copyoperation)
 - [`TestOperation`](#testoperation)
 
-Discriminated by `op`.
+以 `op` 判别。
 
 ### `JsonPatch`
 
-A JSON Patch document as defined by RFC 6902, referenced by STATE_DELTA.delta and ACTIVITY_DELTA.patch: an ordered sequence of operations applied to a target document. An empty array is a valid no-op patch. Whether the operations actually apply to the document they target is a runtime question RFC 6902 leaves to the applier; structural validity here says nothing about it.
+RFC 6902 定义的 JSON Patch 文档，被 STATE_DELTA.delta 与 ACTIVITY_DELTA.patch 引用：应用于目标文档的有序操作序列。空数组是合法的空操作补丁。这些操作是否真的能应用于目标文档，是运行时问题，RFC 6902 把它留给应用方；这里结构上的有效与否对此不作判断。
 
-**Type:** array of [`JsonPatchOperation`](#jsonpatchoperation)
+**类型：** [`JsonPatchOperation`](#jsonpatchoperation) 数组
 
 ### `FunctionCall`
 
-The name and arguments of a tool call.
+一次工具调用的名称与参数。
 
-**Fields:**
+**字段：**
 
-- `name` — `string`, **required**. Which tool is being called.
-- `arguments` — `string`, **required**. The arguments as a JSON string, not as parsed JSON. Kept as written because a model can emit arguments that are not valid JSON, and losing them at the protocol boundary would hide the fault from the consumer that has to handle it.
+- `name` — `string`, **required**. 正在调用哪个工具。
+- `arguments` — `string`, **required**. 以 JSON 字符串形式保存的参数，而非解析后的 JSON。保持原样，因为模型可能发出不合法的 JSON 参数；若在协议边界丢失它们，必须处理该问题的消费者反而看不见故障。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `ToolCall`
 
-A call an assistant message made. Carries no subagent attribution of its own and inherits its containing message's, since several calls can share one parent.
+助手消息发起的一次调用。自身不携带子智能体归因，而是继承其所在消息的归因，因为多个调用可以共享同一个父消息。
 
-**Fields:**
+**字段：**
 
-- `id` — `string`, **required**. Identifies the call. The answering tool message carries this as its toolCallId.
-- `type` — `"function"`, **required**. The only kind of call the protocol models.
-- `function` — [`FunctionCall`](#functioncall), **required**. What is being called, and with what.
-- `encryptedValue` — `string`, optional. A provider's opaque artefact belonging to this call.
-- `encryptedValueType` — `string`, optional. The producer's own name for what kind of artefact encryptedValue is. Stored and returned with it, never interpreted by a consumer.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this call. Carried here rather than folded into the containing message, because several calls can share one parent and merging them would make the result depend on their order.
+- `id` — `string`, **required**. 标识该调用。应答它的工具消息以它作为 toolCallId。
+- `type` — `"function"`, **required**. 协议建模的唯一调用类型。
+- `function` — [`FunctionCall`](#functioncall), **required**. 调用的是什么，以及用什么参数。
+- `encryptedValue` — `string`, optional. 属于该调用的提供方不透明产物。
+- `encryptedValueType` — `string`, optional. 生产者自己为 encryptedValue 这类产物取的名称。与值一起存储并原样返回，消费者绝不解读。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到本次调用上的额外信息。放在这里而非并入所在消息，因为多个调用可以共享同一个父消息，合并它们会让结果取决于顺序。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `TokenUsage`
 
-Token counts for one provider and model, in the protocol's own accounting: every count is either a total or a named part of one, so entries from different providers add up without double-counting. inputTokens and outputTokens are the totals; reasoningTokens, cachedInputTokens and cacheWriteInputTokens are parts of them, never additions to them; totalTokens is the two totals summed. Every field is a label or a number — nothing content-bearing or identifying, no prompts, completions, messages, or thread, run and user identifiers.
+一个提供方与一个模型的 token 计数，采用协议自己的记账口径：每个计数要么是总量，要么是某个总量的具名组成部分，因此不同提供方的条目可以直接相加而不会重复计数。inputTokens 与 outputTokens 是总量；reasoningTokens、cachedInputTokens 与 cacheWriteInputTokens 是它们的组成部分，绝不是在总量之外另加的部分；totalTokens 是两个总量之和。每个字段都只是标签或数字——不包含任何内容性或可识别信息，没有提示词、补全、消息，也没有线程、运行与用户标识符。
 
-**Fields:**
+**字段：**
 
-- `provider` — `string`, optional. Which provider served the request.
-- `model` — `string`, optional. Which model served the request.
-- `inputTokens` — `integer` (min 0, max 9007199254740991), optional. Every prompt token the call was charged for: tokens read from a provider cache, tokens written to one, and audio or other non-text input all count here. cachedInputTokens and cacheWriteInputTokens break this number down and are never added to it — a provider that reports its cache counts beside a smaller input count has them added in by the producer before the entry leaves. Bounded like timestamp and for the same reason: a count above the JSON safe-integer range does not survive a round trip, so a consumer would silently read a different number than the producer wrote.
-- `outputTokens` — `integer` (min 0, max 9007199254740991), optional. Every generated token, reasoning included where the provider distinguishes it. reasoningTokens breaks this number down and is never added to it — a provider that reports reasoning tokens beside a smaller completion count has them added in by the producer.
-- `totalTokens` — `integer` (min 0, max 9007199254740991), optional. inputTokens plus outputTokens, under the accounting above. A producer MAY compute it rather than copy a provider's total, and copies a provider's total only when that total counts the same way, so a consumer can read this field as the sum of the other two.
-- `reasoningTokens` — `integer` (min 0, max 9007199254740991), optional. Output tokens spent on reasoning, where the provider distinguishes them. Part of outputTokens, not in addition to it.
-- `cachedInputTokens` — `integer` (min 0, max 9007199254740991), optional. Input tokens read from a provider cache. Part of inputTokens, not in addition to it, and disjoint from cacheWriteInputTokens.
-- `cacheWriteInputTokens` — `integer` (min 0, max 9007199254740991), optional. Input tokens written to a provider cache on this call, where the provider distinguishes them. Part of inputTokens, not in addition to it, and disjoint from cachedInputTokens. Its own field because providers price a cache write differently from a cache read, so a consumer computing cost cannot do without it.
+- `provider` — `string`, optional. 由哪个提供方服务该请求。
+- `model` — `string`, optional. 由哪个模型服务该请求。
+- `inputTokens` — `integer` (min 0, max 9007199254740991), optional. 本次调用被计费的全部提示词 token：从提供方缓存读取的 token、写入缓存的 token，以及音频或其他非文本输入都计入其中。cachedInputTokens 与 cacheWriteInputTokens 是对这个数字的拆分，绝不会另加其上——如果提供方在较小的输入计数旁边报告缓存计数，生产者会在条目发出前把它们加进来。与 timestamp 一样限定范围，理由也相同：超出 JSON 安全整数范围的计数无法无损往返，消费者会悄然读到一个与生产者写入值不同的数字。
+- `outputTokens` — `integer` (min 0, max 9007199254740991), optional. 生成的全部 token，在提供方加以区分时包含推理 token。reasoningTokens 是对这个数字的拆分，绝不会另加其上——如果提供方在较小的补全计数旁边报告推理 token，生产者会把它们加进来。
+- `totalTokens` — `integer` (min 0, max 9007199254740991), optional. inputTokens 加 outputTokens，按上述口径。生产者 MAY 自行计算而不照抄提供方的总量，并且只在提供方总量按同一口径统计时才照抄，这样消费者可以把本字段读作另外两个字段之和。
+- `reasoningTokens` — `integer` (min 0, max 9007199254740991), optional. 花在推理上的输出 token（在提供方加以区分时）。是 outputTokens 的组成部分，不是其之外的另加部分。
+- `cachedInputTokens` — `integer` (min 0, max 9007199254740991), optional. 从提供方缓存读取的输入 token。是 inputTokens 的组成部分，不是另加部分，且与 cacheWriteInputTokens 不相交。
+- `cacheWriteInputTokens` — `integer` (min 0, max 9007199254740991), optional. 本次调用写入提供方缓存的输入 token（在提供方加以区分时）。是 inputTokens 的组成部分，不是另加部分，且与 cachedInputTokens 不相交。单列一个字段，是因为提供方对缓存写入的计价与缓存读取不同，计算成本的消费者离不开它。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `ReasoningEncryptedValueSubtype`
 
-Whether a REASONING_ENCRYPTED_VALUE belongs to a message or to a tool call.
+REASONING_ENCRYPTED_VALUE 属于消息还是属于工具调用。
 
-**Values:**
+**取值：**
 
 `tool-call` · `message`
 
 ### `SubagentInfo`
 
-Describes a subagent that can be invoked by a parent agent.
+描述可被父智能体调用的子智能体。
 
-**Fields:**
+**字段：**
 
-- `name` — `string`, **required**. Unique name or identifier of the subagent.
-- `description` — `string`, optional. What this subagent specializes in. Helps clients build agent selection UIs.
+- `name` — `string`, **required**. 子智能体的唯一名称或标识符。
+- `description` — `string`, optional. 该子智能体的专长。帮助客户端构建智能体选择 UI。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `IdentityCapabilities`
 
-Basic metadata about the agent. Useful for discovery UIs, agent marketplaces, and debugging. Set these when you want clients to display agent information or when multiple agents are available and users need to pick one.
+关于智能体的基本元数据。对发现 UI、智能体市场与调试都有用。当希望客户端展示智能体信息，或在多个智能体可用、用户需要挑选时，设置这些字段。
 
-**Fields:**
+**字段：**
 
-- `name` — `string`, optional. Human-readable name shown in UIs and agent selectors.
-- `type` — `string`, optional. The framework or platform powering this agent (e.g., "langgraph", "mastra", "crewai").
-- `description` — `string`, optional. What this agent does — helps users and routing logic decide when to use it.
-- `version` — `string`, optional. Semantic version of the agent (e.g., "1.2.0"). Useful for compatibility checks.
-- `provider` — `string`, optional. Organization or team that maintains this agent.
-- `documentationUrl` — `string`, optional. URL to the agent's documentation or homepage.
-- `metadata` — [`Metadata`](#metadata), optional. Arbitrary key-value pairs for integration-specific identity info.
+- `name` — `string`, optional. 在 UI 与智能体选择器中显示的人类可读名称。
+- `type` — `string`, optional. 驱动该智能体的框架或平台（如 "langgraph"、"mastra"、"crewai"）。
+- `description` — `string`, optional. 该智能体做什么——帮助用户与路由逻辑判断何时使用它。
+- `version` — `string`, optional. 智能体的语义化版本（如 "1.2.0"）。对兼容性检查有用。
+- `provider` — `string`, optional. 维护该智能体的组织或团队。
+- `documentationUrl` — `string`, optional. 指向智能体文档或主页的 URL。
+- `metadata` — [`Metadata`](#metadata), optional. 承载集成专属身份信息的任意键值对。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `TransportCapabilities`
 
-Declares which transport mechanisms the agent supports. Clients use this to pick the best connection strategy. Only set flags to true for transports your agent actually handles — omit or set false for unsupported ones.
+声明智能体支持哪些传输机制。客户端据此挑选最佳连接策略。只为智能体真正处理的传输层把标志设为 true——不支持的省略或设为 false。
 
-**Fields:**
+**字段：**
 
-- `streaming` — `boolean`, optional. Set true if the agent streams responses via SSE. Most agents enable this.
-- `websocket` — `boolean`, optional. Set true if the agent accepts persistent WebSocket connections.
-- `httpBinary` — `boolean`, optional. Set true if the agent supports the AG-UI binary protocol (protobuf over HTTP).
-- `pushNotifications` — `boolean`, optional. Set true if the agent can send async updates via webhooks after a run finishes.
-- `resumable` — `boolean`, optional. Set true if the agent supports resuming interrupted streams via sequence numbers.
+- `streaming` — `boolean`, optional. 若智能体通过 SSE 流式返回响应则设为 true。多数智能体会启用此项。
+- `websocket` — `boolean`, optional. 若智能体接受持久的 WebSocket 连接则设为 true。
+- `httpBinary` — `boolean`, optional. 若智能体支持 AG-UI 二进制协议（HTTP 上的 protobuf）则设为 true。
+- `pushNotifications` — `boolean`, optional. 若智能体能在运行结束后通过 webhook 发送异步更新则设为 true。
+- `resumable` — `boolean`, optional. 若智能体支持通过序列号恢复被中断的流则设为 true。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `ToolsCapabilities`
 
-Tool calling capabilities. Distinguishes between tools the agent itself provides (listed in items) and tools the client passes at runtime via RunAgentInput.tools. Enable this when your agent can call functions, search the web, execute code, etc.
+工具调用能力。区分智能体自己提供的工具（列在 items 中）与客户端在运行时通过 RunAgentInput.tools 传入的工具。当智能体可以调用函数、搜索网页、执行代码等时启用。
 
-**Fields:**
+**字段：**
 
-- `supported` — `boolean`, optional. Set true if the agent can make tool calls at all. Set false to explicitly signal tool calling is disabled even if items are present.
-- `items` — array of [`Tool`](#tool), optional. The tools this agent provides on its own (full JSON Schema definitions). These are distinct from client-provided tools passed in RunAgentInput.tools.
-- `parallelCalls` — `boolean`, optional. Set true if the agent can invoke multiple tools concurrently within a single step.
-- `clientProvided` — `boolean`, optional. Set true if the agent accepts and uses tools provided by the client at runtime.
+- `supported` — `boolean`, optional. 若智能体完全能够发起工具调用则设为 true。设为 false 可以明确表示：即使 items 存在，工具调用也已被禁用。
+- `items` — array of [`Tool`](#tool), optional. 该智能体自己提供的工具（完整 JSON Schema 定义）。它们与通过 RunAgentInput.tools 传入的客户端工具不同。
+- `parallelCalls` — `boolean`, optional. 若智能体能在单个步骤内并发调用多个工具则设为 true。
+- `clientProvided` — `boolean`, optional. 若智能体接受并使用客户端在运行时提供的工具则设为 true。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `OutputCapabilities`
 
-Output format support. Enable structuredOutput when your agent can return responses conforming to a JSON schema, which is useful for programmatic consumption.
+输出格式支持。当智能体能够返回符合某个 JSON schema 的响应时启用 structuredOutput，这对程序化消费很有用。
 
-**Fields:**
+**字段：**
 
-- `structuredOutput` — `boolean`, optional. Set true if the agent can produce structured JSON output matching a provided schema.
-- `supportedMimeTypes` — array of `string`, optional. MIME types the agent can produce (e.g., ["text/plain", "application/json"]). Omit if the agent only produces plain text.
+- `structuredOutput` — `boolean`, optional. 若智能体能产出与给定 schema 匹配的结构化 JSON 输出则设为 true。
+- `supportedMimeTypes` — array of `string`, optional. 智能体能产出的 MIME 类型（如 ["text/plain", "application/json"]）。若只产出纯文本则省略。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `StateCapabilities`
 
-State and memory management capabilities. These tell the client how the agent handles shared state and whether conversation context persists across runs.
+状态与记忆管理能力。这些字段告诉客户端智能体如何处理共享状态，以及对话上下文是否跨运行保留。
 
-**Fields:**
+**字段：**
 
-- `snapshots` — `boolean`, optional. Set true if the agent emits STATE_SNAPSHOT events (full state replacement).
-- `deltas` — `boolean`, optional. Set true if the agent emits STATE_DELTA events (JSON Patch incremental updates).
-- `memory` — `boolean`, optional. Set true if the agent has long-term memory beyond the current thread (e.g., vector store, knowledge base, or cross-session recall).
-- `persistentState` — `boolean`, optional. Set true if state is preserved across multiple runs within the same thread. When false, state resets on each run.
+- `snapshots` — `boolean`, optional. 若智能体发出 STATE_SNAPSHOT 事件（完整状态替换）则设为 true。
+- `deltas` — `boolean`, optional. 若智能体发出 STATE_DELTA 事件（JSON Patch 增量更新）则设为 true。
+- `memory` — `boolean`, optional. 若智能体拥有超出当前线程的长期记忆（如向量库、知识库或跨会话回忆）则设为 true。
+- `persistentState` — `boolean`, optional. 若状态在同一线程的多次运行之间保留则设为 true。为 false 时，状态在每次运行时重置。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `MultiAgentCapabilities`
 
-Multi-agent coordination capabilities. Enable these when your agent can orchestrate or hand off work to other agents.
+多智能体协作能力。当智能体能够编排工作或把工作移交给其他智能体时启用。
 
-**Fields:**
+**字段：**
 
-- `supported` — `boolean`, optional. Set true if the agent participates in any form of multi-agent coordination.
-- `delegation` — `boolean`, optional. Set true if the agent can delegate subtasks to other agents while retaining control.
-- `handoffs` — `boolean`, optional. Set true if the agent can transfer the conversation entirely to another agent.
-- `subagents` — array of [`SubagentInfo`](#subagentinfo), optional. List of subagents this agent can invoke. Helps clients build agent selection UIs.
+- `supported` — `boolean`, optional. 若智能体参与任何形式的多智能体协作则设为 true。
+- `delegation` — `boolean`, optional. 若智能体能在保留控制权的同时把子任务委派给其他智能体则设为 true。
+- `handoffs` — `boolean`, optional. 若智能体能把对话完全移交给另一个智能体则设为 true。
+- `subagents` — array of [`SubagentInfo`](#subagentinfo), optional. 该智能体可调用的子智能体列表。帮助客户端构建智能体选择 UI。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `ReasoningCapabilities`
 
-Reasoning and thinking capabilities. Enable these when your agent exposes its internal thought process (e.g., chain-of-thought, extended thinking).
+推理与思考能力。当智能体会暴露其内部思考过程（如思维链、扩展思考）时启用。
 
-**Fields:**
+**字段：**
 
-- `supported` — `boolean`, optional. Set true if the agent produces reasoning/thinking tokens visible to the client.
-- `streaming` — `boolean`, optional. Set true if reasoning tokens are streamed incrementally (vs. returned all at once).
-- `encrypted` — `boolean`, optional. Set true if reasoning content is encrypted (zero-data-retention mode). Clients should expect opaque encryptedValue fields instead of readable content.
+- `supported` — `boolean`, optional. 若智能体产出对客户端可见的推理/思考 token 则设为 true。
+- `streaming` — `boolean`, optional. 若推理 token 以增量方式流式传输（而非一次性返回）则设为 true。
+- `encrypted` — `boolean`, optional. 若推理内容被加密（零数据保留模式）则设为 true。客户端应预期收到不透明的 encryptedValue 字段而非可读内容。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `MultimodalInputCapabilities`
 
-Modalities the agent can accept as input. Clients use this to show or hide file upload buttons, audio recorders, image pickers, etc.
+智能体可接受的输入模态。客户端据此显示或隐藏文件上传按钮、录音器、图片选择器等。
 
-**Fields:**
+**字段：**
 
-- `image` — `boolean`, optional. Set true if the agent can process image inputs (e.g., screenshots, photos).
-- `audio` — `boolean`, optional. Set true if the agent can process audio inputs (speech, recordings).
-- `video` — `boolean`, optional. Set true if the agent can process video inputs.
-- `pdf` — `boolean`, optional. Set true if the agent can process PDF documents.
-- `file` — `boolean`, optional. Set true if the agent can process arbitrary file uploads: files of a kind the image, audio, video and document parts do not cover. Says nothing about how a file arrives; a part's source (inline, URL or provider handle) is a separate question.
+- `image` — `boolean`, optional. 若智能体能处理图像输入（如截图、照片）则设为 true。
+- `audio` — `boolean`, optional. 若智能体能处理音频输入（语音、录音）则设为 true。
+- `video` — `boolean`, optional. 若智能体能处理视频输入则设为 true。
+- `pdf` — `boolean`, optional. 若智能体能处理 PDF 文档则设为 true。
+- `file` — `boolean`, optional. 若智能体能处理任意文件上传则设为 true：即图像、音频、视频与文档部分未覆盖的那类文件。它不说明文件如何到达；部分来自哪里（内联、URL 还是提供方句柄）是另一个问题。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `MultimodalOutputCapabilities`
 
-Modalities the agent can produce as output. Clients use this to anticipate rich content in the agent's response.
+智能体能产出的输出模态。客户端据此预判智能体响应中的富内容。
 
-**Fields:**
+**字段：**
 
-- `image` — `boolean`, optional. Set true if the agent can generate images as part of its response.
-- `audio` — `boolean`, optional. Set true if the agent can produce audio output (text-to-speech, audio files).
+- `image` — `boolean`, optional. 若智能体能在响应中生成图像则设为 true。
+- `audio` — `boolean`, optional. 若智能体能产出音频输出（文本转语音、音频文件）则设为 true。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `MultimodalCapabilities`
 
-Multimodal input and output support. Organized into input and output sub-objects so clients can independently query what the agent accepts versus what it produces.
+多模态输入与输出支持。拆分为 input 与 output 两个子对象，让客户端可以分别查询智能体接受什么、产出什么。
 
-**Fields:**
+**字段：**
 
-- `input` — [`MultimodalInputCapabilities`](#multimodalinputcapabilities), optional. Modalities the agent can accept as input (images, audio, video, PDFs, files).
-- `output` — [`MultimodalOutputCapabilities`](#multimodaloutputcapabilities), optional. Modalities the agent can produce as output (images, audio).
+- `input` — [`MultimodalInputCapabilities`](#multimodalinputcapabilities), optional. 智能体可接受的输入模态（图像、音频、视频、PDF、文件）。
+- `output` — [`MultimodalOutputCapabilities`](#multimodaloutputcapabilities), optional. 智能体能产出的输出模态（图像、音频）。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `ExecutionCapabilities`
 
-Execution control and limits. Declare these so clients can set expectations about how long or how many steps an agent run might take.
+执行控制与限制。声明这些字段，让客户端对一次智能体运行可能耗时多久、涉及多少步骤建立预期。
 
-**Fields:**
+**字段：**
 
-- `codeExecution` — `boolean`, optional. Set true if the agent can execute code (e.g., Python, JavaScript) during a run.
-- `sandboxed` — `boolean`, optional. Set true if code execution happens in a sandboxed or isolated environment. Only meaningful when codeExecution is true.
-- `maxIterations` — `integer` (min 0, max 9007199254740991), optional. Maximum number of tool-call/reasoning iterations the agent will perform per run. Helps clients display progress or set timeout expectations.
-- `maxExecutionTime` — `integer` (min 0, max 9007199254740991), optional. Maximum wall-clock time (in milliseconds) the agent will run before timing out.
+- `codeExecution` — `boolean`, optional. 若智能体能在运行期间执行代码（如 Python、JavaScript）则设为 true。
+- `sandboxed` — `boolean`, optional. 若代码执行发生在沙箱或隔离环境中则设为 true。仅当 codeExecution 为 true 时才有意义。
+- `maxIterations` — `integer` (min 0, max 9007199254740991), optional. 智能体每次运行将执行的"工具调用/推理"迭代次数上限。帮助客户端展示进度或设置超时预期。
+- `maxExecutionTime` — `integer` (min 0, max 9007199254740991), optional. 智能体运行的最大墙钟时间（毫秒），超过即超时。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `HumanInTheLoopCapabilities`
 
-Human-in-the-loop interaction support. Enable these when your agent can pause execution to request human input, approval, or feedback before continuing.
+人在回路（human-in-the-loop）交互支持。当智能体能在继续之前暂停执行、请求人类输入、批准或反馈时启用。
 
-**Fields:**
+**字段：**
 
-- `supported` — `boolean`, optional. Set true if the agent supports any form of human-in-the-loop interaction.
-- `approvals` — `boolean`, optional. Set true if the agent can pause and request explicit approval before performing sensitive actions (e.g., sending emails, deleting data).
-- `interventions` — `boolean`, optional. Set true if the agent allows humans to intervene and modify its plan mid-execution.
-- `feedback` — `boolean`, optional. Set true if the agent can incorporate user feedback (thumbs up/down, corrections) to improve its behavior within the current session.
-- `interrupts` — `boolean`, optional. Set true if the agent participates in the AG-UI interrupt protocol: it ends a run with RUN_FINISHED carrying an interrupt outcome, and accepts the answers back in RunAgentInput.resume.
-- `approveWithEdits` — `boolean`, optional. Set true if tool-call interrupts accept editedArgs in the resume payload. Only meaningful when interrupts is true.
+- `supported` — `boolean`, optional. 若智能体支持任何形式的人在回路交互则设为 true。
+- `approvals` — `boolean`, optional. 若智能体能在执行敏感操作（如发送邮件、删除数据）之前暂停并请求明确批准则设为 true。
+- `interventions` — `boolean`, optional. 若智能体允许人类在执行中途介入并修改其计划则设为 true。
+- `feedback` — `boolean`, optional. 若智能体能吸纳用户反馈（点赞/点踩、纠正）以在当前会话内改进自身行为则设为 true。
+- `interrupts` — `boolean`, optional. 若智能体参与 AG-UI 中断协议则设为 true：它以携带 interrupt outcome 的 RUN_FINISHED 结束运行，并在 RunAgentInput.resume 中接受应答。
+- `approveWithEdits` — `boolean`, optional. 若工具调用中断接受 resume 负载中的 editedArgs 则设为 true。仅当 interrupts 为 true 时才有意义。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
 ### `AgentCapabilities`
 
-A typed, categorized snapshot of an agent's current capabilities. All fields are optional — agents only declare what they support. An omitted field means the capability is not declared (unknown), not that it is unsupported. The custom field is an escape hatch for integration-specific capabilities that do not fit into the standard categories.
+智能体当前能力的类型化、分类快照。所有字段皆可选——智能体只声明自己支持的。字段缺省表示该能力未声明（未知），而不表示不支持。custom 字段是一个逃生舱，用于容纳装不进标准分类的集成专属能力。
 
-**Fields:**
+**字段：**
 
-- `identity` — [`IdentityCapabilities`](#identitycapabilities), optional. Agent identity and metadata.
-- `transport` — [`TransportCapabilities`](#transportcapabilities), optional. Supported transport mechanisms (SSE, WebSocket, binary, etc.).
-- `tools` — [`ToolsCapabilities`](#toolscapabilities), optional. Tools the agent provides and tool calling configuration.
-- `output` — [`OutputCapabilities`](#outputcapabilities), optional. Output format support (structured output, MIME types).
-- `state` — [`StateCapabilities`](#statecapabilities), optional. State and memory management (snapshots, deltas, persistence).
-- `multiAgent` — [`MultiAgentCapabilities`](#multiagentcapabilities), optional. Multi-agent coordination (delegation, handoffs, subagents).
-- `reasoning` — [`ReasoningCapabilities`](#reasoningcapabilities), optional. Reasoning and thinking support (chain-of-thought, encrypted thinking).
-- `multimodal` — [`MultimodalCapabilities`](#multimodalcapabilities), optional. Multimodal input/output support (images, audio, video, files).
-- `execution` — [`ExecutionCapabilities`](#executioncapabilities), optional. Execution control and limits (code execution, timeouts, iteration caps).
-- `humanInTheLoop` — [`HumanInTheLoopCapabilities`](#humanintheloopcapabilities), optional. Human-in-the-loop support (approvals, interventions, feedback).
-- `custom` — `object`, open by key, optional. Integration-specific capabilities not covered by the standard categories. Open by key: any JSON value is allowed under a key, because the categories above cannot anticipate what an integration declares.
+- `identity` — [`IdentityCapabilities`](#identitycapabilities), optional. 智能体身份与元数据。
+- `transport` — [`TransportCapabilities`](#transportcapabilities), optional. 支持的传输机制（SSE、WebSocket、二进制等）。
+- `tools` — [`ToolsCapabilities`](#toolscapabilities), optional. 智能体提供的工具与工具调用配置。
+- `output` — [`OutputCapabilities`](#outputcapabilities), optional. 输出格式支持（结构化输出、MIME 类型）。
+- `state` — [`StateCapabilities`](#statecapabilities), optional. 状态与记忆管理（快照、增量、持久化）。
+- `multiAgent` — [`MultiAgentCapabilities`](#multiagentcapabilities), optional. 多智能体协作（委派、移交、子智能体）。
+- `reasoning` — [`ReasoningCapabilities`](#reasoningcapabilities), optional. 推理与思考支持（思维链、加密思考）。
+- `multimodal` — [`MultimodalCapabilities`](#multimodalcapabilities), optional. 多模态输入/输出支持（图像、音频、视频、文件）。
+- `execution` — [`ExecutionCapabilities`](#executioncapabilities), optional. 执行控制与限制（代码执行、超时、迭代上限）。
+- `humanInTheLoop` — [`HumanInTheLoopCapabilities`](#humanintheloopcapabilities), optional. 人在回路支持（批准、介入、反馈）。
+- `custom` — `object`，按 key 开放, optional. 标准分类未覆盖的集成专属能力。按 key 开放：key 下允许任意 JSON 值，因为上述分类无法预知某个集成会声明什么。
 
-Closed object: the schema rejects members not listed here.
+封闭对象：schema 拒绝未在此列出的成员。
 
-## Mixins
+## 混入
 
-Shared field sets, flattened into every definition that composes them. They
-exist in the schema as named definitions so their documentation lives once;
-no wire object is ever just a mixin.
+共享的字段集合，展平进每个组合它们的定义。它们在 schema 中以具名定义存在，因此其文档只需写一次；线上对象绝不会只是一个混入。
 
 ### `Attributable`
 
-Composed into everything that can belong to a subagent's work: the events that describe content or progress, the message types, and each interrupt. Run-scoped events omit it — RUN_STARTED, RUN_FINISHED and RUN_ERROR describe the run itself and MESSAGES_SNAPSHOT is conversation-wide, so none of them can belong to one subagent. A tool call omits it too and inherits its containing message's attribution.
+组合进一切可能属于子智能体工作的东西：描述内容或进度的事件、各消息类型，以及每个中断。作用于运行整体的事件不含它——RUN_STARTED、RUN_FINISHED 与 RUN_ERROR 描述的是运行本身，MESSAGES_SNAPSHOT 覆盖整个对话——因此它们都不能归属于某个子智能体。工具调用也不含它，而是继承其所在消息的归因。
 
-**Fields:**
+**字段：**
 
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
 
 
 ### `BaseEvent`
 
-The fields every event carries, whatever its type. Composed into each event definition rather than repeated, so a change here reaches every event at once.
+无论类型如何，每个事件都携带的字段。组合进每个事件定义而非重复书写，因此在这里改一处，所有事件同时生效。
 
-**Fields:**
+**字段：**
 
-- `type` — [`EventType`](#eventtype), **required**. Which event this is. Each event definition narrows this to a single value.
-- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. When the event was created. Bounded to the range JSON numbers survive a round trip in, so the value a consumer reads is the value the producer wrote. Deliberately not a float. The unit is not constrained here, because it never has been stated normatively; every SDK that sets it in practice uses milliseconds since the Unix epoch, and a producer choosing another unit will be misread by consumers even though it validates. Nothing in the protocol computes with this value.
-- `rawEvent` — any JSON value except `null`, optional. The provider-native event this one was translated from, carried verbatim for debugging and for consumers that need detail the protocol does not model. Any JSON value.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this event.
+- `type` — [`EventType`](#eventtype), **required**. 标识这是哪种事件。每个事件定义都把它收窄为单一取值。
+- `timestamp` — `integer` (min -9007199254740991, max 9007199254740991), optional. 事件创建的时间。取值限定在 JSON 数字能无损往返的范围内，因此消费者读到的值就是生产者写入的值。有意不用浮点数。此处不约束单位，因为从未有过规范性的说法；实践中所有设置该值的 SDK 都使用 Unix 纪元以来的毫秒数，选择其他单位的生产者即使通过校验，也会被消费者误读。协议中没有任何计算会用到这个值。
+- `rawEvent` — any JSON value except `null`, optional. 本事件由哪个提供方原生事件翻译而来，原样携带以便调试，也供需要协议未建模细节的消费者使用。可以是任意 JSON 值。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此事件上的额外信息。
 
 
 ### `BaseMessage`
 
-The fields shared by the developer, system, assistant and user messages. Deliberately excludes content, because a user message's content may be an array while the others are strings, and composition here intersects rather than overrides: a base that constrained content to a string would make an array content invalid. The tool, activity and reasoning messages do not compose this, because they carry no name.
+developer、system、assistant 与 user 消息共享的字段。有意不包含 content，因为用户消息的 content 可以是数组而其他是字符串，而这里的组合取交集而非覆盖：若基类把 content 约束为字符串，数组形式的 content 就会失效。tool、activity 与 reasoning 消息不组合它，因为它们不携带 name。
 
-**Fields:**
+**字段：**
 
-- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. The subagent invocation this belongs to. Absent means the parent agent produced it directly.
-- `id` — `string`, **required**. Identifies the message within the conversation.
-- `role` — `string`, **required**. Who the message is from. Each message definition narrows this to a single value.
-- `name` — `string`, optional. An optional display name for the author.
-- `encryptedValue` — `string`, optional. A provider's opaque artefact belonging to this message, stored by a consumer and returned on a later turn.
-- `encryptedValueType` — `string`, optional. The producer's own name for what kind of artefact encryptedValue is. Stored and returned with it, never interpreted by a consumer.
-- `metadata` — [`Metadata`](#metadata), optional. Extra information attached to this message.
+- `subagentRunId` — [`SubagentRunId`](#subagentrunid), optional. 本条目所属的子智能体调用。缺省表示由父智能体直接产生。
+- `id` — `string`, **required**. 在对话内标识该消息。
+- `role` — `string`, **required**. 消息来自谁。每个消息定义都把它收窄为单一取值。
+- `name` — `string`, optional. 作者的可选显示名。
+- `encryptedValue` — `string`, optional. 属于该消息的提供方不透明产物，由消费者存储并在后续轮次返回。
+- `encryptedValueType` — `string`, optional. 生产者自己为 encryptedValue 这类产物取的名称。与值一起存储并原样返回，消费者绝不解读。
+- `metadata` — [`Metadata`](#metadata), optional. 附加到此消息上的额外信息。
 

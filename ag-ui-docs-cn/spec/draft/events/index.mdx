@@ -1,59 +1,50 @@
 ---
-title: "Event Streams"
-description: "The eight event families, and who reacts to each — Draft"
+title: "事件流"
+description: "八大事件族，以及每一族由谁来消费——草案（Draft）"
 ---
 
 import DraftNotice from "/snippets/draft-notice.mdx";
 
 <DraftNotice />
 
-Everything a producer has to say arrives as events, in eight families. Each
-family binds one of the [event patterns](/spec/draft/basic/patterns) and adds
-its own rules; each is addressed to a different part of the consumer:
+生产者要说的一切都以事件到达，分属八个事件族。每族绑定一种[事件模式](/spec/draft/basic/patterns)并附加自己的规则；每族面向消费者的不同部分：
 
-| Family | Events | Pattern | Consumed by |
+| 事件族 | 事件 | 模式 | 消费方 |
 | --- | --- | --- | --- |
-| [Runs and steps](/spec/draft/events/lifecycle) | `RUN_STARTED` · `RUN_FINISHED` · `RUN_ERROR` · `STEP_STARTED` · `STEP_FINISHED` | lifecycle | the client itself |
-| [Text messages](/spec/draft/events/text-messages) | `TEXT_MESSAGE_*` | streaming | the UI |
-| [Tool calls](/spec/draft/events/tool-calls) | `TOOL_CALL_*` | streaming | the application |
-| [Reasoning](/spec/draft/events/reasoning) | `REASONING_*` | streaming | the UI |
-| [State](/spec/draft/events/state) | `STATE_SNAPSHOT` · `STATE_DELTA` · `MESSAGES_SNAPSHOT` | snapshot–delta | the application store |
-| [Activity](/spec/draft/events/activity) | `ACTIVITY_SNAPSHOT` · `ACTIVITY_DELTA` | snapshot–delta | the UI |
-| [Subagents](/spec/draft/events/subagents) | `SUBAGENT_STARTED` · `SUBAGENT_FINISHED` · `SUBAGENT_ERROR` | lifecycle | the client itself |
-| [Passthrough](/spec/draft/events/passthrough) | `RAW` · `CUSTOM` | standalone | the application, opt-in |
+| [运行与步骤](/spec/draft/events/lifecycle) | `RUN_STARTED` · `RUN_FINISHED` · `RUN_ERROR` · `STEP_STARTED` · `STEP_FINISHED` | 生命周期 | 客户端本身 |
+| [文本消息](/spec/draft/events/text-messages) | `TEXT_MESSAGE_*` | 流式 | UI |
+| [工具调用](/spec/draft/events/tool-calls) | `TOOL_CALL_*` | 流式 | 应用 |
+| [推理](/spec/draft/events/reasoning) | `REASONING_*` | 流式 | UI |
+| [状态](/spec/draft/events/state) | `STATE_SNAPSHOT` · `STATE_DELTA` · `MESSAGES_SNAPSHOT` | 快照–增量 | 应用存储 |
+| [活动](/spec/draft/events/activity) | `ACTIVITY_SNAPSHOT` · `ACTIVITY_DELTA` | 快照–增量 | UI |
+| [子智能体](/spec/draft/events/subagents) | `SUBAGENT_STARTED` · `SUBAGENT_FINISHED` · `SUBAGENT_ERROR` | 生命周期 | 客户端本身 |
+| [透传](/spec/draft/events/passthrough) | `RAW` · `CUSTOM` | 独立 | 应用，自愿启用 |
 
-The thirty-one event types these families comprise are enumerated on
-[The Event Model](/spec/draft/basic), and their shapes are the
-[schema](/spec/draft/schema)'s. Only the run lifecycle is mandatory for a
-producer — every other family is a feature it emits when it has something to
-say with it. A consumer MUST accept all of them: an event from a family a
-consumer has no use for is still a well-formed event, not
-[unrecognised material](/spec/draft/basic/processing).
+这些事件族所含的三十一个事件类型，罗列于[事件模型](/spec/draft/basic)，其形态归 [schema](/spec/draft/schema) 管辖。对生产者而言只有运行生命周期是强制的——其余每族都是特性，有内容要表达时才发出。消费者 MUST 全部接受：来自消费者用不上事件族的事件，仍是一件格式良好的事件，不是[无法识别的内容](/spec/draft/basic/processing)。
 
 <CardGroup cols={2}>
-  <Card title="Runs and steps" href="/spec/draft/events/lifecycle">
-    When a run begins and ends, and how steps mark its phases.
+  <Card title="运行与步骤" href="/spec/draft/events/lifecycle">
+    一次运行何时开始与结束，步骤如何标记它的各阶段。
   </Card>
-  <Card title="Text messages" href="/spec/draft/events/text-messages">
-    The conversation itself, streamed as it is generated.
+  <Card title="文本消息" href="/spec/draft/events/text-messages">
+    对话本身，边生成边流式传输。
   </Card>
-  <Card title="Tool calls" href="/spec/draft/events/tool-calls">
-    The agent proposes, the application disposes.
+  <Card title="工具调用" href="/spec/draft/events/tool-calls">
+    智能体提议，应用裁决。
   </Card>
-  <Card title="Reasoning" href="/spec/draft/events/reasoning">
-    The model's thinking, streamed, and the encrypted artefacts that
-    round-trip it.
+  <Card title="推理" href="/spec/draft/events/reasoning">
+    模型的思考，流式到达，以及往返携带它的加密产物。
   </Card>
-  <Card title="State" href="/spec/draft/events/state">
-    Shared state and the conversation, replaced and amended.
+  <Card title="状态" href="/spec/draft/events/state">
+    共享状态与对话，替换与修订。
   </Card>
-  <Card title="Activity" href="/spec/draft/events/activity">
-    Structured progress a UI renders outside the transcript.
+  <Card title="活动" href="/spec/draft/events/activity">
+    UI 在对话记录之外渲染的结构化进度。
   </Card>
-  <Card title="Subagents" href="/spec/draft/events/subagents">
-    Attribution, ownership, nesting, and how delegated work terminates.
+  <Card title="子智能体" href="/spec/draft/events/subagents">
+    归因、所有权、嵌套，以及被委派的工作如何终止。
   </Card>
-  <Card title="Raw and custom events" href="/spec/draft/events/passthrough">
-    The escape hatches, and their limits.
+  <Card title="Raw 与自定义事件" href="/spec/draft/events/passthrough">
+    逃生舱，以及它们的边界。
   </Card>
 </CardGroup>

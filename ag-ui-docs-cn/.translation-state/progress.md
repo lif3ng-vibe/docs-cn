@@ -21,7 +21,7 @@
 | B1 | 快速开始 11 文件（introduction, agentic-protocols, quickstart×5, migrating, talk-to-us, integrations+omnara） | ✅ |
 | B2 | 核心概念 concepts×14 | ✅（页内锚点改写 7 处，映射 14 份） |
 | B3 | 规范 spec/1.0×27（含 schema.mdx——不在导航但被 12+ 处 `#anchor` 深链，必须译） | ✅（页内锚点 9 处，映射 27 份；`mintlify validate` 全绿仅 49 条良性 duplicate-h1 警告=上游风格） |
-| B4 | 规范 spec/draft×27（与 B3 同构；开工先读 .anchor-maps/B3/ 沿用同标题译文） | ⬜ |
+| B4 | 规范 spec/draft×27（与 B3 同构；沿用 B3 译名） | ✅（页内锚点 10 处，映射 27 份；schema 98 定义标题保持英文） |
 | B5a | SDK dotnet×10 + python×5（磁盘实为 15 文件） | ✅（映射 15 份） |
 | B5b | SDK js×13 + development×3 + drafts×3 + tutorials×2 + support + integrations/google-adk-js | ✅（实译 22 文件；sdk/js/encoder.mdx、sdk/js/proto.mdx 为空页未动；页内锚点约 120 处，映射 22 份） |
 | B6 | snippets×3 + docs.json anchors 改站内 + 跨页锚点回修 + 终检（残留/锚点/字面**）+ README + 阶段 C 五处同步 | ⬜ |
@@ -37,9 +37,19 @@
 
 ## 下一步
 
-1. B3 规范进行中；B5a 已开工（B4 特意排在 B3 完成后，沿用其完整锚点映射）
-2. 后续按批次表推进；B4 开工前必读 .anchor-maps/B3/ 沿用 spec/1.0 同标题译文
-3. B6 收尾时按「跨页锚点清单」+ verify-anchors-cn.mjs 全站回修
+全部翻译批次（B1–B5b、B4）完成 → **B6 收尾**（主线执行）：
+1. spec/1.0/schema.mdx 补译 2 句 "Discriminated by `role`/`op`."（B4 发现的 B3 漏网，与 draft 页统一为「以 `role`/`op` 判别。」）
+2. snippets×3 主线自译（snippets/draft-notice、since、snippet-intro——MDX 组件，import 它们的页面不用动）
+3. docs.json navigation.global 三条 anchors 改站内路径（/sdk/js/core/overview、/sdk/python/core/overview、/sdk/dotnet/abstractions/overview）
+4. 全站 export → `node scripts/repair-anchors-cn.mjs /tmp/dist-en dist --apply` → 重导出 → `node scripts/verify-anchors-cn.mjs` 复验至零缺失（外站锚点除外）；dry-scan 基数 228 处
+5. 残留检查（B1–B5b 已过，重跑全量）+ dist 剥标签扫字面 `**`（应为 0）
+6. `DOCS_BASE=/docs-cn/ag-ui node scripts/prefix-dist.mjs` + `node scripts/smoke-serve.mjs` 冒烟（curl http://localhost:4639/docs-cn/ag-ui/ → 200 且含 CJK）；确认 dist 无 .anchor-maps/.translation-state 泄漏
+7. 阶段 C 五处同步（hub sites.json + gen-index.cjs + deploy-pages.yml 构建段 + README 三处）；Mintlify=导出产物镜像（prefix 后纯拷贝），CI 构建段照 herdr/diagram-design 先例
+8. `git fetch origin master && git merge --no-edit origin/master`（冲突规则：sites.json 并存重跑 gen-index、README 段落并存）→ 最终 push → STATUS=done → 总结回帖
+
+## 结构勘误
+
+- **.anchor-maps 已迁出 Mintlify 内容根** → `../.anchor-maps-ag-ui/`（仓库内仍提交）：Mintlify validate/export 会把项目下所有 .md/.mdx 当内容扫描，映射文件里的元数据（如 `<Since>` 字样）会造成 parse-error 与垃圾导出页。repair-anchors-cn.mjs 已同步改路径
 
 ## 跨页锚点清单（回修用，逐批追加）
 

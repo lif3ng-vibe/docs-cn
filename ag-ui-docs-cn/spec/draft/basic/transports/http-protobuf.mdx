@@ -1,79 +1,40 @@
 ---
 title: "HTTP + Protobuf"
-description: "The binary binding: the same POST, a stream of length-prefixed protobuf frames back — Draft"
+description: "二进制绑定：同样的 POST，返回一串以长度前缀分帧的 protobuf 帧——草案（Draft）"
 ---
 
 import DraftNotice from "/snippets/draft-notice.mdx";
 
 <DraftNotice />
 
-The binary binding, for consumers that want a compact wire. It shares the
-[SSE binding](/spec/draft/basic/transports/http-sse)'s request half entirely —
-the run input is the same JSON POST — and differs only in the response.
+这是二进制绑定，供想要紧凑线上格式的消费者使用。它完全共享 [SSE 绑定](/spec/draft/basic/transports/http-sse)的请求一侧——运行输入是同样的 JSON POST——差别只在响应。
 
-## Negotiation
+## 协商
 
-- A client that wants this binding includes
-  `application/vnd.ag-ui.event+proto` in its `Accept` header, alongside
-  `text/event-stream`. Admission is what opts in — a wildcard range
-  (`*/*`, `application/*`) admits the media type too — so a client that
-  cannot consume protobuf MUST send an explicit `Accept` naming what it can,
-  rather than a wildcard or down-ranked entry: relative quality values
-  between the two media types are not consulted.
-- A producer that supports the binding SHOULD answer with it whenever the
-  client's `Accept` admits the media type with a positive quality, and MUST
-  answer SSE otherwise. A producer that does not support it ignores the media
-  type — which is why a client MUST always be prepared to receive SSE.
-- The response's `Content-Type` is exactly `application/vnd.ag-ui.event+proto`;
-  the consumer selects its parser by this header.
+- 想用本绑定的客户端在自己的 `Accept` 头中、在 `text/event-stream` 旁边加上 `application/vnd.ag-ui.event+proto`。准入即是选择加入——通配范围（`*/*`、`application/*`）同样准许该媒体类型——因此无法消费 protobuf 的客户端 MUST 发送指名自己所能消费内容的显式 `Accept`，而不是通配或降序条目：两种媒体类型之间的相对质量值（q 值）不予考虑。
+- 支持本绑定的生产者，只要客户端的 `Accept` 以正的质量值准许该媒体类型，SHOULD 就以它作答；否则 MUST 以 SSE 作答。不支持本绑定的生产者会忽略该媒体类型——这正是客户端 MUST 时刻准备好接收 SSE 的原因。
+- 响应的 `Content-Type` 恰为 `application/vnd.ag-ui.event+proto`；消费者以这个头选择自己的解析器。
 
-## Framing
+## 分帧
 
-The response body is a sequence of frames, each one protocol event:
+响应体是一串帧，每帧一个协议事件：
 
-- A frame is a 4-byte length header — an unsigned 32-bit big-endian integer —
-  followed by exactly that many bytes of one encoded event.
-- Frames abut with no separator. A consumer MUST tolerate frames split across
-  transport chunks and multiple frames within one chunk.
-- A body that ends mid-frame is a
-  [truncated run](/spec/draft/basic/transports#truncation).
+- 一帧是一个 4 字节长度头——无符号 32 位大端整数——后跟恰好那么多字节的一个已编码事件。
+- 帧之间直接相接，没有分隔符。消费者 MUST 容忍帧被传输层分块切开、以及一个分块内含多帧的情形。
+- 在帧中途结束的响应体是一次[被截断的运行](/spec/draft/basic/transports#truncation)。
 
-## The wire schema
+## 线上 schema
 
-The protobuf message definitions are generated from the same
-[JSON Schema](/spec/draft/schema-files) the SDKs are generated from; the wire
-schema is not a second source of truth. Cross-implementation parity is part of
-the conformance surface: a corpus of canonical events pins the encoded bytes,
-and every first-party encoder MUST reproduce the corpus byte for byte. (The
-corpus is the guarantee — two encoders handed the same *semantic* value may
-still order the entries of an open JSON object differently, which protobuf
-map encoding makes visible.)
+protobuf 消息定义与各 SDK 一样，由同一份 [JSON Schema](/spec/draft/schema-files) 生成；线上 schema 不是第二个事实来源。跨实现的一致性是一致性验证面的一部分：一组规范事件钉死编码后的字节，每个一方官方编码器 MUST 逐字节复现这组测试样例库（corpus）。（这组样例就是保证——拿到同一*语义*值的两个编码器，仍可能以不同顺序排列开放 JSON 对象的条目，而 protobuf 的 map 编码会把它暴露出来。）
 
-Semantics stay as close to the SSE binding as a binary wire allows:
+语义在二进制线上格式允许的范围内尽量贴近 SSE 绑定：
 
-- An event decoded from a frame enters the same
-  [processing pipeline](/spec/draft/basic/processing) as an event parsed from
-  SSE — middleware first, enforcement after, identically.
-- Material the wire schema carries as open payloads — `RUN_FINISHED.outcome`,
-  metadata, state, `rawEvent` — survives decoding and reaches that pipeline:
-  an unrecognised outcome arriving on this binding is stripped by enforcement
-  with a warning, exactly as on SSE, and the binding MUST NOT reject it at
-  decode time.
-- The binary wire is inherently narrower for the rest. A *field* this build's
-  wire schema predates is skipped by protobuf decoding itself, silently — the
-  stripped-with-warning behaviour is fully observable only on the JSON wire.
-  The same narrowing covers protocol-legal open members the wire schema does
-  not model: a JSON Patch operation's extension members, which the JSON wire
-  MUST preserve, do not survive this one.
-  An *event* whose envelope arm this build predates carries no type string to
-  hand onward, so the binding drops the frame with a warning — the same
-  answer enforcement gives, spelled at the transport.
-- A frame whose bytes do not decode as a message is malformed transport
-  material and fatal to the stream. A body that simply ends mid-frame is not:
-  that is a [truncated run](/spec/draft/basic/transports#truncation).
+- 从帧中解码出的事件，进入与从 SSE 解析出的事件相同的[处理管线](/spec/draft/basic/processing)——同样是中间件在前、强制执行在后。
+- 线上 schema 以开放负载承载的材料——`RUN_FINISHED.outcome`、元数据、状态、`rawEvent`——在解码后存活并到达该管线：经由本绑定到达的无法识别 outcome，会由强制执行剥离并给出警告，与 SSE 上完全一致，绑定 MUST NOT 在解码时拒绝它。
+- 其余方面，二进制线上格式天然更窄。比本构建的线上 schema 更新的*字段*，会被 protobuf 解码本身静默跳过——"剥离并警告"的行为只有在 JSON 线上格式上才完全可观察。同样的收窄也覆盖线上 schema 未建模的、协议上合法的开放成员：JSON Patch 操作的扩展成员在 JSON 线上格式 MUST 保留，在这条线上则无法存活。
+  信封分支比本构建更新的*事件*，没有类型字符串可以传递，绑定会丢弃该帧并给出警告——与强制执行给出的答案相同，只是在传输层说出。
+- 字节无法按消息解码的帧是格式错误的传输材料，对流而言是致命的。而只是在中途结束的响应体不是：那是一次[被截断的运行](/spec/draft/basic/transports#truncation)。
 
-## Errors
+## 错误
 
-Identical to the [SSE binding](/spec/draft/basic/transports/http-sse#errors):
-rejection before the stream is an HTTP error status; failure inside the stream
-is `RUN_ERROR`, as a frame like any other.
+与 [SSE 绑定](/spec/draft/basic/transports/http-sse#errors)相同：流开始前的拒绝是 HTTP 错误状态；流内的失败是 `RUN_ERROR`，作为与其他帧无异的又一帧传输。

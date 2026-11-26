@@ -19,6 +19,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url))); // ag-ui-docs-cn/
+const MAPS = join(ROOT, '..', '.anchor-maps-ag-ui'); // 映射在 Mintlify 内容根之外（防 validate/export 误扫）
 const DIST_EN = process.argv[2] || '/tmp/dist-en';
 const DIST_CN = process.argv[3] && !process.argv[3].startsWith('--') ? process.argv[3] : null;
 const APPLY = process.argv.includes('--apply');
@@ -69,7 +70,7 @@ function loadDistHeadings(dist) {
 // ---------- 锚点映射加载 ----------
 // 页路径（如 spec/1.0/events/lifecycle）→ 映射条目 [{old,new}]
 const maps = new Map();
-for (const dirBase of walk(join(ROOT, '.anchor-maps'), '.map.md')) {
+for (const dirBase of walk(MAPS, '.map.md')) {
   const base = dirBase.split('/').pop().replace(/\.map\.md$/, '');
   const pagePath = base.replace(/-/g, '/'); // 与子代理约定：页路径 / → -
   const entries = [];
