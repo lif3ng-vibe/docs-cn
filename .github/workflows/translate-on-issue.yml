@@ -96,7 +96,10 @@ jobs:
             issue_comment)
               TRIMMED="$(printf '%s' "$COMMENT" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
               case "$TRIMMED" in
-                /continue|/reply*) ISSUE_NUMBER="${{ github.event.issue.number }}" ;;
+                # Windows Git Bash 下 gh CLI 发的 /continue 会被 MSYS 路径转换成
+                # C:/Program Files/Git/continue——容忍该特定前缀（web 端评论不受影响）
+                /continue|*"C:/Program Files/Git/continue"|/reply*|*"C:/Program Files/Git/reply"*) \
+                  ISSUE_NUMBER="${{ github.event.issue.number }}" ;;
                 *) echo "非 /continue、/reply 评论，跳过"
                    SKIP=1 ;;
               esac
