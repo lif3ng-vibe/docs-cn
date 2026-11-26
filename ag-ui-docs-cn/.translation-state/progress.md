@@ -27,20 +27,27 @@
 | B4 | 规范 spec/draft×27（与 B3 同构；沿用 B3 译名） | ✅（页内锚点 10 处，映射 27 份；schema 98 定义标题保持英文） |
 | B5a | SDK dotnet×10 + python×5（磁盘实为 15 文件） | ✅（映射 15 份） |
 | B5b | SDK js×13 + development×3 + drafts×3 + tutorials×2 + support + integrations/google-adk-js | ✅（实译 22 文件；sdk/js/encoder.mdx、sdk/js/proto.mdx 为空页未动；页内锚点约 120 处，映射 22 份） |
-| B6 | snippets×3 + docs.json anchors 改站内 + 跨页锚点回修 + 终检（残留/锚点/字面**）+ README + 阶段 C 五处同步 | ⬜ |
+| B6 | snippets×3 + docs.json anchors 改站内 + 跨页锚点回修 + 终检（残留/锚点/字面**）+ README + 阶段 C 五处同步 | ✅（前置修缮 808c15af；跨页锚点三轮回修 427 处 1feb07d4；终检补漏 bb20e66c/f31f614d；五处同步 ac388295） |
 
-## 已译文件清单
+## 已译文件清单（120 个 .mdx 全译）
 
-- openbot.mdx（B0 重写为中文说明页）
-- B1（11）：introduction、agentic-protocols、quickstart/{introduction,server,middleware,applications,clients}、migrating-to-1-0、talk-to-us、integrations、integrations/omnara——锚点映射 11 份在 .anchor-maps/B1/
+- B0：openbot.mdx（重写为中文说明页）+ 导航中文化 + GLOSSARY
+- B1（11）：introduction、agentic-protocols、quickstart×5、migrating-to-1-0、talk-to-us、integrations、integrations/omnara
+- B2（14）：concepts 全部
+- B3（27）：spec/1.0 全部（含 schema.mdx）
+- B4（27）：spec/draft 全部（含 schema.mdx）
+- B5a（15）：sdk/dotnet×10 + sdk/python×5
+- B5b（22）：sdk/js×13 + development×3 + drafts×3 + tutorials×2 + support + integrations/google-adk-js（encoder/proto 空页未动）
+- B6（3）：snippets×3（draft-notice、since、snippet-intro）
+- 逐文件锚点映射在 ../.anchor-maps-ag-ui/<批>/（已迁出 Mintlify 内容根，防 parse-error）
 
 ## 锚点回修状态
 
-- 未开始；每文件随翻译产出 `.anchor-maps/<批>/<file>.map.md`（原英文标题 | 中文标题 | 新锚点），导出后 `scripts/verify-anchors-cn.mjs` 全站核对
+- **已完成**：B6 三轮回修共 427 处（commit 1feb07d4），`verify-anchors-cn.mjs` 全站核对通过（外站锚点除外）；逐文件映射在 ../.anchor-maps-ag-ui/<批>/
 
 ## 下一步
 
-全部翻译批次（B1–B5b、B4）完成 → **B6 收尾**（主线执行）：
+**无——全链收官（B0–B6 全 ✅，阶段 C 完成，STATUS=done，已自动合并上线）。** 本节原 B6 收尾清单 8 项已全部执行完毕（见批次表与 git log 808c15af..ac388295）。原清单：
 1. spec/1.0/schema.mdx 补译 2 句 "Discriminated by `role`/`op`."（B4 发现的 B3 漏网，与 draft 页统一为「以 `role`/`op` 判别。」）
 2. snippets×3 主线自译（snippets/draft-notice、since、snippet-intro——MDX 组件，import 它们的页面不用动）
 3. docs.json navigation.global 三条 anchors 改站内路径（/sdk/js/core/overview、/sdk/python/core/overview、/sdk/dotnet/abstractions/overview）
@@ -54,7 +61,7 @@
 
 - **.anchor-maps 已迁出 Mintlify 内容根** → `../.anchor-maps-ag-ui/`（仓库内仍提交）：Mintlify validate/export 会把项目下所有 .md/.mdx 当内容扫描，映射文件里的元数据（如 `<Since>` 字样）会造成 parse-error 与垃圾导出页。repair-anchors-cn.mjs 已同步改路径
 
-## 跨页锚点清单（回修用，逐批追加）
+## 跨页锚点清单（历史工作底稿——已全部回修，B6 三轮 427 处 commit 1feb07d4）
 
 - B1：quickstart/server.mdx:40 → python-poetry.org#installation（外站）；omnara 两处外站锚点。站内互链锚点：无
 - B2 站内待回修（8 处，源文件 → 目标锚点）：

@@ -75,6 +75,8 @@ push 一律用 checkout 预配的 origin 凭据（`DOCS_CN_PAT`，fine-grained P
 
 阶段 C 五处同步提交后、最终 push 前：`git fetch origin master` 并 `git merge --no-edit origin/master` 把最新 master 并进分支——冲突规则：sites.json 双方条目**并存**并重跑 `node scripts/gen-index.cjs`、README 双方段落并存（这是自动合并能 ff 推 master 的前提）。然后最终 push → STATUS 写 `done` → 回帖一行总结即结束。
 
+**STATUS=done 的前置硬条件**：progress.md 与 git log 逐批对齐——批次表**不允许残留 ⬜**（逐行改 ✅ 并补 commit 号）、「下一步」改为收官说明、已译文件清单/锚点状态等段落刷新到终态。只刷头部不回填表格 = 违约（ag-ui 首轮实录：表头写 done、B6 行 ⬜ 混进了合并，workflow 现有 ⬜ 检查会拦）。
+
 上线两模式（workflow 按 `DEPLOY_MODE` 分路，claude 不做合并/PR）：**auto** = workflow 直接合入 master 并触发部署，无 PR；**review** = workflow 建 PR 等人工合并。两者之下用户都可在 issue 里 `/reply 修改：…` 提迭代意见 → 新 run 续跑落实并推同一分支。
 
 ## 流程

@@ -284,6 +284,7 @@ jobs:
           - progress.md、.anchor-maps/、GLOSSARY.md 随批提交；dist 与 node_modules 不进 git
           - 持续 429 / 额度耗尽：按 429 协议回帖（已完成/剩余/如何 /continue）+ 打 quota-blocked label + STATUS 写 paused:quota 后正常退出；功能死局（要改需求才能继续）用 blocked label
           - 阶段 C 五处同步提交后、最终 push 前：git fetch origin master 并 git merge --no-edit origin/master 把最新 master 并进分支（冲突规则：sites.json 双方条目并存并重跑 node scripts/gen-index.cjs、README 双方段落并存），再最终 push → STATUS 写 done → 回帖一行总结即结束
+          - 写 STATUS=done 前必须把 progress.md 与 git log 逐批对齐：批次表不留 ⬜（逐行 ✅ + commit 号）、「下一步」改收官说明、清单/锚点段落刷新终态——workflow 会机械检查，残留 ⬜ 直接判失败
           EOF
           )"
           ARGS=(--dangerously-skip-permissions)
@@ -315,6 +316,12 @@ jobs:
           set -euo pipefail
           [ -d "${SLUG}-docs-cn" ] || { echo "::error::项目目录 ${SLUG}-docs-cn 不存在"; exit 1; }
           SLUG="$SLUG" node -e 'const j=JSON.parse(require("fs").readFileSync("sites.json","utf8"));const a=Array.isArray(j)?j:(j.sites||[]);if(!a.some(x=>x.slug===process.env.SLUG)){console.error("sites.json 未含 "+process.env.SLUG+"（阶段C 未完成）");process.exit(1)}'
+          # progress.md 终态纪律：STATUS=done 时批次表不允许残留未完成标记（ag-ui 首轮实录：表头 done、B6 行 ⬜ 混进合并）
+          if [ -f "${SLUG}-docs-cn/.translation-state/progress.md" ] && grep -q '⬜' "${SLUG}-docs-cn/.translation-state/progress.md"; then
+            echo "::error::progress.md 仍有 ⬜ 未完成项但 STATUS=done——收尾必须把批次表/段落与 git log 逐批对齐后再写 done"
+            grep -n '⬜' "${SLUG}-docs-cn/.translation-state/progress.md"
+            exit 1
+          fi
           echo "产物校验通过"
 
       - name: 兜底残留提交 + 最终 push
